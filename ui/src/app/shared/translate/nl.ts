@@ -28,7 +28,7 @@ export const TRANSLATION = {
     },
     Menu: {
         Index: "Overzicht",
-        AboutUI: "Over FEMS- UI",
+        AboutUI: "Over OpenEMS-UI",
         Settings: 'Algemene instellingen',
         Logout: 'Uitloggen'
     },

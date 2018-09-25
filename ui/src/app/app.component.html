@@ -5,7 +5,9 @@
         <ion-button [routerLink]="backUrl">
           <ion-icon name="arrow-back"></ion-icon>
         </ion-button>
+        <ion-title text-center>BloGPV</ion-title>
       </ion-buttons>
+      <ion-title *ngIf="!backUrl" text-center>BloGPV</ion-title>
       <ion-buttons slot="end">
         <nav *ngIf="(websocket.currentEdge | async) as currentEdge">
           <ion-button routerLink="/device/{{ currentEdge.name }}/config/index">

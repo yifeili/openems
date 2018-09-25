@@ -29,7 +29,7 @@ export const TRANSLATION = {
     },
     Menu: {
         Index: "Index",
-        AboutUI: "About FEMS-UI",
+        AboutUI: "About OpenEMS-UI",
         Settings: 'General Settings',
         Logout: 'Sign Out'
     },

@@ -29,7 +29,7 @@ export const TRANSLATION = {
     },
     Menu: {
         Index: "Übersicht",
-        AboutUI: "Über FEMS-UI",
+        AboutUI: "Über OpenEMS-UI",
         Settings: 'Allgemeine Einstellungen',
         Logout: 'Abmelden'
     },
@@ -149,7 +149,7 @@ export const TRANSLATION = {
         OpenEMS: "Mehr zu OpenEMS",
         CurrentDevelopments: "Aktuelle Entwicklungen",
         Build: "Dieser Build",
-        Contact: "Für Rückfragen und Anregungen zum System, wenden Sie sich bitte an unser FEMS-Team unter <a href=\"mailto:{{value}}\">{{value}}</a>.", // value = Mail from FEMS-Team
+        Contact: "Für Rückfragen und Anregungen zum System, wenden Sie sich bitte an unseren zuständigen Entwickler unter <a href=\"mailto:{{value}}\">{{value}}</a>.", // value = Mail from FEMS-Team
         Language: "Sprache wählen:"
     },
     Notifications: {
