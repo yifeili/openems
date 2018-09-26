@@ -60,8 +60,11 @@ export class Websocket {
   public setCurrentEdge(route: ActivatedRoute): Subject<Edge> {
     let onTimeout = () => {
       // Timeout: redirect to index
-      this.router.navigate(['/index']);
-      subscription.unsubscribe();
+      if (this.router.url != '/about') {
+        this.router.navigate(['/index']);
+        subscription.unsubscribe();
+        console.log("ERWISCHT ON TIMEOUT")
+      }
     }
 
     let edgeName = route.snapshot.params["edgeName"];
