@@ -63,7 +63,6 @@ export class Websocket {
       if (this.router.url != '/about') {
         this.router.navigate(['/index']);
         subscription.unsubscribe();
-        console.log("ERWISCHT ON TIMEOUT")
       }
     }
 
