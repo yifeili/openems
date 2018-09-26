@@ -69,23 +69,31 @@
             <span [innerHTML]="'About.Contact' | translate:{value: 'fabian.schwarzbeck@fenecon.de'}"></span>
           </p>
           <br>
-          <h1>Projektpartner</h1>
-          <br>
-          <ion-row>
+          <ion-row justify-content-start>
             <ion-item>
-              <ion-img style="width:120px" src="assets/img/dfk.png"></ion-img>
+              <ion-text color="primary">
+                <h2>
+                  Projektpartner
+                </h2>
+              </ion-text>
             </ion-item>
-            <ion-item>
-              <ion-img style="width:120px" src="assets/img/discovergy.png"></ion-img>
+          </ion-row>
+          <ion-row justify-content-start>
+            <ion-item href="https://www.dfki.de/web">
+              <ion-img style="width:140px" src="assets/img/dfk.png" padding-top></ion-img>
             </ion-item>
-            <ion-item>
-              <ion-img style="width:120px" src="assets/img/enercity.png"></ion-img>
+
+            <ion-item href="https://www.enercity.de/privatkunden/index.html">
+              <ion-img style="width:140px" src="assets/img/enercity.png" padding-top></ion-img>
             </ion-item>
-            <ion-item>
-              <ion-img style="width:120px" src="assets/img/fenecon.png"></ion-img>
+            <ion-item href="https://discovergy.com/">
+              <ion-img style="width:220px" src="assets/img/discovergy.png"></ion-img>
             </ion-item>
-            <ion-item>
-              <ion-img style="width:120px" src="assets/img/tub.png"></ion-img>
+            <ion-item href="https://fenecon.de/">
+              <ion-img style="width:125px" src="assets/img/fenecon.png" padding-top></ion-img>
+            </ion-item>
+            <ion-item href="https://www.tu-berlin.de/menue/home/">
+              <ion-img style=" width:100px" src="assets/img/tub.png" padding-top></ion-img>
             </ion-item>
           </ion-row>
         </ion-card-content>
