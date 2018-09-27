@@ -8,7 +8,7 @@
     "start": "ng serve",
     "build": "ng build",
     "build-edge": "ng build -prod --env=edge --base-href / --output-path=target/edge",
-    "build-backend": "ng build -prod --env=backend --base-href /m/ --output-path=target/backend",
+    "build-backend": "ng build -prod --env=backend --base-href /m-blogpv/ --output-path=target/backend",
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e"

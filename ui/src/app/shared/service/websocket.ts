@@ -202,7 +202,7 @@ export class Websocket {
             this.initialize();
             if (env.backend === "OpenEMS Backend") {
               if (env.production) {
-                window.location.href = "/web/login?redirect=/m/index";
+                window.location.href = "/web/login?redirect=/m-blogpv/index";
               } else {
                 console.info("would redirect...");
               }
