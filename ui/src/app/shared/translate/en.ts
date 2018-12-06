@@ -30,11 +30,7 @@ export const TRANSLATION = {
     },
     Menu: {
         Index: "Index",
-<<<<<<< HEAD
-        AboutUI: "About OpenEMS-UI",
-=======
-        AboutUI: "About OpenEMS UI",
->>>>>>> develop
+        AboutUI: "About BloGPV-UI",
         Settings: 'General Settings',
         Logout: 'Sign Out'
     },

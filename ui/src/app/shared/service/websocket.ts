@@ -60,11 +60,7 @@ export class Websocket {
   public setCurrentEdge(route: ActivatedRoute): Subject<Edge> {
     let onTimeout = () => {
       // Timeout: redirect to index
-<<<<<<< HEAD
-      if (this.router.url != '/about') {
-=======
       if (this.router.url != '/settings' && this.router.url != '/about') {
->>>>>>> develop
         this.router.navigate(['/index']);
         subscription.unsubscribe();
       }

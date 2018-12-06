@@ -29,11 +29,7 @@ export const TRANSLATION = {
     },
     Menu: {
         Index: "Přehled",
-<<<<<<< HEAD
-        AboutUI: "About OpenEMS-UI",
-=======
-        AboutUI: "About OpenEMS UI",
->>>>>>> develop
+        AboutUI: "About BloGPV-UI",
         Settings: 'Obecné Nastavení',
         Logout: 'Odhlásit'
     },
