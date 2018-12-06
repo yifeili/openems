@@ -27,7 +27,11 @@ import io.openems.edge.common.channel.doc.Level;
 import io.openems.edge.common.channel.doc.Unit;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.event.EdgeEventConstants;
+import io.openems.edge.common.modbusslave.ModbusSlave;
+import io.openems.edge.common.modbusslave.ModbusSlaveNatureTable;
+import io.openems.edge.common.modbusslave.ModbusSlaveTable;
 import io.openems.edge.common.taskmanager.Priority;
+import io.openems.edge.ess.api.AsymmetricEss;
 import io.openems.edge.ess.api.SinglePhaseEss;
 import io.openems.edge.ess.api.SymmetricEss;
 import io.openems.edge.fenecon.mini.FeneconMiniConstants;
@@ -39,7 +43,8 @@ import io.openems.edge.fenecon.mini.FeneconMiniConstants;
 		configurationPolicy = ConfigurationPolicy.REQUIRE, //
 		property = EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_AFTER_WRITE //
 )
-public class FeneconMiniEss extends AbstractOpenemsModbusComponent implements SinglePhaseEss, OpenemsComponent {
+public class FeneconMiniEss extends AbstractOpenemsModbusComponent
+		implements SinglePhaseEss, AsymmetricEss, SymmetricEss, OpenemsComponent, ModbusSlave {
 
 	@Reference
 	protected ConfigurationAdmin cm;
@@ -57,7 +62,7 @@ public class FeneconMiniEss extends AbstractOpenemsModbusComponent implements Si
 	void activate(ComponentContext context, Config config) {
 		super.activate(context, config.service_pid(), config.id(), config.enabled(), FeneconMiniConstants.UNIT_ID,
 				this.cm, "Modbus", config.modbus_id());
-		this.channel(Phase.phase).setNextValue(config.Phase());
+		this.getPhase().setNextValue(config.Phase());
 	}
 
 	@Deactivate
@@ -596,5 +601,15 @@ public class FeneconMiniEss extends AbstractOpenemsModbusComponent implements Si
 	public String debugLog() {
 		return "SoC:" + this.getSoc().value().asString() //
 				+ "|L:" + this.getActivePower().value().asString(); //
+	}
+
+	@Override
+	public ModbusSlaveTable getModbusSlaveTable() {
+		return new ModbusSlaveTable( //
+				OpenemsComponent.getModbusSlaveNatureTable(), //
+				SymmetricEss.getModbusSlaveNatureTable(), //
+				AsymmetricEss.getModbusSlaveNatureTable(), //
+				ModbusSlaveNatureTable.of(FeneconMiniEss.class, 300) //
+						.build());
 	}
 }

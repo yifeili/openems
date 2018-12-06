@@ -14,6 +14,7 @@ export const TRANSLATION = {
         More: "Mehr...",
         ChargePower: "Beladung",
         DischargePower: "Entladung",
+        ActualPower: "E-Auto Beladung",
         PeriodFromTo: "von {{value1}} bis {{value2}}", // value1 = start date, value2 = end date
         DateFormat: "dd.MM.yyyy", // z.B. Englisch: yyyy-MM-dd (dd = Tag, MM = Monat, yyyy = Jahr)
         Search: "Suchen",
@@ -29,7 +30,11 @@ export const TRANSLATION = {
     },
     Menu: {
         Index: "Übersicht",
+<<<<<<< HEAD
         AboutUI: "Über BloGPV-UI",
+=======
+        AboutUI: "Über OpenEMS UI",
+>>>>>>> develop
         Settings: 'Allgemeine Einstellungen',
         Logout: 'Abmelden'
     },
@@ -38,7 +43,7 @@ export const TRANSLATION = {
         ConnectionSuccessful: "Verbindung zu {{value}} hergestellt.", // value = name of websocket
         ConnectionFailed: "Verbindung zu {{value}} getrennt.", // value = name of websocket
         ToEnergymonitor: "Zum Energiemonitor...",
-        IsOffline: "FEMS ist offline!"
+        IsOffline: "OpenEMS ist offline!"
     },
     Edge: {
         Index: {
@@ -120,7 +125,7 @@ export const TRANSLATION = {
                 NewScheduler: "Neuer Scheduler...",
                 Class: "Klasse:",
                 NotImplemented: "Formular nicht implementiert: ",
-                Contact: "Das sollte nicht passieren. Bitte kontaktieren Sie <a href=\"mailto:{{value}}\">{{value}}</a>.", // value = Mail from FEMS-Team
+                Contact: "Das sollte nicht passieren. Bitte kontaktieren Sie <a href=\"mailto:{{value}}\">{{value}}</a>.",
                 Always: "Immer"
             },
             Log: {
@@ -142,14 +147,16 @@ export const TRANSLATION = {
         }
     },
     About: {
-        UI: "Benutzeroberfläche für FEMS und OpenEMS",
-        Developed: "Diese Benutzeroberfläche wird von FENECON als Open-Source-Software entwickelt.",
-        Fenecon: "Mehr zu FENECON",
-        Fems: "Mehr zu FEMS",
+        UI: "Benutzeroberfläche für OpenEMS",
+        Developed: "Diese Benutzeroberfläche wird als Open-Source-Software entwickelt.",
         OpenEMS: "Mehr zu OpenEMS",
         CurrentDevelopments: "Aktuelle Entwicklungen",
         Build: "Dieser Build",
+<<<<<<< HEAD
         Contact: "Für Rückfragen und Anregungen zum System, wenden Sie sich bitte an unseren zuständigen Entwickler unter <a href=\"mailto:{{value}}\">{{value}}</a>.", // value = Mail from FEMS-Team
+=======
+        Contact: "Für Rückfragen und Anregungen zum System, wenden Sie sich bitte an unser Team unter <a href=\"mailto:{{value}}\">{{value}}</a>.",
+>>>>>>> develop
         Language: "Sprache wählen:"
     },
     Notifications: {
