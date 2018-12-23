@@ -1,21 +1,9 @@
-<!-- <div fxLayout fxLayoutAlign="start start" fxLayout="row wrap"> -->
-
-<!--<mat-card fxFlex="100%" class="single_leftright single_top">
-  </mat-card>-->
-
 <ng-container *ngIf="currentData && config">
   <ng-container *ngFor="let thing of config.evcsDevices">
-    <!-- <mat-card class="single" fxFlex="100%"> -->
     <ion-card>
-      <!-- <mat-card-header>
-          <img src="assets/img/evcs.png" mat-card-avatar/>
-          <mat-card-title translate>Edge.Index.Widgets.EVCS.ChargingStation</mat-card-title>
-          <mat-card-subtitle>{{ thing }}</mat-card-subtitle>
-        </mat-card-header> -->
       <ion-item>
         <ion-img style="width:40px" src="assets/img/evcs.png"></ion-img>
         <ion-label translate>Edge.Index.Widgets.EVCS.ChargingStation<br>{{thing}}</ion-label>
-        <!-- <ion-label>{{thing}}</ion-label> -->
       </ion-item>
       <ion-card-content *ngIf="currentData.data[thing] as data">
         <table class="full_width">
@@ -92,7 +80,5 @@
         </table>
       </ion-card-content>
     </ion-card>
-    <!-- </mat-card> -->
   </ng-container>
 </ng-container>
-<!-- </div> -->
