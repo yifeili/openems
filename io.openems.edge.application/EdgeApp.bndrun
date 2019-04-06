@@ -52,6 +52,7 @@
 	bnd.identity;id='io.openems.edge.controller.symmetric.randompower',\
 	bnd.identity;id='io.openems.edge.controller.symmetric.reactivepowervoltagecharacteristic',\
 	bnd.identity;id='io.openems.edge.core',\
+	bnd.identity;id='io.openems.edge.demo.arduino',\
 	bnd.identity;id='io.openems.edge.ess.cluster',\
 	bnd.identity;id='io.openems.edge.ess.core',\
 	bnd.identity;id='io.openems.edge.ess.fenecon.commercial40',\
@@ -168,4 +169,5 @@
 	com.fazecast.jSerialComm;version='[2.2.2,2.2.3)',\
 	com.ghgande.j2mod;version='[2.5.2,2.5.3)',\
 	com.google.guava;version='[27.1.0,27.1.1)',\
-	io.openems.edge.controller.ess.acisland;version=snapshot
+	io.openems.edge.controller.ess.acisland;version=snapshot,\
+	io.openems.edge.demo.arduino;version=snapshot

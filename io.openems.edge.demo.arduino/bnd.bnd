@@ -1,0 +1,19 @@
+Bundle-Name: OpenEMS Edge Demo Arduino
+Bundle-Vendor: FENECON GmbH
+Bundle-License: https://opensource.org/licenses/EPL-2.0
+Bundle-Version: 1.0.0.${tstamp}
+Private-Package: io.openems.edge.demo.arduino
+
+-includeresource: {readme.md}
+
+-buildpath: \
+	${buildpath},\
+	io.openems.common;version=latest,\
+	io.openems.edge.common;version=latest,\
+	slf4j.api,\
+	com.fazecast.jSerialComm
+
+-testpath: ${testpath}
+
+javac.source: 1.8
+javac.target: 1.8
