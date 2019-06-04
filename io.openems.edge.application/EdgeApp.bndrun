@@ -75,6 +75,7 @@
 	bnd.identity;id='io.openems.edge.meter.carlo.gavazzi.em300',\
 	bnd.identity;id='io.openems.edge.meter.janitza.umg96rme',\
 	bnd.identity;id='io.openems.edge.meter.microcare.sdm630',\
+	bnd.identity;id='io.openems.edge.meter.pqplus.umd97',\
 	bnd.identity;id='io.openems.edge.meter.socomec',\
 	bnd.identity;id='io.openems.edge.meter.virtual',\
 	bnd.identity;id='io.openems.edge.meter.weidmueller',\
@@ -178,4 +179,5 @@
 	io.openems.edge.meter.artemes.am2;version=snapshot,\
 	io.openems.edge.ess.byd.container;version=snapshot,\
 	io.openems.wrapper.fastexcel;version=snapshot,\
-	io.openems.wrapper.opczip;version=snapshot
+	io.openems.wrapper.opczip;version=snapshot,\
+	io.openems.edge.meter.pqplus.umd97;version=snapshot
