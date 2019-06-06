@@ -1596,4 +1596,8 @@ public class EssFeneconCommercial40Impl extends AbstractOpenemsModbusComponent i
 		);
 	}
 
+	public SystemState getSystemState() {
+		return this.channel(ChannelId.SYSTEM_STATE).value().asEnum();
+	}
+
 }

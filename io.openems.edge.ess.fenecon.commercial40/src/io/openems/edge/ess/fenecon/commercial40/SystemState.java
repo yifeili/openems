@@ -4,7 +4,7 @@ import io.openems.common.types.OptionsEnum;
 
 public enum SystemState implements OptionsEnum {
 	UNDEFINED(-1, "Undefined"), //
-	STARTING(2, "Stop"), //
+	STOP(2, "Stop"), //
 	PV_CHARGE(4, "PV-Charge"), //
 	STANDBY(8, "Standby"), //
 	START(16, "Start"), //
