@@ -41,8 +41,6 @@ import io.openems.edge.ess.power.api.Relationship;
 @Component(name = "Project.Sambia.Controller.TimelineCharge", immediate = true, configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class TimelineChargeController extends AbstractOpenemsComponent implements Controller, OpenemsComponent {
 
-	public final static double DEFAULT_MAX_ADJUSTMENT_RATE = 0.2;
-
 	private final Logger log = LoggerFactory.getLogger(TimelineChargeController.class);
 
 	public enum ChannelId implements io.openems.edge.common.channel.ChannelId {
@@ -83,65 +81,6 @@ public class TimelineChargeController extends AbstractOpenemsComponent implement
 		super.deactivate();
 	}
 
-//	@Override
-//	public void run() throws OpenemsNamedException {
-//		ManagedSymmetricEss ess = this.componentManager.getComponent(this.config.ess_id());
-//		SymmetricMeter meter = this.componentManager.getComponent(this.config.meter_id());
-//
-//		/*
-//		 * Check that we are On-Grid (and warn on undefined Grid-Mode)
-//		 */
-//		GridMode gridMode = ess.getGridMode().value().asEnum();
-//		if (gridMode.isUndefined()) {
-//			this.logWarn(this.log, "Grid-Mode is [UNDEFINED]");
-//		}
-//		switch (gridMode) {
-//		case ON_GRID:
-//		case UNDEFINED:
-//			break;
-//		case OFF_GRID:
-//			return;
-//		}
-//
-//		/*
-//		 * Calculates required charge/discharge power
-//		 */
-//		int calculatedPower = this.calculateRequiredPower(ess, meter);
-//
-//		if (Math.abs(this.lastSetActivePower) > 100 && Math.abs(calculatedPower) > 100
-//				&& Math.abs(this.lastSetActivePower - calculatedPower) > (Math.abs(this.lastSetActivePower)
-//						* this.config.maxPowerAdjustmentRate())) {
-//			if (this.lastSetActivePower > calculatedPower) {
-//				int newPower = this.lastSetActivePower
-//						- (int) Math.abs(this.lastSetActivePower * this.config.maxPowerAdjustmentRate());
-//				this.logInfo(log, "Adjust [-] Last [" + this.lastSetActivePower + "] Calculated [" + calculatedPower
-//						+ "] Corrected to [" + newPower + "]");
-//				calculatedPower = newPower;
-//			} else {
-//				int newPower = this.lastSetActivePower
-//						+ (int) Math.abs(this.lastSetActivePower * this.config.maxPowerAdjustmentRate());
-//				this.logInfo(log, "Adjust [+] Last [" + this.lastSetActivePower + "] Calculated [" + calculatedPower
-//						+ "] Corrected to [" + newPower + "]");
-//				calculatedPower = newPower;
-//			}
-//		}
-//
-//		// adjust value so that it fits into Min/MaxActivePower
-//		calculatedPower = ess.getPower().fitValueIntoMinMaxPower(ess, Phase.ALL, Pwr.ACTIVE, calculatedPower);
-//
-//		// store lastSetActivePower
-//		this.lastSetActivePower = calculatedPower;
-//
-//		/*
-//		 * set result
-//		 */
-//		ess.getSetActivePowerEquals().setNextWriteValue(calculatedPower);
-//		ess.getSetReactivePowerEquals().setNextWriteValue(0);
-//	}
-
-	/*
-	 * Fields
-	 */
 	private AvgFiFoQueue floatingChargerPower = new AvgFiFoQueue(10, 1);
 	private State currentState = State.NORMAL;
 
@@ -165,7 +104,14 @@ public class TimelineChargeController extends AbstractOpenemsComponent implement
 		GridMode gridMode = ess.getGridMode().value().asEnum();
 
 		// start controller logic
-		if (!gridMode.equals(GridMode.ON_GRID)) {
+		if (gridMode.isUndefined()) {
+			this.logWarn(this.log, "Grid-Mode is [UNDEFINED]");
+		}
+		switch (gridMode) {
+		case ON_GRID:
+		case UNDEFINED:
+			break;
+		case OFF_GRID:
 			this.logInfo(this.log, "Doing nothing... Off-Grid");
 			return;
 		}
@@ -202,9 +148,6 @@ public class TimelineChargeController extends AbstractOpenemsComponent implement
 		if (requiredTimeGrid > 60 * 60 * 24) {
 			requiredTimeGrid = 60 * 60 * 24;
 		}
-
-		this.logInfo(this.log,
-				"RequiredTimeCharger: " + requiredTimeCharger + ", RequiredTimeGrid: " + requiredTimeGrid);
 
 		if (floatingChargerPower.avg() >= 1000
 				&& !LocalDateTime.now().plusSeconds(requiredTimeCharger).isBefore(socPoint.getTime())

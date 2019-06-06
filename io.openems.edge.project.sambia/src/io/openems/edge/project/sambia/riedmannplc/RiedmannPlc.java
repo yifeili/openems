@@ -22,6 +22,8 @@ import io.openems.edge.bridge.modbus.api.element.SignedWordElement;
 import io.openems.edge.bridge.modbus.api.task.FC16WriteRegistersTask;
 import io.openems.edge.bridge.modbus.api.task.FC3ReadRegistersTask;
 import io.openems.edge.common.channel.Doc;
+import io.openems.edge.common.channel.IntegerWriteChannel;
+import io.openems.edge.common.channel.IntegerDoc;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.taskmanager.Priority;
 
@@ -56,67 +58,92 @@ public class RiedmannPlc extends AbstractOpenemsModbusComponent implements Opene
 	}
 
 	public enum ChannelId implements io.openems.edge.common.channel.ChannelId {
-		SET_PIVOT_ON(Doc.of(OpenemsType.INTEGER) //
-				.accessMode(AccessMode.WRITE_ONLY)), //
-		SET_BOREHOLE1_ON(Doc.of(OpenemsType.INTEGER) //
-				.accessMode(AccessMode.WRITE_ONLY)), //
-		SET_BOREHOLE2_ON(Doc.of(OpenemsType.INTEGER) //
-				.accessMode(AccessMode.WRITE_ONLY)), //
-		SET_BOREHOLE3_ON(Doc.of(OpenemsType.INTEGER) //
-				.accessMode(AccessMode.WRITE_ONLY)), //
-		SET_CLIMA1_ON(Doc.of(OpenemsType.INTEGER) //
-				.accessMode(AccessMode.WRITE_ONLY)), //
-		SET_CLIMA2_ON(Doc.of(OpenemsType.INTEGER) //
-				.accessMode(AccessMode.WRITE_ONLY)), //
-		SET_OFFICE_ON(Doc.of(OpenemsType.INTEGER) //
-				.accessMode(AccessMode.WRITE_ONLY)), //
-		SET_TRAINEE_CENTER_ON(Doc.of(OpenemsType.INTEGER) //
-				.accessMode(AccessMode.WRITE_ONLY)), //
-		SIGNAL_BUS1_ON(Doc.of(OpenemsType.INTEGER) //
-				.accessMode(AccessMode.WRITE_ONLY)), //
-		SIGNAL_BUS2_ON(Doc.of(OpenemsType.INTEGER) //
-				.accessMode(AccessMode.WRITE_ONLY)), //
-		SIGNAL_GRID_ON(Doc.of(OpenemsType.INTEGER) //
-				.accessMode(AccessMode.WRITE_ONLY)), //
-		SIGNAL_SYSTEM_STOP(Doc.of(OpenemsType.INTEGER) //
-				.accessMode(AccessMode.WRITE_ONLY)), //
-		SIGNAL_WATCHDOG(Doc.of(OpenemsType.INTEGER) //
-				.accessMode(AccessMode.WRITE_ONLY)), //
+		DEBUG_PIVOT_ON(Doc.of(OpenemsType.INTEGER)), //
+		PIVOT_ON(new IntegerDoc() //
+				.accessMode(AccessMode.READ_WRITE) //
+				.onInit(new IntegerWriteChannel.MirrorToDebugChannel(ChannelId.DEBUG_PIVOT_ON))),
+		DEBUG_BOREHOLE1_ON(Doc.of(OpenemsType.INTEGER)), //
+		BOREHOLE1_ON(new IntegerDoc() //
+				.accessMode(AccessMode.READ_WRITE) //
+				.onInit(new IntegerWriteChannel.MirrorToDebugChannel(ChannelId.DEBUG_BOREHOLE1_ON))),
+		DEBUG_BOREHOLE2_ON(Doc.of(OpenemsType.INTEGER)), //
+		BOREHOLE2_ON(new IntegerDoc() //
+				.accessMode(AccessMode.READ_WRITE) //
+				.onInit(new IntegerWriteChannel.MirrorToDebugChannel(ChannelId.DEBUG_BOREHOLE2_ON))),
+		DEBUG_BOREHOLE3_ON(Doc.of(OpenemsType.INTEGER)), //
+		BOREHOLE3_ON(new IntegerDoc() //
+				.accessMode(AccessMode.READ_WRITE) //
+				.onInit(new IntegerWriteChannel.MirrorToDebugChannel(ChannelId.DEBUG_BOREHOLE3_ON))),
+		DEBUG_CLIMA1_ON(Doc.of(OpenemsType.INTEGER)), //
+		CLIMA1_ON(new IntegerDoc() //
+				.accessMode(AccessMode.READ_WRITE) //
+				.onInit(new IntegerWriteChannel.MirrorToDebugChannel(ChannelId.DEBUG_CLIMA1_ON))),
+		DEBUG_CLIMA2_ON(Doc.of(OpenemsType.INTEGER)), //
+		CLIMA2_ON(new IntegerDoc() //
+				.accessMode(AccessMode.READ_WRITE) //
+				.onInit(new IntegerWriteChannel.MirrorToDebugChannel(ChannelId.DEBUG_CLIMA2_ON))),
+		DEBUG_OFFICE_ON(Doc.of(OpenemsType.INTEGER)), //
+		OFFICE_ON(new IntegerDoc() //
+				.accessMode(AccessMode.READ_WRITE) //
+				.onInit(new IntegerWriteChannel.MirrorToDebugChannel(ChannelId.DEBUG_OFFICE_ON))),
+		DEBUG_TRAINEE_CENTER_ON(Doc.of(OpenemsType.INTEGER)), //
+		TRAINEE_CENTER_ON(new IntegerDoc() //
+				.accessMode(AccessMode.READ_WRITE) //
+				.onInit(new IntegerWriteChannel.MirrorToDebugChannel(ChannelId.DEBUG_TRAINEE_CENTER_ON))),
 
-		SET_WATERLEVEL_BOREHOLE1_ON(Doc.of(OpenemsType.INTEGER) //
-				.accessMode(AccessMode.WRITE_ONLY)), //
-		SET_WATERLEVEL_BOREHOLE1_OFF(Doc.of(OpenemsType.INTEGER) //
-				.accessMode(AccessMode.WRITE_ONLY)), //
-		SET_WATERLEVEL_BOREHOLE2_ON(Doc.of(OpenemsType.INTEGER) //
-				.accessMode(AccessMode.WRITE_ONLY)), //
-		SET_WATERLEVEL_BOREHOLE2_OFF(Doc.of(OpenemsType.INTEGER) //
-				.accessMode(AccessMode.WRITE_ONLY)), //
-		SET_WATERLEVEL_BOREHOLE3_ON(Doc.of(OpenemsType.INTEGER) //
-				.accessMode(AccessMode.WRITE_ONLY)), //
-		SET_WATERLEVEL_BOREHOLE3_OFF(Doc.of(OpenemsType.INTEGER) //
-				.accessMode(AccessMode.WRITE_ONLY)), //
+		DEBUG_SIGNAL_BUS1_ON(Doc.of(OpenemsType.INTEGER)), //
+		SIGNAL_BUS1_ON(new IntegerDoc() //
+				.accessMode(AccessMode.WRITE_ONLY) //
+				.onInit(new IntegerWriteChannel.MirrorToDebugChannel(ChannelId.DEBUG_SIGNAL_BUS1_ON))),
+		DEBUG_SIGNAL_BUS2_ON(Doc.of(OpenemsType.INTEGER)), //
+		SIGNAL_BUS2_ON(new IntegerDoc() //
+				.accessMode(AccessMode.WRITE_ONLY) //
+				.onInit(new IntegerWriteChannel.MirrorToDebugChannel(ChannelId.DEBUG_SIGNAL_BUS2_ON))),
+		DEBUG_SIGNAL_GRID_ON(Doc.of(OpenemsType.INTEGER)), //
+		SIGNAL_GRID_ON(new IntegerDoc() //
+				.accessMode(AccessMode.WRITE_ONLY) //
+				.onInit(new IntegerWriteChannel.MirrorToDebugChannel(ChannelId.DEBUG_SIGNAL_GRID_ON))),
+		DEBUG_SIGNAL_SYSTEM_STOP(Doc.of(OpenemsType.INTEGER)), //
+		SIGNAL_SYSTEM_STOP(new IntegerDoc() //
+				.accessMode(AccessMode.WRITE_ONLY) //
+				.onInit(new IntegerWriteChannel.MirrorToDebugChannel(ChannelId.DEBUG_SIGNAL_SYSTEM_STOP))),
+		DEBUG_SIGNAL_WATCHDOG(Doc.of(OpenemsType.INTEGER)), //
+		SIGNAL_WATCHDOG(new IntegerDoc() //
+				.accessMode(AccessMode.WRITE_ONLY) //
+				.onInit(new IntegerWriteChannel.MirrorToDebugChannel(ChannelId.DEBUG_SIGNAL_WATCHDOG))),
+
+		DEBUG_WATERLEVEL_BOREHOLE1_ON(Doc.of(OpenemsType.INTEGER)), //
+		WATERLEVEL_BOREHOLE1_ON(new IntegerDoc() //
+				.accessMode(AccessMode.READ_WRITE) //
+				.onInit(new IntegerWriteChannel.MirrorToDebugChannel(ChannelId.DEBUG_WATERLEVEL_BOREHOLE1_ON))),
+		DEBUG_WATERLEVEL_BOREHOLE1_OFF(Doc.of(OpenemsType.INTEGER)), //
+		WATERLEVEL_BOREHOLE1_OFF(new IntegerDoc() //
+				.accessMode(AccessMode.READ_WRITE) //
+				.onInit(new IntegerWriteChannel.MirrorToDebugChannel(ChannelId.DEBUG_WATERLEVEL_BOREHOLE1_OFF))),
+		DEBUG_WATERLEVEL_BOREHOLE2_ON(Doc.of(OpenemsType.INTEGER)), //
+		WATERLEVEL_BOREHOLE2_ON(new IntegerDoc() //
+				.accessMode(AccessMode.READ_WRITE) //
+				.onInit(new IntegerWriteChannel.MirrorToDebugChannel(ChannelId.DEBUG_WATERLEVEL_BOREHOLE2_ON))),
+		DEBUG_WATERLEVEL_BOREHOLE2_OFF(Doc.of(OpenemsType.INTEGER)), //
+		WATERLEVEL_BOREHOLE2_OFF(new IntegerDoc() //
+				.accessMode(AccessMode.READ_WRITE) //
+				.onInit(new IntegerWriteChannel.MirrorToDebugChannel(ChannelId.DEBUG_WATERLEVEL_BOREHOLE2_OFF))),
+		DEBUG_WATERLEVEL_BOREHOLE3_ON(Doc.of(OpenemsType.INTEGER)), //
+		WATERLEVEL_BOREHOLE3_ON(new IntegerDoc() //
+				.accessMode(AccessMode.READ_WRITE) //
+				.onInit(new IntegerWriteChannel.MirrorToDebugChannel(ChannelId.DEBUG_WATERLEVEL_BOREHOLE3_ON))),
+		DEBUG_WATERLEVEL_BOREHOLE3_OFF(Doc.of(OpenemsType.INTEGER)), //
+		WATERLEVEL_BOREHOLE3_OFF(new IntegerDoc() //
+				.accessMode(AccessMode.READ_WRITE) //
+				.onInit(new IntegerWriteChannel.MirrorToDebugChannel(ChannelId.DEBUG_WATERLEVEL_BOREHOLE3_OFF))),
 
 		WATERLEVEL(Doc.of(OpenemsType.INTEGER)), //
-		GET_PIVOT_ON(Doc.of(OpenemsType.INTEGER)), //
-		GET_BOREHOLE1_ON(Doc.of(OpenemsType.INTEGER)), //
-		GET_BOREHOLE2_ON(Doc.of(OpenemsType.INTEGER)), //
-		GET_BOREHOLE3_ON(Doc.of(OpenemsType.INTEGER)), //
-		GET_CLIMA1_ON(Doc.of(OpenemsType.INTEGER)), //
-		GET_CLIMA2_ON(Doc.of(OpenemsType.INTEGER)), //
-		GET_OFFICE_ON(Doc.of(OpenemsType.INTEGER)), //
-		GET_TRAINEE_CENTER_ON(Doc.of(OpenemsType.INTEGER)), //
 		AUTOMATIC_MODE(Doc.of(OpenemsType.INTEGER)), //
 		MANUAL_MODE(Doc.of(OpenemsType.INTEGER)), //
 		EMERGENCY_STOP(Doc.of(OpenemsType.INTEGER)), //
 		SWITCH_STATE_PIVOT_PUMP(Doc.of(OpenemsType.INTEGER)), //
 		SWITCH_STATE_PIVOT_DRIVE(Doc.of(OpenemsType.INTEGER)), //
-		ERROR(Doc.of(OpenemsType.INTEGER)), //
-		GET_WATER_LEVEL_BOREHOLE1_ON(Doc.of(OpenemsType.INTEGER)), //
-		GET_WATER_LEVEL_BOREHOLE1_OFF(Doc.of(OpenemsType.INTEGER)), //
-		GET_WATER_LEVEL_BOREHOLE2_ON(Doc.of(OpenemsType.INTEGER)), //
-		GET_WATER_LEVEL_BOREHOLE2_OFF(Doc.of(OpenemsType.INTEGER)), //
-		GET_WATER_LEVEL_BOREHOLE3_ON(Doc.of(OpenemsType.INTEGER)), //
-		GET_WATER_LEVEL_BOREHOLE3_OFF(Doc.of(OpenemsType.INTEGER)), //
+		ERROR(Doc.of(OpenemsType.INTEGER)) //
 		;
 		private final Doc doc;
 
@@ -133,14 +160,14 @@ public class RiedmannPlc extends AbstractOpenemsModbusComponent implements Opene
 	protected ModbusProtocol defineModbusProtocol() {
 		return new ModbusProtocol(this, //
 				new FC16WriteRegistersTask(0, //
-						m(ChannelId.SET_PIVOT_ON, new SignedWordElement(0)), //
-						m(ChannelId.SET_BOREHOLE1_ON, new SignedWordElement(1)), //
-						m(ChannelId.SET_BOREHOLE2_ON, new SignedWordElement(2)), //
-						m(ChannelId.SET_BOREHOLE3_ON, new SignedWordElement(3)), //
-						m(ChannelId.SET_CLIMA1_ON, new SignedWordElement(4)), //
-						m(ChannelId.SET_CLIMA2_ON, new SignedWordElement(5)), //
-						m(ChannelId.SET_OFFICE_ON, new SignedWordElement(6)), //
-						m(ChannelId.SET_TRAINEE_CENTER_ON, new SignedWordElement(7)), //
+						m(ChannelId.PIVOT_ON, new SignedWordElement(0)), //
+						m(ChannelId.BOREHOLE1_ON, new SignedWordElement(1)), //
+						m(ChannelId.BOREHOLE2_ON, new SignedWordElement(2)), //
+						m(ChannelId.BOREHOLE3_ON, new SignedWordElement(3)), //
+						m(ChannelId.CLIMA1_ON, new SignedWordElement(4)), //
+						m(ChannelId.CLIMA2_ON, new SignedWordElement(5)), //
+						m(ChannelId.OFFICE_ON, new SignedWordElement(6)), //
+						m(ChannelId.TRAINEE_CENTER_ON, new SignedWordElement(7)), //
 						m(ChannelId.SIGNAL_BUS1_ON, new SignedWordElement(8)), //
 						m(ChannelId.SIGNAL_BUS2_ON, new SignedWordElement(9)), //
 						m(ChannelId.SIGNAL_GRID_ON, new SignedWordElement(10)), //
@@ -148,23 +175,23 @@ public class RiedmannPlc extends AbstractOpenemsModbusComponent implements Opene
 						m(ChannelId.SIGNAL_WATCHDOG, new SignedWordElement(12)) //
 				), //
 				new FC16WriteRegistersTask(20, //
-						m(ChannelId.SET_WATERLEVEL_BOREHOLE1_ON, new SignedWordElement(20)), //
-						m(ChannelId.SET_WATERLEVEL_BOREHOLE1_OFF, new SignedWordElement(21)), //
-						m(ChannelId.SET_WATERLEVEL_BOREHOLE2_ON, new SignedWordElement(22)), //
-						m(ChannelId.SET_WATERLEVEL_BOREHOLE2_OFF, new SignedWordElement(23)), //
-						m(ChannelId.SET_WATERLEVEL_BOREHOLE3_ON, new SignedWordElement(24)), //
-						m(ChannelId.SET_WATERLEVEL_BOREHOLE3_OFF, new SignedWordElement(25)) //
+						m(ChannelId.WATERLEVEL_BOREHOLE1_ON, new SignedWordElement(20)), //
+						m(ChannelId.WATERLEVEL_BOREHOLE1_OFF, new SignedWordElement(21)), //
+						m(ChannelId.WATERLEVEL_BOREHOLE2_ON, new SignedWordElement(22)), //
+						m(ChannelId.WATERLEVEL_BOREHOLE2_OFF, new SignedWordElement(23)), //
+						m(ChannelId.WATERLEVEL_BOREHOLE3_ON, new SignedWordElement(24)), //
+						m(ChannelId.WATERLEVEL_BOREHOLE3_OFF, new SignedWordElement(25)) //
 				), //
 				new FC3ReadRegistersTask(50, Priority.LOW, //
 						m(ChannelId.WATERLEVEL, new SignedWordElement(50)), //
-						m(ChannelId.GET_PIVOT_ON, new SignedWordElement(51)), //
-						m(ChannelId.GET_BOREHOLE1_ON, new SignedWordElement(52)), //
-						m(ChannelId.GET_BOREHOLE2_ON, new SignedWordElement(53)), //
-						m(ChannelId.GET_BOREHOLE3_ON, new SignedWordElement(54)), //
-						m(ChannelId.GET_CLIMA1_ON, new SignedWordElement(55)), //
-						m(ChannelId.GET_CLIMA2_ON, new SignedWordElement(56)), //
-						m(ChannelId.GET_OFFICE_ON, new SignedWordElement(57)), //
-						m(ChannelId.GET_TRAINEE_CENTER_ON, new SignedWordElement(58)), //
+						m(ChannelId.PIVOT_ON, new SignedWordElement(51)), //
+						m(ChannelId.BOREHOLE1_ON, new SignedWordElement(52)), //
+						m(ChannelId.BOREHOLE2_ON, new SignedWordElement(53)), //
+						m(ChannelId.BOREHOLE3_ON, new SignedWordElement(54)), //
+						m(ChannelId.CLIMA1_ON, new SignedWordElement(55)), //
+						m(ChannelId.CLIMA2_ON, new SignedWordElement(56)), //
+						m(ChannelId.OFFICE_ON, new SignedWordElement(57)), //
+						m(ChannelId.TRAINEE_CENTER_ON, new SignedWordElement(58)), //
 						m(ChannelId.AUTOMATIC_MODE, new SignedWordElement(59)), //
 						m(ChannelId.MANUAL_MODE, new SignedWordElement(60)), //
 						m(ChannelId.EMERGENCY_STOP, new SignedWordElement(61)), //
@@ -172,12 +199,12 @@ public class RiedmannPlc extends AbstractOpenemsModbusComponent implements Opene
 						m(ChannelId.SWITCH_STATE_PIVOT_DRIVE, new SignedWordElement(63)), //
 						m(ChannelId.ERROR, new SignedWordElement(64)), //
 						new DummyRegisterElement(65, 69), //
-						m(ChannelId.GET_WATER_LEVEL_BOREHOLE1_ON, new SignedWordElement(70)), //
-						m(ChannelId.GET_WATER_LEVEL_BOREHOLE1_OFF, new SignedWordElement(71)), //
-						m(ChannelId.GET_WATER_LEVEL_BOREHOLE2_ON, new SignedWordElement(72)), //
-						m(ChannelId.GET_WATER_LEVEL_BOREHOLE2_OFF, new SignedWordElement(73)), //
-						m(ChannelId.GET_WATER_LEVEL_BOREHOLE3_ON, new SignedWordElement(74)), //
-						m(ChannelId.GET_WATER_LEVEL_BOREHOLE3_OFF, new SignedWordElement(75)) //
+						m(ChannelId.WATERLEVEL_BOREHOLE1_ON, new SignedWordElement(70)), //
+						m(ChannelId.WATERLEVEL_BOREHOLE1_OFF, new SignedWordElement(71)), //
+						m(ChannelId.WATERLEVEL_BOREHOLE2_ON, new SignedWordElement(72)), //
+						m(ChannelId.WATERLEVEL_BOREHOLE2_OFF, new SignedWordElement(73)), //
+						m(ChannelId.WATERLEVEL_BOREHOLE3_ON, new SignedWordElement(74)), //
+						m(ChannelId.WATERLEVEL_BOREHOLE3_OFF, new SignedWordElement(75)) //
 				));
 	}
 }

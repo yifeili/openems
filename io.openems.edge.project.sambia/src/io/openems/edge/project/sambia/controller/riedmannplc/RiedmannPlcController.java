@@ -1,5 +1,7 @@
 package io.openems.edge.project.sambia.controller.riedmannplc;
 
+import java.util.Optional;
+
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -7,8 +9,11 @@ import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.metatype.annotations.Designate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.openems.common.exceptions.OpenemsError.OpenemsNamedException;
+import io.openems.common.exceptions.OpenemsException;
 import io.openems.edge.common.channel.Doc;
 import io.openems.edge.common.channel.IntegerWriteChannel;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
@@ -22,6 +27,8 @@ import io.openems.edge.project.sambia.riedmannplc.RiedmannPlc;
 @Designate(ocd = Config.class, factory = true)
 @Component(name = "Project.Sambia.Controller.RiedmannPLC", immediate = true, configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class RiedmannPlcController extends AbstractOpenemsComponent implements Controller, OpenemsComponent {
+
+	private final Logger log = LoggerFactory.getLogger(RiedmannPlcController.class);
 
 	public enum ChannelId implements io.openems.edge.common.channel.ChannelId {
 		;
@@ -51,16 +58,6 @@ public class RiedmannPlcController extends AbstractOpenemsComponent implements C
 	private Config config;
 
 	private boolean watchdogState = false;
-	private boolean updateWaterLevelBorehole1On = false;
-	private boolean updateWaterLevelBorehole1Off = false;
-	private boolean updateWaterLevelBorehole2On = false;
-	private boolean updateWaterLevelBorehole2Off = false;
-	private boolean updateWaterLevelBorehole3On = false;
-	private boolean updateWaterLevelBorehole3Off = false;
-	private boolean load1On = true;
-	private boolean load2On = true;
-	private boolean load3On = true;
-	private boolean load4On = true;
 
 	@Activate
 	void activate(ComponentContext context, Config config) {
@@ -77,10 +74,10 @@ public class RiedmannPlcController extends AbstractOpenemsComponent implements C
 	public void run() throws OpenemsNamedException {
 		// Check if all parameters are available
 		SymmetricEss ess = this.componentManager.getComponent(this.config.ess_id());
-		RiedmannPlc sps = this.componentManager.getComponent(this.config.plc_id());
+		RiedmannPlc plc = this.componentManager.getComponent(this.config.plc_id());
 
 		// Watchdog
-		IntegerWriteChannel watchdog = sps.channel(RiedmannPlc.ChannelId.SIGNAL_WATCHDOG);
+		IntegerWriteChannel watchdog = plc.channel(RiedmannPlc.ChannelId.SIGNAL_WATCHDOG);
 		if (this.watchdogState) {
 			watchdog.setNextWriteValue(0);
 			watchdogState = false;
@@ -90,47 +87,14 @@ public class RiedmannPlcController extends AbstractOpenemsComponent implements C
 		}
 
 		// Water level
-		if (this.updateWaterLevelBorehole1Off) {
-			IntegerWriteChannel setWaterLevelBorehole1Off = sps
-					.channel(RiedmannPlc.ChannelId.SET_WATERLEVEL_BOREHOLE1_OFF);
-			setWaterLevelBorehole1Off.setNextWriteValue(this.config.setWaterLevelBorehole1Off());
-			this.updateWaterLevelBorehole1Off = false;
-		}
+		this.setOutput(plc, RiedmannPlc.ChannelId.WATERLEVEL_BOREHOLE1_OFF, this.config.setWaterLevelBorehole1Off());
+		this.setOutput(plc, RiedmannPlc.ChannelId.WATERLEVEL_BOREHOLE1_ON, this.config.setWaterLevelBorehole1On());
 
-		if (this.updateWaterLevelBorehole1On) {
-			IntegerWriteChannel setWaterLevelBorehole1On = sps
-					.channel(RiedmannPlc.ChannelId.SET_WATERLEVEL_BOREHOLE1_ON);
-			setWaterLevelBorehole1On.setNextWriteValue(this.config.setWaterLevelBorehole1On());
-			this.updateWaterLevelBorehole1On = false;
-		}
+		this.setOutput(plc, RiedmannPlc.ChannelId.WATERLEVEL_BOREHOLE2_OFF, this.config.setWaterLevelBorehole2Off());
+		this.setOutput(plc, RiedmannPlc.ChannelId.WATERLEVEL_BOREHOLE2_ON, this.config.setWaterLevelBorehole2On());
 
-		if (this.updateWaterLevelBorehole2Off) {
-			IntegerWriteChannel setWaterLevelBorehole2Off = sps
-					.channel(RiedmannPlc.ChannelId.SET_WATERLEVEL_BOREHOLE2_OFF);
-			setWaterLevelBorehole2Off.setNextWriteValue(this.config.setWaterLevelBorehole2Off());
-			this.updateWaterLevelBorehole2Off = false;
-		}
-
-		if (this.updateWaterLevelBorehole2On) {
-			IntegerWriteChannel setWaterLevelBorehole2On = sps
-					.channel(RiedmannPlc.ChannelId.SET_WATERLEVEL_BOREHOLE2_ON);
-			setWaterLevelBorehole2On.setNextWriteValue(this.config.setWaterLevelBorehole2On());
-			this.updateWaterLevelBorehole2On = false;
-		}
-
-		if (this.updateWaterLevelBorehole3Off) {
-			IntegerWriteChannel setWaterLevelBorehole3Off = sps
-					.channel(RiedmannPlc.ChannelId.SET_WATERLEVEL_BOREHOLE3_OFF);
-			setWaterLevelBorehole3Off.setNextWriteValue(this.config.setWaterLevelBorehole3Off());
-			this.updateWaterLevelBorehole3Off = false;
-		}
-
-		if (this.updateWaterLevelBorehole3On) {
-			IntegerWriteChannel setWaterLevelBorehole3On = sps
-					.channel(RiedmannPlc.ChannelId.SET_WATERLEVEL_BOREHOLE3_ON);
-			setWaterLevelBorehole3On.setNextWriteValue(this.config.setWaterLevelBorehole3On());
-			this.updateWaterLevelBorehole3On = false;
-		}
+		this.setOutput(plc, RiedmannPlc.ChannelId.WATERLEVEL_BOREHOLE3_OFF, this.config.setWaterLevelBorehole3Off());
+		this.setOutput(plc, RiedmannPlc.ChannelId.WATERLEVEL_BOREHOLE3_ON, this.config.setWaterLevelBorehole3On());
 
 		/*
 		 * Load switching
@@ -141,75 +105,58 @@ public class RiedmannPlcController extends AbstractOpenemsComponent implements C
 		// Load1
 		if (essSoc >= this.config.socLoad1Off() + this.config.socHysteresis()
 				|| (gridMode.isUndefined() || gridMode.equals(GridMode.ON_GRID))) {
-			this.load1On = true;
+			this.setOutput(plc, RiedmannPlc.ChannelId.CLIMA1_ON, 1);
+			this.setOutput(plc, RiedmannPlc.ChannelId.CLIMA2_ON, 1);
 		} else if (essSoc <= this.config.socLoad1Off()) {
-			this.load1On = false;
-		}
-		{
-			IntegerWriteChannel setClima1On = sps.channel(RiedmannPlc.ChannelId.SET_CLIMA1_ON);
-			IntegerWriteChannel setClima2On = sps.channel(RiedmannPlc.ChannelId.SET_CLIMA2_ON);
-			if (this.load1On) {
-				setClima1On.setNextWriteValue(1);
-				setClima2On.setNextWriteValue(1);
-			} else {
-				setClima1On.setNextWriteValue(0);
-				setClima2On.setNextWriteValue(0);
-			}
+			this.setOutput(plc, RiedmannPlc.ChannelId.CLIMA1_ON, 0);
+			this.setOutput(plc, RiedmannPlc.ChannelId.CLIMA2_ON, 0);
 		}
 
 		// Load2
 		if (essSoc >= this.config.socLoad2Off() + this.config.socHysteresis()
 				|| (gridMode.isUndefined() || gridMode.equals(GridMode.ON_GRID))) {
-			this.load2On = true;
+			this.setOutput(plc, RiedmannPlc.ChannelId.PIVOT_ON, 1);
 		} else if (essSoc <= this.config.socLoad2Off()) {
-			this.load2On = false;
+			this.setOutput(plc, RiedmannPlc.ChannelId.PIVOT_ON, 0);
 		}
-		{
-			IntegerWriteChannel setPivotOn = sps.channel(RiedmannPlc.ChannelId.SET_PIVOT_ON);
-			if (this.load2On) {
-				setPivotOn.setNextWriteValue(1);
-			} else {
-				setPivotOn.setNextWriteValue(0);
-			}
-		}
+
 		// Load3
 		if (essSoc >= this.config.socLoad3Off() + this.config.socHysteresis()
 				|| (gridMode.isUndefined() || gridMode.equals(GridMode.ON_GRID))) {
-			this.load3On = true;
+			this.setOutput(plc, RiedmannPlc.ChannelId.BOREHOLE1_ON, 1);
+			this.setOutput(plc, RiedmannPlc.ChannelId.BOREHOLE2_ON, 1);
+			this.setOutput(plc, RiedmannPlc.ChannelId.BOREHOLE3_ON, 1);
 		} else if (essSoc <= this.config.socLoad3Off()) {
-			this.load3On = false;
+			this.setOutput(plc, RiedmannPlc.ChannelId.BOREHOLE1_ON, 0);
+			this.setOutput(plc, RiedmannPlc.ChannelId.BOREHOLE2_ON, 0);
+			this.setOutput(plc, RiedmannPlc.ChannelId.BOREHOLE3_ON, 0);
 		}
-		{
-			IntegerWriteChannel setBorehole1On = sps.channel(RiedmannPlc.ChannelId.SET_BOREHOLE1_ON);
-			IntegerWriteChannel setBorehole2On = sps.channel(RiedmannPlc.ChannelId.SET_BOREHOLE2_ON);
-			IntegerWriteChannel setBorehole3On = sps.channel(RiedmannPlc.ChannelId.SET_BOREHOLE3_ON);
-			if (this.load3On) {
-				setBorehole1On.setNextWriteValue(1);
-				setBorehole2On.setNextWriteValue(1);
-				setBorehole3On.setNextWriteValue(1);
-			} else {
-				setBorehole1On.setNextWriteValue(0);
-				setBorehole2On.setNextWriteValue(0);
-				setBorehole3On.setNextWriteValue(0);
-			}
-		}
+
 		// Load4
 		if (essSoc >= this.config.socLoad4Off() + this.config.socHysteresis()
 				|| (gridMode.isUndefined() || gridMode.equals(GridMode.ON_GRID))) {
-			this.load4On = true;
+			this.setOutput(plc, RiedmannPlc.ChannelId.OFFICE_ON, 1);
+			this.setOutput(plc, RiedmannPlc.ChannelId.TRAINEE_CENTER_ON, 1);
 		} else if (essSoc <= this.config.socLoad4Off()) {
-			this.load4On = false;
+			this.setOutput(plc, RiedmannPlc.ChannelId.OFFICE_ON, 0);
+			this.setOutput(plc, RiedmannPlc.ChannelId.TRAINEE_CENTER_ON, 0);
 		}
-		{
-			IntegerWriteChannel setOfficeOn = sps.channel(RiedmannPlc.ChannelId.SET_OFFICE_ON);
-			IntegerWriteChannel setTraineeCenterOn = sps.channel(RiedmannPlc.ChannelId.SET_TRAINEE_CENTER_ON);
-			if (this.load4On) {
-				setOfficeOn.setNextWriteValue(1);
-				setTraineeCenterOn.setNextWriteValue(1);
-			} else {
-				setOfficeOn.setNextWriteValue(0);
-				setTraineeCenterOn.setNextWriteValue(0);
+	}
+
+	/**
+	 * Helper function to switch an output if it was not switched before.
+	 */
+	private void setOutput(RiedmannPlc plc, RiedmannPlc.ChannelId channelId, int value)
+			throws IllegalArgumentException, OpenemsNamedException {
+		try {
+			IntegerWriteChannel outputChannel = plc.channel(channelId);
+			Optional<Integer> currentValueOpt = outputChannel.value().asOptional();
+			if (!currentValueOpt.isPresent() || currentValueOpt.get() != value) {
+				this.logInfo(this.log, "Set output [" + outputChannel.address() + "] value [" + value + "].");
+				outputChannel.setNextWriteValue(value);
 			}
+		} catch (OpenemsException e) {
+			this.logError(this.log, "Unable to set output: [" + channelId.id() + "] " + e.getMessage());
 		}
 	}
 
