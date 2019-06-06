@@ -269,7 +269,7 @@ public class Wago extends AbstractOpenemsModbusComponent implements DigitalOutpu
 		}
 		StringBuilder b = new StringBuilder();
 		for (int i = 0; i < this.modules.size(); i++) {
-			b.append("M" + i + ":");
+			b.append("M" + (i + 1) + ":");
 			BooleanReadChannel[] channels = this.modules.get(i).getChannels();
 			for (int j = 0; j < channels.length; j++) {
 				Optional<Boolean> valueOpt = channels[j].value().asOptional();
