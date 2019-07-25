@@ -1,0 +1,521 @@
+package io.openems.edge.battery.bmw;
+
+
+import java.time.LocalDateTime;
+
+import org.osgi.service.cm.ConfigurationAdmin;
+import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
+import org.osgi.service.event.Event;
+import org.osgi.service.event.EventConstants;
+import org.osgi.service.event.EventHandler;
+import org.osgi.service.metatype.annotations.Designate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.openems.common.channel.AccessMode;
+import io.openems.edge.battery.api.Battery;
+import io.openems.edge.bridge.modbus.api.AbstractOpenemsModbusComponent;
+import io.openems.edge.bridge.modbus.api.BridgeModbus;
+import io.openems.edge.bridge.modbus.api.ElementToChannelConverter;
+import io.openems.edge.bridge.modbus.api.ModbusProtocol;
+import io.openems.edge.bridge.modbus.api.element.BitsWordElement;
+import io.openems.edge.bridge.modbus.api.element.UnsignedDoublewordElement;
+import io.openems.edge.bridge.modbus.api.element.UnsignedWordElement;
+import io.openems.edge.bridge.modbus.api.task.FC16WriteRegistersTask;
+import io.openems.edge.bridge.modbus.api.task.FC4ReadInputRegistersTask;
+import io.openems.edge.common.component.OpenemsComponent;
+import io.openems.edge.common.event.EdgeEventConstants;
+import io.openems.edge.common.modbusslave.ModbusSlave;
+import io.openems.edge.common.modbusslave.ModbusSlaveTable;
+import io.openems.edge.common.taskmanager.Priority;
+
+@Designate(ocd = Config.class, factory = true)
+@Component( //
+		name = "Bms.Bmw.Battery", //
+		immediate = true, //
+		configurationPolicy = ConfigurationPolicy.REQUIRE, //
+		property = EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_AFTER_PROCESS_IMAGE //
+)
+public class BMWBattery extends AbstractOpenemsModbusComponent
+		implements Battery, OpenemsComponent, EventHandler, ModbusSlave { 
+		
+		// , // JsonApi // TODO
+
+	protected static final int SYSTEM_ON = 1;
+	protected final static int SYSTEM_OFF = 0;
+
+	private static final int SECONDS_TOLERANCE_CELL_DRIFT = 15 * 60;
+
+	@Reference
+	protected ConfigurationAdmin cm;
+
+	private final Logger log = LoggerFactory.getLogger(BMWBattery.class);
+	private String modbusBridgeId;
+	private State state = State.UNDEFINED;
+	// if configuring is needed this is used to go through the necessary steps
+	private Config config;
+	// If an error has occurred, this indicates the time when next action could be
+	// done
+	private LocalDateTime errorDelayIsOver = null;
+	private int unsuccessfulStarts = 0;
+	private LocalDateTime startAttemptTime = null;
+		
+	private LocalDateTime handleOneCellDriftHandlingStarted = null;
+	private int handleOneCellDriftHandlingCounter = 0;
+
+	private LocalDateTime pendingTimestamp;
+
+	public BMWBattery() {
+		super(//
+				OpenemsComponent.ChannelId.values(), //
+				Battery.ChannelId.values(), //
+				BMWChannelId.values() //
+		);
+	}
+
+	@Reference(policy = ReferencePolicy.STATIC, policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
+	protected void setModbus(BridgeModbus modbus) {
+		super.setModbus(modbus);
+	}
+
+	@Activate
+	void activate(ComponentContext context, Config config) {
+		this.config = config;
+
+		// adds dynamically created channels and save them into a map to access them
+		// when modbus tasks are created
+
+		super.activate(context, config.id(), config.alias(), config.enabled(), config.modbusUnitId(), this.cm, "Modbus",
+				config.modbus_id());
+		this.modbusBridgeId = config.modbus_id();
+		initializeCallbacks();
+
+	}
+
+
+	private void handleStateMachine() {
+		log.info("BMWBattery.handleStateMachine(): State: " + this.getStateMachineState());
+		boolean readyForWorking = false;
+		switch (this.getStateMachineState()) {
+		case ERROR:
+			if (handleOneCellDriftHandlingCounter > 5) {
+				// this cell drift error seems to be not removable
+				// systems remains in error state, can only be  removed by restarting component
+			}	else {	
+				stopSystem();
+				errorDelayIsOver = LocalDateTime.now().plusSeconds(config.errorDelay());
+				setStateMachineState(State.ERRORDELAY);
+			}
+			break;
+
+		case ERRORDELAY:
+			if (LocalDateTime.now().isAfter(errorDelayIsOver)) {
+				errorDelayIsOver = null;
+				if (this.isError()) {
+					this.setStateMachineState(State.ERROR);
+				} else {
+					this.setStateMachineState(State.OFF);
+				}
+			}
+			break;
+		case INIT:
+			if (this.isSystemRunning()) {
+				this.setStateMachineState(State.RUNNING);
+				unsuccessfulStarts = 0;
+				startAttemptTime = null;
+			} else {
+				if (startAttemptTime.plusSeconds(config.maxStartTime()).isBefore(LocalDateTime.now())) {
+					startAttemptTime = null;
+					unsuccessfulStarts++;
+					this.stopSystem();
+					this.setStateMachineState(State.STOPPING);
+					if (unsuccessfulStarts >= config.maxStartAppempts()) {
+						errorDelayIsOver = LocalDateTime.now().plusSeconds(config.startUnsuccessfulDelay());
+						this.setStateMachineState(State.ERRORDELAY);
+						unsuccessfulStarts = 0;
+					}
+				}
+			}
+			break;
+		case OFF:
+			log.debug("in case 'OFF'; try to start the system");
+			this.startSystem();
+			log.debug("set state to 'INIT'");
+			this.setStateMachineState(State.INIT);
+			startAttemptTime = LocalDateTime.now();
+			break;
+		case RUNNING:
+
+			if ( // if it has run 15 minutes in normal mode, reset timer and counter
+				this.handleOneCellDriftHandlingStarted != null && // 
+				this.handleOneCellDriftHandlingStarted.plusSeconds(SECONDS_TOLERANCE_CELL_DRIFT).isBefore(LocalDateTime.now()) //
+			) { //
+				this.handleOneCellDriftHandlingStarted = null;
+				this.handleOneCellDriftHandlingCounter = 0;
+			}
+
+			if (this.isError()) {
+				this.setStateMachineState(State.ERROR);
+			} else if (!this.isSystemRunning()) {
+				this.setStateMachineState(State.UNDEFINED);
+			} else {
+				this.setStateMachineState(State.RUNNING);
+				readyForWorking = true;
+			}
+			break;
+		case STOPPING:
+			if (this.isError()) {
+				this.setStateMachineState(State.ERROR);
+			} else {
+				if (this.isSystemStopped()) {
+					this.setStateMachineState(State.OFF);
+				}
+			}
+			break;
+		case UNDEFINED:
+			if (this.isError()) {
+				this.setStateMachineState(State.ERROR);
+			} else if (this.isSystemStopped()) {
+				this.setStateMachineState(State.OFF);
+			} else if (this.isSystemRunning()) {
+				this.setStateMachineState(State.RUNNING);
+			} else if (this.isSystemStatePending()) {
+				this.setStateMachineState(State.PENDING);
+			}
+			break;
+		case PENDING:
+			if (this.pendingTimestamp == null) {
+				this.pendingTimestamp = LocalDateTime.now();
+			}
+			if (this.pendingTimestamp.plusSeconds(this.config.pendingTolerance()).isBefore(LocalDateTime.now())) {
+				// System state could not be determined, stop and start it
+				this.pendingTimestamp = null;
+				this.stopSystem();
+				this.setStateMachineState(State.OFF);
+			} else {
+				if (this.isError()) {
+					this.setStateMachineState(State.ERROR);
+					this.pendingTimestamp = null;
+				} else if (this.isSystemStopped()) {
+					this.setStateMachineState(State.OFF);
+					this.pendingTimestamp = null;
+				} else if (this.isSystemRunning()) {
+					this.setStateMachineState(State.RUNNING);
+					this.pendingTimestamp = null;
+				}
+			}
+			break;
+		case STANDBY:
+			break;		
+		}
+
+		this.getReadyForWorking().setNextValue(readyForWorking);
+	}
+
+
+//	private void resetSystem() {
+//
+//		
+//		
+//		IntegerWriteChannel resetChannel = this.channel(BMWChannelId.SYSTEM_RESET);
+//		try {
+//			resetChannel.setNextWriteValue(SYSTEM_RESET);
+//		} catch (OpenemsNamedException e) {
+//			System.out.println("Error while trying to reset the system!");
+//		}
+//	}
+
+
+	@Deactivate
+	protected void deactivate() {
+		super.deactivate();
+	}
+
+	private void initializeCallbacks() {
+
+//		this.channel(BMWChannelId.CLUSTER_1_VOLTAGE).onChange(value -> {
+//			@SuppressWarnings("unchecked")
+//			Optional<Integer> vOpt = (Optional<Integer>) value.asOptional();
+//			if (!vOpt.isPresent()) {
+//				return;
+//			}
+//			int voltage_volt = (int) (vOpt.get() * 0.001);
+//			log.debug("callback voltage, value: " + voltage_volt);
+//			this.channel(Battery.ChannelId.VOLTAGE).setNextValue(voltage_volt);
+//		});
+//
+//		this.channel(BMWChannelId.CLUSTER_1_MIN_CELL_VOLTAGE).onChange(value -> {
+//			@SuppressWarnings("unchecked")
+//			Optional<Integer> vOpt = (Optional<Integer>) value.asOptional();
+//			if (!vOpt.isPresent()) {
+//				return;
+//			}
+//			int voltage_millivolt = vOpt.get();
+//			log.debug("callback min cell voltage, value: " + voltage_millivolt);
+//			this.channel(Battery.ChannelId.MIN_CELL_VOLTAGE).setNextValue(voltage_millivolt);
+//		});
+//
+//		// write battery ranges to according channels in battery api
+//		// MAX_VOLTAGE x2082
+//		this.channel(BMWChannelId.WARN_PARAMETER_SYSTEM_OVER_VOLTAGE_ALARM).onChange(value -> {
+//			@SuppressWarnings("unchecked")
+//			Optional<Integer> vOpt = (Optional<Integer>) value.asOptional();
+//			if (!vOpt.isPresent()) {
+//				return;
+//			}
+//			int max_charge_voltage = (int) (vOpt.get() * 0.001);
+//			log.debug("callback battery range, max charge voltage, value: " + max_charge_voltage);
+//			this.channel(Battery.ChannelId.CHARGE_MAX_VOLTAGE).setNextValue(max_charge_voltage);
+//		});
+//
+//		// DISCHARGE_MIN_VOLTAGE 0x2088
+//		this.channel(BMWChannelId.WARN_PARAMETER_SYSTEM_UNDER_VOLTAGE_ALARM).onChange(value -> {
+//			@SuppressWarnings("unchecked")
+//			Optional<Integer> vOpt = (Optional<Integer>) value.asOptional();
+//			if (!vOpt.isPresent()) {
+//				return;
+//			}
+//			int min_discharge_voltage = (int) (vOpt.get() * 0.001);
+//			log.debug("callback battery range, min discharge voltage, value: " + min_discharge_voltage);
+//			this.channel(Battery.ChannelId.DISCHARGE_MIN_VOLTAGE).setNextValue(min_discharge_voltage);
+//		});
+//
+//		// CHARGE_MAX_CURRENT 0x2160
+//		this.channel(BMWChannelId.SYSTEM_MAX_CHARGE_CURRENT).onChange(value -> {
+//			@SuppressWarnings("unchecked")
+//			Optional<Integer> cOpt = (Optional<Integer>) value.asOptional();
+//			if (!cOpt.isPresent()) {
+//				return;
+//			}
+//			int max_current = (int) (cOpt.get() * 0.001);
+//			log.debug("callback battery range, max charge current, value: " + max_current);
+//			this.channel(Battery.ChannelId.CHARGE_MAX_CURRENT).setNextValue(max_current);
+//		});
+//
+//		// DISCHARGE_MAX_CURRENT 0x2161
+//		this.channel(BMWChannelId.SYSTEM_MAX_DISCHARGE_CURRENT).onChange(value -> {
+//			@SuppressWarnings("unchecked")
+//			Optional<Integer> cOpt = (Optional<Integer>) value.asOptional();
+//			if (!cOpt.isPresent()) {
+//				return;
+//			}
+//			int max_current = (int) (cOpt.get() * 0.001);
+//			log.debug("callback battery range, max discharge current, value: " + max_current);
+//			this.channel(Battery.ChannelId.DISCHARGE_MAX_CURRENT).setNextValue(max_current);
+//		});
+
+	}
+
+	@Override
+	public void handleEvent(Event event) {
+		if (!this.isEnabled()) {
+			return;
+		}
+		switch (event.getTopic()) {
+
+		case EdgeEventConstants.TOPIC_CYCLE_AFTER_PROCESS_IMAGE:
+			handleBatteryState();
+			break;
+		}
+	}
+
+	private void handleBatteryState() {
+		switch (config.batteryState()) {
+		case DEFAULT:
+			handleStateMachine();
+			break;
+		case OFF:
+			stopSystem();
+			break;
+		case ON:
+			startSystem();
+			break;
+		}
+	}
+
+	private boolean isSystemRunning() {
+//		EnumReadChannel contactorControlChannel = this.channel(BMWChannelId.BMS_CONTACTOR_CONTROL);
+//		ContactorControl cc = contactorControlChannel.value().asEnum();
+//		return cc == ContactorControl.ON_GRID;
+		return false;
+	}
+
+	private boolean isSystemStopped() {
+//		EnumReadChannel contactorControlChannel = this.channel(BMWChannelId.BMS_CONTACTOR_CONTROL);
+//		ContactorControl cc = contactorControlChannel.value().asEnum();
+//		return cc == ContactorControl.CUT_OFF;
+		return false;
+	}
+
+	/**
+	 * Checks whether system has an undefined state, e.g. rack 1 & 2 are configured,
+	 * but only rack 1 is running. This state can only be reached at startup coming
+	 * from state undefined
+	 */
+	private boolean isSystemStatePending() {
+		return !isSystemRunning() && !isSystemStopped();
+	}
+
+
+	private boolean isError() {
+		return false;
+	}
+
+	public String getModbusBridgeId() {
+		return modbusBridgeId;
+	}
+
+	@Override
+	public String debugLog() {
+		return "SoC:" + this.getSoc().value() //
+				+ "|Discharge:" + this.getDischargeMinVoltage().value() + ";" + this.getDischargeMaxCurrent().value() //
+				+ "|Charge:" + this.getChargeMaxVoltage().value() + ";" + this.getChargeMaxCurrent().value() + "|State:"
+				+ this.getStateMachineState();
+	}
+
+	private void startSystem() {
+//		EnumWriteChannel contactorControlChannel = this.channel(BMWChannelId.BMS_CONTACTOR_CONTROL);
+//		ContactorControl cc = contactorControlChannel.value().asEnum();
+//		// To avoid hardware damages do not send start command if system has already
+//		// started
+//		if (cc == ContactorControl.ON_GRID || cc == ContactorControl.CONNECTION_INITIATING) {
+//			return;
+//		}
+//
+//		try {
+//			log.debug("write value to contactor control channel: value: " + SYSTEM_ON);
+//			contactorControlChannel.setNextWriteValue(SYSTEM_ON);
+//		} catch (OpenemsNamedException e) {
+//			log.error("Error while trying to start system\n" + e.getMessage());
+//		}
+	}
+
+	private void stopSystem() {
+//		EnumWriteChannel contactorControlChannel = this.channel(BMWChannelId.BMS_CONTACTOR_CONTROL);
+//		ContactorControl cc = contactorControlChannel.value().asEnum();
+//		// To avoid hardware damages do not send stop command if system has already
+//		// stopped
+//		if (cc == ContactorControl.CUT_OFF) {
+//			return;
+//		}
+//
+//		try {
+//			log.debug("write value to contactor control channel: value: " + SYSTEM_OFF);
+//			contactorControlChannel.setNextWriteValue(SYSTEM_OFF);
+//		} catch (OpenemsNamedException e) {
+//			log.error("Error while trying to stop system\n" + e.getMessage());
+//		}
+	}
+
+	public State getStateMachineState() {
+		return state;
+	}
+
+	public void setStateMachineState(State state) {
+		this.state = state;
+		this.channel(BMWChannelId.STATE_MACHINE).setNextValue(this.state);
+	}
+
+
+	@Override
+	protected ModbusProtocol defineModbusProtocol() {
+
+		ModbusProtocol protocol = new ModbusProtocol(this, //
+
+				new FC16WriteRegistersTask(1399,
+						m(BMWChannelId.HEART_BEAT, new UnsignedWordElement(1399)), //
+						m(new BitsWordElement(1400, this) //
+								.bit(15, BMWChannelId.BMS_STATE_COMMAND_RESET) //
+								.bit(14, BMWChannelId.BMS_STATE_COMMAND_CLEAR_ERROR) //
+								.bit(3, BMWChannelId.BMS_STATE_COMMAND_CLOSE_PRECHARGE) //
+								.bit(2, BMWChannelId.BMS_STATE_COMMAND_CLOSE_CONTACTOR) //
+								.bit(1, BMWChannelId.BMS_STATE_COMMAND_WAKE_UP_FROM_STOP) //
+								.bit(0, BMWChannelId.BMS_STATE_COMMAND_ENABLE_BATTERY) //
+						), //
+						m(BMWChannelId.OPERATING_STATE_INVERTER, new UnsignedWordElement(1401)), //
+						m(BMWChannelId.DC_LINK_VOLTAGE, new UnsignedWordElement(1402), ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
+						m(BMWChannelId.DC_LINK_CURRENT, new UnsignedWordElement(1403)), //
+						m(BMWChannelId.OPERATION_MODE_REQUEST_GRANTED, new UnsignedWordElement(1404)), //
+						m(BMWChannelId.OPERATION_MODE_REQUEST_CANCELED, new UnsignedWordElement(1405)), //
+						m(new BitsWordElement(1406, this) //
+								.bit(1, BMWChannelId.CONNECTION_STRATEGY_HIGH_SOC_FIRST) //								
+								.bit(0, BMWChannelId.CONNECTION_STRATEGY_LOW_SOC_FIRST) //
+						), //
+						m(BMWChannelId.SYSTEM_TIME, new UnsignedDoublewordElement(1407)) //
+				),
+				
+				new FC4ReadInputRegistersTask(999, Priority.HIGH,
+						m(BMWChannelId.LIFE_SIGN, new UnsignedWordElement(999)), //
+						m(BMWChannelId.BMS_STATE, new UnsignedWordElement(1000)), //
+						m(BMWChannelId.ERROR_BITS_1, new UnsignedWordElement(1001)), //
+						m(BMWChannelId.ERROR_BITS_2, new UnsignedWordElement(1002)), //
+						m(BMWChannelId.WARNING_BITS_1, new UnsignedWordElement(1003)), //
+						m(BMWChannelId.WARNING_BITS_2, new UnsignedWordElement(1004)), //
+						m(BMWChannelId.INFO_BITS, new UnsignedWordElement(1005)), //
+						m(BMWChannelId.MAXIMUM_OPERATING_CURRENT, new UnsignedWordElement(1006)), //
+						m(BMWChannelId.MINIMUM_OPERATING_CURRENT, new UnsignedWordElement(1007)), //
+						m(BMWChannelId.MAXIMUM_OPERATING_VOLTAGE, new UnsignedWordElement(1008), ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
+						m(BMWChannelId.MINIMUM_OPERATING_VOLTAGE, new UnsignedWordElement(1009), ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
+						m(BMWChannelId.MAXIMUM_LIMIT_DYNAMIC_CURRENT, new UnsignedWordElement(1010)), //
+						m(BMWChannelId.MINIMUM_LIMIT_DYNAMIC_CURRENT, new UnsignedWordElement(1011)), //
+						m(BMWChannelId.MAXIMUM_LIMIT_DYNAMIC_VOLTAGE, new UnsignedWordElement(1012), ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
+						m(BMWChannelId.MINIMUM_LIMIT_DYNAMIC_VOLTAGE, new UnsignedWordElement(1013), ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //						
+						m(BMWChannelId.NUMBER_OF_STRINGS_CONNECTED, new UnsignedWordElement(1014)), //
+						m(BMWChannelId.NUMBER_OF_STRINGS_INSTALLED, new UnsignedWordElement(1015)), //						
+						m(BMWChannelId.SOC_ALL_STRINGS, new UnsignedWordElement(1016), ElementToChannelConverter.SCALE_FACTOR_MINUS_2), //
+						m(BMWChannelId.SOC_CONNECTED_STRINGS, new UnsignedWordElement(1017), ElementToChannelConverter.SCALE_FACTOR_MINUS_2), //
+						m(BMWChannelId.REMAINING_CHARGE_CAPACITY, new UnsignedWordElement(1018)), //
+						m(BMWChannelId.REMAINING_DISCHARGE_CAPACITY, new UnsignedWordElement(1019)), //
+						m(BMWChannelId.REMAINING_CHARGE_ENERGY, new UnsignedWordElement(1020)), //
+						m(BMWChannelId.REMAINING_DISCHARGE_ENERGY, new UnsignedWordElement(1021)), //
+						m(BMWChannelId.NOMINAL_ENERGY, new UnsignedWordElement(1022)), //
+						m(BMWChannelId.TOTAL_ENERGY, new UnsignedWordElement(1023)), //
+						m(BMWChannelId.NOMINAL_CAPACITY, new UnsignedWordElement(1024)), //
+						m(BMWChannelId.TOTAL_CAPACITY, new UnsignedWordElement(1025)), //
+						m(Battery.ChannelId.SOH, new UnsignedWordElement(1026), ElementToChannelConverter.SCALE_FACTOR_MINUS_2), //
+						m(BMWChannelId.DC_VOLTAGE_CONNECTED_RACKS, new UnsignedWordElement(1027), ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
+						m(BMWChannelId.DC_VOLTAGE_AVERAGE, new UnsignedWordElement(1028), ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
+						m(BMWChannelId.DC_CURRENT, new UnsignedWordElement(1029), ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
+						m(BMWChannelId.AVERAGE_TEMPERATURE, new UnsignedWordElement(1030), ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
+						m(BMWChannelId.MINIMUM_TEMPERATURE, new UnsignedWordElement(1031), ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
+						m(BMWChannelId.MAXIMUM_TEMPERATURE, new UnsignedWordElement(1032), ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
+						m(Battery.ChannelId.MIN_CELL_VOLTAGE, new UnsignedWordElement(1033)), //
+						m(Battery.ChannelId.MAX_CELL_VOLTAGE, new UnsignedWordElement(1034)), //
+						m(BMWChannelId.AVERAGE_CELL_VOLTAGE, new UnsignedWordElement(1035)), //
+						m(BMWChannelId.INTERNAL_RESISTANCE, new UnsignedWordElement(1036)), //
+						m(BMWChannelId.INSULATION_RESISTANCE, new UnsignedWordElement(1037), ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
+						m(BMWChannelId.CONTAINER_TEMPERATURE, new UnsignedWordElement(1038), ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
+						m(BMWChannelId.AMBIENT_TEMPERATURE, new UnsignedWordElement(1039), ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
+						m(BMWChannelId.HUMIDITY_CONTAINER, new UnsignedWordElement(1040), ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
+						m(BMWChannelId.MAXIMUM_LIMIT_DYNAMIC_CURRENT_HIGH_RES, new UnsignedWordElement(1041), ElementToChannelConverter.SCALE_FACTOR_2), //
+						m(BMWChannelId.MINIMUM_LIMIT_DYNAMIC_CURRENT_HIGH_RES, new UnsignedWordElement(1042), ElementToChannelConverter.SCALE_FACTOR_2), //
+						m(BMWChannelId.FULL_CYCLE_COUNT, new UnsignedWordElement(1043)), //
+						m(BMWChannelId.OPERATING_TIME_COUNT, new UnsignedDoublewordElement(1044)), //
+						m(BMWChannelId.COM_PRO_VERSION, new UnsignedDoublewordElement(1046)), //
+						m(BMWChannelId.SERIAL_NUMBER, new UnsignedDoublewordElement(1048)), //
+						m(BMWChannelId.SERIAL_NUMBER, new UnsignedDoublewordElement(1048)), //
+						m(BMWChannelId.SOFTWARE_VERSION, new UnsignedDoublewordElement(1050)) //
+				)
+
+			
+		); //
+
+		return protocol;
+	}
+
+	@Override
+	public ModbusSlaveTable getModbusSlaveTable(AccessMode accessMode) {
+		return new ModbusSlaveTable( //
+				OpenemsComponent.getModbusSlaveNatureTable(accessMode), //
+				Battery.getModbusSlaveNatureTable(accessMode) //
+		);
+	}
+}
