@@ -448,9 +448,9 @@ public class BMWBattery extends AbstractOpenemsModbusComponent
 						m(BMWChannelId.DC_VOLTAGE_CONNECTED_RACKS, new UnsignedWordElement(1027), ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
 						m(BMWChannelId.DC_VOLTAGE_AVERAGE, new UnsignedWordElement(1028), ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
 						m(BMWChannelId.DC_CURRENT, new UnsignedWordElement(1029), ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
-						m(BMWChannelId.AVERAGE_TEMPERATURE, new UnsignedWordElement(1030), ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
-						m(BMWChannelId.MINIMUM_TEMPERATURE, new UnsignedWordElement(1031), ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
-						m(BMWChannelId.MAXIMUM_TEMPERATURE, new UnsignedWordElement(1032), ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
+						m(BMWChannelId.AVERAGE_TEMPERATURE, new UnsignedWordElement(1030)), //
+						m(BMWChannelId.MINIMUM_TEMPERATURE, new UnsignedWordElement(1031)), //
+						m(BMWChannelId.MAXIMUM_TEMPERATURE, new UnsignedWordElement(1032)), //
 						m(Battery.ChannelId.MIN_CELL_VOLTAGE, new UnsignedWordElement(1033)), //
 						m(Battery.ChannelId.MAX_CELL_VOLTAGE, new UnsignedWordElement(1034)), //
 						m(BMWChannelId.AVERAGE_CELL_VOLTAGE, new UnsignedWordElement(1035)), //

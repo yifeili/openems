@@ -35,7 +35,7 @@ import io.openems.edge.bridge.modbus.api.element.UnsignedWordElement;
 import io.openems.edge.bridge.modbus.api.task.FC16WriteRegistersTask;
 import io.openems.edge.bridge.modbus.api.task.FC3ReadRegistersTask;
 import io.openems.edge.common.channel.Doc;
-import io.openems.edge.common.channel.IntegerReadChannel;
+import io.openems.edge.common.channel.EnumReadChannel;
 import io.openems.edge.common.channel.IntegerWriteChannel;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.event.EdgeEventConstants;
@@ -107,7 +107,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 		// by default: block Power
 		this.isActivePowerAllowed = false;
 		
-		IntegerReadChannel operatingStateChannel = this.channel(ChannelId.ST);
+		EnumReadChannel operatingStateChannel = this.channel(ChannelId.ST);
 		OperatingState operatingState = operatingStateChannel.value().asEnum();
 
 		switch (operatingState) {
@@ -432,8 +432,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 		/*
 		 * Sunspec Model No: 64800
 		 */
-		PCS_SET_OPERATION(Doc.of(OperatingState.values())), //
-//		PCSSetOperation(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_WRITE)), //
+		PCS_SET_OPERATION(Doc.of(OperatingState.values()).accessMode(AccessMode.READ_WRITE)), //
 		;
 
 		private final Doc doc;
@@ -448,7 +447,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 	}
 
 	/*
-	 * Supportet Models First available Model = Start Address + 2 = 40002 Then 40002
+	 * Supported Models First available Model = Start Address + 2 = 40002 Then 40002
 	 * + Length of Model ....
 	 */
 	private final static int START_ADDRESS = 40000;
