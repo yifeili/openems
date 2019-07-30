@@ -2,6 +2,7 @@ package io.openems.edge.battery.bmw;
 
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentContext;
@@ -21,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.openems.common.channel.AccessMode;
+import io.openems.common.exceptions.OpenemsError.OpenemsNamedException;
 import io.openems.edge.battery.api.Battery;
 import io.openems.edge.bridge.modbus.api.AbstractOpenemsModbusComponent;
 import io.openems.edge.bridge.modbus.api.BridgeModbus;
@@ -30,7 +32,9 @@ import io.openems.edge.bridge.modbus.api.element.BitsWordElement;
 import io.openems.edge.bridge.modbus.api.element.UnsignedDoublewordElement;
 import io.openems.edge.bridge.modbus.api.element.UnsignedWordElement;
 import io.openems.edge.bridge.modbus.api.task.FC16WriteRegistersTask;
-import io.openems.edge.bridge.modbus.api.task.FC4ReadInputRegistersTask;
+import io.openems.edge.bridge.modbus.api.task.FC3ReadRegistersTask;
+import io.openems.edge.common.channel.BooleanWriteChannel;
+import io.openems.edge.common.channel.EnumReadChannel;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.event.EdgeEventConstants;
 import io.openems.edge.common.modbusslave.ModbusSlave;
@@ -52,7 +56,6 @@ public class BMWBattery extends AbstractOpenemsModbusComponent
 	protected static final int SYSTEM_ON = 1;
 	protected final static int SYSTEM_OFF = 0;
 
-	private static final int SECONDS_TOLERANCE_CELL_DRIFT = 15 * 60;
 
 	@Reference
 	protected ConfigurationAdmin cm;
@@ -68,9 +71,6 @@ public class BMWBattery extends AbstractOpenemsModbusComponent
 	private int unsuccessfulStarts = 0;
 	private LocalDateTime startAttemptTime = null;
 		
-	private LocalDateTime handleOneCellDriftHandlingStarted = null;
-	private int handleOneCellDriftHandlingCounter = 0;
-
 	private LocalDateTime pendingTimestamp;
 
 	public BMWBattery() {
@@ -106,14 +106,13 @@ public class BMWBattery extends AbstractOpenemsModbusComponent
 		boolean readyForWorking = false;
 		switch (this.getStateMachineState()) {
 		case ERROR:
-			if (handleOneCellDriftHandlingCounter > 5) {
-				// this cell drift error seems to be not removable
-				// systems remains in error state, can only be  removed by restarting component
-			}	else {	
-				stopSystem();
+				this.clearError(); 
+
+				// TODO Reset BMS? anything else?
+				
 				errorDelayIsOver = LocalDateTime.now().plusSeconds(config.errorDelay());
 				setStateMachineState(State.ERRORDELAY);
-			}
+			
 			break;
 
 		case ERRORDELAY:
@@ -153,15 +152,6 @@ public class BMWBattery extends AbstractOpenemsModbusComponent
 			startAttemptTime = LocalDateTime.now();
 			break;
 		case RUNNING:
-
-			if ( // if it has run 15 minutes in normal mode, reset timer and counter
-				this.handleOneCellDriftHandlingStarted != null && // 
-				this.handleOneCellDriftHandlingStarted.plusSeconds(SECONDS_TOLERANCE_CELL_DRIFT).isBefore(LocalDateTime.now()) //
-			) { //
-				this.handleOneCellDriftHandlingStarted = null;
-				this.handleOneCellDriftHandlingCounter = 0;
-			}
-
 			if (this.isError()) {
 				this.setStateMachineState(State.ERROR);
 			} else if (!this.isSystemRunning()) {
@@ -221,17 +211,14 @@ public class BMWBattery extends AbstractOpenemsModbusComponent
 	}
 
 
-//	private void resetSystem() {
-//
-//		
-//		
-//		IntegerWriteChannel resetChannel = this.channel(BMWChannelId.SYSTEM_RESET);
-//		try {
-//			resetChannel.setNextWriteValue(SYSTEM_RESET);
-//		} catch (OpenemsNamedException e) {
-//			System.out.println("Error while trying to reset the system!");
-//		}
-//	}
+	private void clearError() {
+		BooleanWriteChannel clearErrorChannel = this.channel(BMWChannelId.BMS_STATE_COMMAND_CLEAR_ERROR);
+		try {
+			clearErrorChannel.setNextWriteValue(true);
+		} catch (OpenemsNamedException e) {
+			System.out.println("Error while trying to reset the system!");
+		}
+	}
 
 
 	@Deactivate
@@ -241,6 +228,7 @@ public class BMWBattery extends AbstractOpenemsModbusComponent
 
 	private void initializeCallbacks() {
 
+		//TODO Check what values to use... !!!
 //		this.channel(BMWChannelId.CLUSTER_1_VOLTAGE).onChange(value -> {
 //			@SuppressWarnings("unchecked")
 //			Optional<Integer> vOpt = (Optional<Integer>) value.asOptional();
@@ -262,55 +250,57 @@ public class BMWBattery extends AbstractOpenemsModbusComponent
 //			log.debug("callback min cell voltage, value: " + voltage_millivolt);
 //			this.channel(Battery.ChannelId.MIN_CELL_VOLTAGE).setNextValue(voltage_millivolt);
 //		});
-//
-//		// write battery ranges to according channels in battery api
-//		// MAX_VOLTAGE x2082
-//		this.channel(BMWChannelId.WARN_PARAMETER_SYSTEM_OVER_VOLTAGE_ALARM).onChange(value -> {
-//			@SuppressWarnings("unchecked")
-//			Optional<Integer> vOpt = (Optional<Integer>) value.asOptional();
-//			if (!vOpt.isPresent()) {
-//				return;
-//			}
-//			int max_charge_voltage = (int) (vOpt.get() * 0.001);
-//			log.debug("callback battery range, max charge voltage, value: " + max_charge_voltage);
-//			this.channel(Battery.ChannelId.CHARGE_MAX_VOLTAGE).setNextValue(max_charge_voltage);
-//		});
-//
-//		// DISCHARGE_MIN_VOLTAGE 0x2088
-//		this.channel(BMWChannelId.WARN_PARAMETER_SYSTEM_UNDER_VOLTAGE_ALARM).onChange(value -> {
-//			@SuppressWarnings("unchecked")
-//			Optional<Integer> vOpt = (Optional<Integer>) value.asOptional();
-//			if (!vOpt.isPresent()) {
-//				return;
-//			}
-//			int min_discharge_voltage = (int) (vOpt.get() * 0.001);
-//			log.debug("callback battery range, min discharge voltage, value: " + min_discharge_voltage);
-//			this.channel(Battery.ChannelId.DISCHARGE_MIN_VOLTAGE).setNextValue(min_discharge_voltage);
-//		});
-//
-//		// CHARGE_MAX_CURRENT 0x2160
-//		this.channel(BMWChannelId.SYSTEM_MAX_CHARGE_CURRENT).onChange(value -> {
-//			@SuppressWarnings("unchecked")
-//			Optional<Integer> cOpt = (Optional<Integer>) value.asOptional();
-//			if (!cOpt.isPresent()) {
-//				return;
-//			}
-//			int max_current = (int) (cOpt.get() * 0.001);
-//			log.debug("callback battery range, max charge current, value: " + max_current);
-//			this.channel(Battery.ChannelId.CHARGE_MAX_CURRENT).setNextValue(max_current);
-//		});
-//
-//		// DISCHARGE_MAX_CURRENT 0x2161
-//		this.channel(BMWChannelId.SYSTEM_MAX_DISCHARGE_CURRENT).onChange(value -> {
-//			@SuppressWarnings("unchecked")
-//			Optional<Integer> cOpt = (Optional<Integer>) value.asOptional();
-//			if (!cOpt.isPresent()) {
-//				return;
-//			}
-//			int max_current = (int) (cOpt.get() * 0.001);
-//			log.debug("callback battery range, max discharge current, value: " + max_current);
-//			this.channel(Battery.ChannelId.DISCHARGE_MAX_CURRENT).setNextValue(max_current);
-//		});
+
+		// write battery ranges to according channels in battery api
+		// MAX_VOLTAGE ==> DcVolDynMax Register 1012
+		this.channel(BMWChannelId.MAXIMUM_LIMIT_DYNAMIC_VOLTAGE).onChange(value -> {
+			@SuppressWarnings("unchecked")
+			Optional<Integer> vOpt = (Optional<Integer>) value.asOptional();
+			if (!vOpt.isPresent()) {
+				return;
+			}
+			int max_charge_voltage = (int) (vOpt.get());
+			log.debug("callback battery range, max charge voltage, value: " + max_charge_voltage);
+			this.channel(Battery.ChannelId.CHARGE_MAX_VOLTAGE).setNextValue(max_charge_voltage);
+		});
+
+		// DISCHARGE_MIN_VOLTAGE ==> DcVolDynMin Registerc 1013
+		this.channel(BMWChannelId.MINIMUM_LIMIT_DYNAMIC_VOLTAGE).onChange(value -> {
+			@SuppressWarnings("unchecked")
+			Optional<Integer> vOpt = (Optional<Integer>) value.asOptional();
+			if (!vOpt.isPresent()) {
+				return;
+			}
+			int min_discharge_voltage = (int) (vOpt.get() );
+			log.debug("callback battery range, min discharge voltage, value: " + min_discharge_voltage);
+			this.channel(Battery.ChannelId.DISCHARGE_MIN_VOLTAGE).setNextValue(min_discharge_voltage);
+		});
+
+		// !!!!! TODO What values are needed !!!!! Is this correct??
+		// CHARGE_MAX_CURRENT ==> DcAmpDynMax ==> 1010
+		this.channel(BMWChannelId.MAXIMUM_LIMIT_DYNAMIC_CURRENT).onChange(value -> {
+			@SuppressWarnings("unchecked")
+			Optional<Integer> cOpt = (Optional<Integer>) value.asOptional();
+			if (!cOpt.isPresent()) {
+				return;
+			}
+			int max_current = (int) (cOpt.get() * 0.001);
+			log.debug("callback battery range, max charge current, value: " + max_current);
+			this.channel(Battery.ChannelId.CHARGE_MAX_CURRENT).setNextValue(max_current);
+		});
+
+		// !!!!! TODO What values are needed !!!!! Is this correct??
+		// DISCHARGE_MAX_CURRENT  ==> DcAmpDynMin ==> 1011
+		this.channel(BMWChannelId.MINIMUM_LIMIT_DYNAMIC_CURRENT).onChange(value -> {
+			@SuppressWarnings("unchecked")
+			Optional<Integer> cOpt = (Optional<Integer>) value.asOptional();
+			if (!cOpt.isPresent()) {
+				return;
+			}
+			int max_current = (int) (cOpt.get() * 0.001);
+			log.debug("callback battery range, max discharge current, value: " + max_current);
+			this.channel(Battery.ChannelId.DISCHARGE_MAX_CURRENT).setNextValue(max_current);
+		});
 
 	}
 
@@ -342,23 +332,19 @@ public class BMWBattery extends AbstractOpenemsModbusComponent
 	}
 
 	private boolean isSystemRunning() {
-//		EnumReadChannel contactorControlChannel = this.channel(BMWChannelId.BMS_CONTACTOR_CONTROL);
-//		ContactorControl cc = contactorControlChannel.value().asEnum();
-//		return cc == ContactorControl.ON_GRID;
-		return false;
+		EnumReadChannel bmsStateChannel = this.channel(BMWChannelId.BMS_STATE);		
+		BmsState bmsState = bmsStateChannel.value().asEnum();
+		return bmsState == BmsState.OPERATION;		
 	}
 
 	private boolean isSystemStopped() {
-//		EnumReadChannel contactorControlChannel = this.channel(BMWChannelId.BMS_CONTACTOR_CONTROL);
-//		ContactorControl cc = contactorControlChannel.value().asEnum();
-//		return cc == ContactorControl.CUT_OFF;
-		return false;
+		EnumReadChannel bmsStateChannel = this.channel(BMWChannelId.BMS_STATE);		
+		BmsState bmsState = bmsStateChannel.value().asEnum();
+		return bmsState == BmsState.OFF;		
 	}
 
 	/**
-	 * Checks whether system has an undefined state, e.g. rack 1 & 2 are configured,
-	 * but only rack 1 is running. This state can only be reached at startup coming
-	 * from state undefined
+	 * Checks whether system has an undefined state
 	 */
 	private boolean isSystemStatePending() {
 		return !isSystemRunning() && !isSystemStopped();
@@ -366,7 +352,9 @@ public class BMWBattery extends AbstractOpenemsModbusComponent
 
 
 	private boolean isError() {
-		return false;
+		EnumReadChannel bmsStateChannel = this.channel(BMWChannelId.BMS_STATE);		
+		BmsState bmsState = bmsStateChannel.value().asEnum();
+		return bmsState == BmsState.ERROR;		
 	}
 
 	public String getModbusBridgeId() {
@@ -382,37 +370,13 @@ public class BMWBattery extends AbstractOpenemsModbusComponent
 	}
 
 	private void startSystem() {
-//		EnumWriteChannel contactorControlChannel = this.channel(BMWChannelId.BMS_CONTACTOR_CONTROL);
-//		ContactorControl cc = contactorControlChannel.value().asEnum();
-//		// To avoid hardware damages do not send start command if system has already
-//		// started
-//		if (cc == ContactorControl.ON_GRID || cc == ContactorControl.CONNECTION_INITIATING) {
-//			return;
-//		}
-//
-//		try {
-//			log.debug("write value to contactor control channel: value: " + SYSTEM_ON);
-//			contactorControlChannel.setNextWriteValue(SYSTEM_ON);
-//		} catch (OpenemsNamedException e) {
-//			log.error("Error while trying to start system\n" + e.getMessage());
-//		}
+		//TODO Currently not necessary, Battery starts itself?!
+		this.log.debug("Start system");
 	}
 
 	private void stopSystem() {
-//		EnumWriteChannel contactorControlChannel = this.channel(BMWChannelId.BMS_CONTACTOR_CONTROL);
-//		ContactorControl cc = contactorControlChannel.value().asEnum();
-//		// To avoid hardware damages do not send stop command if system has already
-//		// stopped
-//		if (cc == ContactorControl.CUT_OFF) {
-//			return;
-//		}
-//
-//		try {
-//			log.debug("write value to contactor control channel: value: " + SYSTEM_OFF);
-//			contactorControlChannel.setNextWriteValue(SYSTEM_OFF);
-//		} catch (OpenemsNamedException e) {
-//			log.error("Error while trying to stop system\n" + e.getMessage());
-//		}
+		//TODO Currently not necessary, Battery starts itself?!
+		this.log.debug("Stop system");
 	}
 
 	public State getStateMachineState() {
@@ -452,7 +416,7 @@ public class BMWBattery extends AbstractOpenemsModbusComponent
 						m(BMWChannelId.SYSTEM_TIME, new UnsignedDoublewordElement(1407)) //
 				),
 				
-				new FC4ReadInputRegistersTask(999, Priority.HIGH,
+				new FC3ReadRegistersTask(999, Priority.HIGH,
 						m(BMWChannelId.LIFE_SIGN, new UnsignedWordElement(999)), //
 						m(BMWChannelId.BMS_STATE, new UnsignedWordElement(1000)), //
 						m(BMWChannelId.ERROR_BITS_1, new UnsignedWordElement(1001)), //
@@ -501,8 +465,8 @@ public class BMWBattery extends AbstractOpenemsModbusComponent
 						m(BMWChannelId.OPERATING_TIME_COUNT, new UnsignedDoublewordElement(1044)), //
 						m(BMWChannelId.COM_PRO_VERSION, new UnsignedDoublewordElement(1046)), //
 						m(BMWChannelId.SERIAL_NUMBER, new UnsignedDoublewordElement(1048)), //
-						m(BMWChannelId.SERIAL_NUMBER, new UnsignedDoublewordElement(1048)), //
-						m(BMWChannelId.SOFTWARE_VERSION, new UnsignedDoublewordElement(1050)) //
+						m(BMWChannelId.SERIAL_NUMBER, new UnsignedDoublewordElement(1050)), //
+						m(BMWChannelId.SOFTWARE_VERSION, new UnsignedDoublewordElement(1052)) //
 				)
 
 			
