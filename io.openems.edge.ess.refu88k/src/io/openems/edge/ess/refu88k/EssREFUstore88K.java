@@ -1,7 +1,5 @@
 package io.openems.edge.ess.refu88k;
 
-import io.openems.common.types.OpenemsType;
-
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
@@ -15,9 +13,14 @@ import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventConstants;
 import org.osgi.service.event.EventHandler;
-import org.osgi.service.metatype.annotations.ObjectClassDefinition;
-import io.openems.common.exceptions.OpenemsException;
+import org.osgi.service.metatype.annotations.Designate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.openems.common.channel.AccessMode;
+import io.openems.common.channel.Unit;
 import io.openems.common.exceptions.OpenemsError.OpenemsNamedException;
+import io.openems.common.types.OpenemsType;
 import io.openems.edge.battery.api.Battery;
 import io.openems.edge.bridge.modbus.api.AbstractOpenemsModbusComponent;
 import io.openems.edge.bridge.modbus.api.BridgeModbus;
@@ -26,15 +29,14 @@ import io.openems.edge.bridge.modbus.api.ModbusProtocol;
 import io.openems.edge.bridge.modbus.api.element.DummyRegisterElement;
 import io.openems.edge.bridge.modbus.api.element.SignedDoublewordElement;
 import io.openems.edge.bridge.modbus.api.element.SignedWordElement;
+import io.openems.edge.bridge.modbus.api.element.StringWordElement;
 import io.openems.edge.bridge.modbus.api.element.UnsignedDoublewordElement;
 import io.openems.edge.bridge.modbus.api.element.UnsignedWordElement;
 import io.openems.edge.bridge.modbus.api.task.FC16WriteRegistersTask;
 import io.openems.edge.bridge.modbus.api.task.FC3ReadRegistersTask;
+import io.openems.edge.common.channel.Doc;
 import io.openems.edge.common.channel.IntegerReadChannel;
 import io.openems.edge.common.channel.IntegerWriteChannel;
-import io.openems.edge.common.channel.Doc;
-import io.openems.common.channel.AccessMode;
-import io.openems.common.channel.Unit;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.event.EdgeEventConstants;
 import io.openems.edge.common.modbusslave.ModbusSlave;
@@ -43,7 +45,6 @@ import io.openems.edge.common.taskmanager.Priority;
 import io.openems.edge.ess.api.ManagedSymmetricEss;
 import io.openems.edge.ess.api.SymmetricEss;
 import io.openems.edge.ess.power.api.Power;
-import org.osgi.service.metatype.annotations.Designate;
 
 @Designate(ocd = Config.class, factory = true)
 @Component(//
@@ -57,10 +58,10 @@ import org.osgi.service.metatype.annotations.Designate;
 public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 		implements ManagedSymmetricEss, SymmetricEss, OpenemsComponent, EventHandler, ModbusSlave {
 
-//	private final Logger log = LoggerFactory.getLogger(EssREFUstore88K.class);
+	private final Logger log = LoggerFactory.getLogger(EssREFUstore88K.class);
 
 	public static final int DEFAULT_UNIT_ID = 1;
-	protected static final int MAX_APPARENT_POWER = 50000;
+	protected static final int MAX_APPARENT_POWER = 88000;
 
 	/*
 	 * Is Power allowed? This is set to false on error or if the inverter is not
@@ -106,9 +107,6 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 		// by default: block Power
 		this.isActivePowerAllowed = false;
 		
-		// do always
-		setBatteryRanges();
-		
 		IntegerReadChannel operatingStateChannel = this.channel(ChannelId.ST);
 		OperatingState operatingState = operatingStateChannel.value().asEnum();
 
@@ -117,7 +115,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 			/*
 			 * 1) Inverter is OFF (St = 1), because no power is provided from the DC side.
 			 * 2) The EMS has to initiate a precharge of the DC link capacities of the
-			 * inverter 3) The EMS closes the DC relais of the battery 4) The inverter’s
+			 * inverter 3) The EMS closes the DC relais of the battery 4) The inverterï¿½s
 			 * control board starts up (firmware booting) and enters the STANDBY state
 			 * automatically
 			 */
@@ -127,7 +125,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 			 * The inverter is initialised but not grid connected. The IGBT's are locked and
 			 * AC relays are open.
 			 */
-			doStandbyHandling();
+			this.doStandbyHandling();
 			break;
 		case SLEEPING:
 			break;
@@ -143,19 +141,21 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 			 * are locked.
 			 */
 
-			doGridConnectedHandling();
+			this.doGridConnectedHandling();
 			break;
 		case THROTTLED:
 			/*
 			 * The inverter feeds and derating is active. The IGBT's are working and AC
 			 * relays are closed.
 			 */
+			this.checkIfActivePowerIsAllowed();
 			break;
 		case MPPT:
 			/*
 			 * The inverter feeds with max possible power. The IGBT's are working and AC
 			 * relays are closed.
 			 */
+			this.checkIfActivePowerIsAllowed();
 			break;
 		case SHUTTING_DOWN:
 			/*
@@ -167,7 +167,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 			 * The inverter is in fault state. The IGBT's are locked and AC relays are open.
 			 */
 
-			doFaultHandling();
+			this.doFaultHandling();
 			break;
 
 		case UNDEFINED:
@@ -175,10 +175,16 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 			break;
 		}
 	}
+	
+	private void checkIfActivePowerIsAllowed() {
+		// If the battery system is not ready yet set power to zero to avoid damaging or
+		// improper system states
+		this.isActivePowerAllowed = battery.getReadyForWorking().value().orElse(false);
+	}
 
 	private void doStandbyHandling() {
 		this.isActivePowerAllowed = false;
-		exitStandbyMode();
+		this.exitStandbyMode();
 	}
 
 	private void exitStandbyMode() {
@@ -190,6 +196,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 		}
 	}
 
+	@SuppressWarnings("unused")
 	private void enterStandbyMode() {
 		IntegerWriteChannel pcsSetOperation = this.channel(ChannelId.PCS_SET_OPERATION);
 		try {
@@ -200,7 +207,6 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 	}
 
 	private void doGridConnectedHandling() {
-
 		IntegerWriteChannel pcsSetOperation = this.channel(ChannelId.PCS_SET_OPERATION);
 		try {
 			pcsSetOperation.setNextWriteValue(1);
@@ -222,25 +228,6 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 			pcsSetOperation.setNextWriteValue(2);
 		} catch (OpenemsNamedException e) {
 			log.error("problem occurred while trying to stop system" + e.getMessage());
-		}
-	}
-
-	private void setBatteryRanges() {
-		if (battery == null) {
-			return;
-		}
-
-		// Read some Channels from Battery
-		int disMinV = battery.getDischargeMinVoltage().value().orElse(0);
-		int chaMaxV = battery.getChargeMaxVoltage().value().orElse(0);
-		int disMaxA = battery.getDischargeMaxCurrent().value().orElse(0);
-		int chaMaxA = battery.getChargeMaxCurrent().value().orElse(0);
-		int batSoC = battery.getSoc().value().orElse(0);
-		int batSoH = battery.getSoh().value().orElse(0);
-		int batTemp = battery.getMaxCellTemperature().value().orElse(0);
-
-		if (disMinV == 0 || chaMaxV == 0) {
-			return;
 		}
 	}
 
@@ -273,11 +260,14 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 	@Override
 	public void applyPower(int activePower, int reactivePower) throws OpenemsNamedException {
 
-		IntegerWriteChannel wMaxChannel = this.channel(ChannelId.W_MAX_LIM_PCT);
+		if (!this.isActivePowerAllowed) {
+			this.log.debug("Active power is not allowed!");
+			return;
+		}
+		
+		IntegerWriteChannel wMaxChannel = this.channel(ChannelId.W_MAX);
 		IntegerWriteChannel wMaxLimPctChannel = this.channel(ChannelId.W_MAX_LIM_PCT);
 		IntegerWriteChannel wMaxLim_EnaChannel = this.channel(ChannelId.W_MAX_LIM_ENA);
-		IntegerWriteChannel varMaxLimPctChannel = this.channel(ChannelId.VAR_W_MAX_PCT);
-		IntegerWriteChannel varMaxLim_EnaChannel = this.channel(ChannelId.VAR_PCT_ENA);
 
 		// Vorgabe WMax
 		wMaxChannel.setNextWriteValue(MAX_APPARENT_POWER);
@@ -287,17 +277,19 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 		wMaxLimPctChannel.setNextWriteValue(wSetPct);
 		wMaxLim_EnaChannel.setNextWriteValue(1);
 		
-		//Blindleistungsvorgabe an den Umrichter als Prozentwert bezogen auf WMAX
-		int varSetPct = ((100 * reactivePower) / MAX_APPARENT_POWER);
-		varMaxLimPctChannel.setNextWriteValue(varSetPct);
-		varMaxLim_EnaChannel.setNextWriteValue(1);
+		//TODO
+//		IntegerWriteChannel varMaxLimPctChannel = this.channel(ChannelId.VAR_W_MAX_PCT);
+//		IntegerWriteChannel varMaxLim_EnaChannel = this.channel(ChannelId.VAR_PCT_ENA);
+//		//Blindleistungsvorgabe an den Umrichter als Prozentwert bezogen auf WMAX
+//		int varSetPct = ((100 * reactivePower) / MAX_APPARENT_POWER);
+//		varMaxLimPctChannel.setNextWriteValue(varSetPct);
+//		varMaxLim_EnaChannel.setNextWriteValue(1);
 
 	}
 
 	@Override
 	public int getPowerPrecision() {
-		// TODO Auto-generated method stub
-		return 500;
+		return 880;
 	}
 
 	/*
@@ -472,15 +464,15 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 	@Override
 	protected ModbusProtocol defineModbusProtocol() {
 		return new ModbusProtocol(this, //
-//				new FC3ReadRegistersTask(SUNSPEC_1, Priority.LOW, //
-//						m(EssREFUstore88K.ChannelId.ID_1, new UnsignedWordElement(SUNSPEC_1)),
-//						m(EssREFUstore88K.ChannelId.L_1, new UnsignedWordElement(SUNSPEC_1 + 1)),
-//						m(EssREFUstore88K.ChannelId.MN, new StringWordElement(SUNSPEC_1 + 2, 16)),
-//						m(EssREFUstore88K.ChannelId.MD, new StringWordElement(SUNSPEC_1 + 18, 16)),
-//						m(EssREFUstore88K.ChannelId.OPT, new StringWordElement(SUNSPEC_1 + 34, 8)),
-//						m(EssREFUstore88K.ChannelId.VR, new StringWordElement(SUNSPEC_1 + 42, 8)),
-//						m(EssREFUstore88K.ChannelId.SN, new StringWordElement(SUNSPEC_1 + 50, 16)),
-//						m(EssREFUstore88K.ChannelId.DA, new UnsignedWordElement(SUNSPEC_1 + 66))),
+				new FC3ReadRegistersTask(SUNSPEC_1, Priority.ONCE, //
+						m(EssREFUstore88K.ChannelId.ID_1, new UnsignedWordElement(SUNSPEC_1)),
+						m(EssREFUstore88K.ChannelId.L_1, new UnsignedWordElement(SUNSPEC_1 + 1)),
+						m(EssREFUstore88K.ChannelId.MN, new StringWordElement(SUNSPEC_1 + 2, 16)),
+						m(EssREFUstore88K.ChannelId.MD, new StringWordElement(SUNSPEC_1 + 18, 16)),
+						m(EssREFUstore88K.ChannelId.OPT, new StringWordElement(SUNSPEC_1 + 34, 8)),
+						m(EssREFUstore88K.ChannelId.VR, new StringWordElement(SUNSPEC_1 + 42, 8)),
+						m(EssREFUstore88K.ChannelId.SN, new StringWordElement(SUNSPEC_1 + 50, 16)),
+						m(EssREFUstore88K.ChannelId.DA, new UnsignedWordElement(SUNSPEC_1 + 66))),
 
 				new FC3ReadRegistersTask(SUNSPEC_103, Priority.LOW, //
 						m(EssREFUstore88K.ChannelId.ID_103, new UnsignedWordElement(SUNSPEC_103)),
@@ -654,37 +646,4 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 		return "State:" + this.channel(ChannelId.ST).value().asOptionString() //
 				+ ",L:" + this.channel(SymmetricEss.ChannelId.ACTIVE_POWER).value().asString(); //
 	}
-
-//	private IntegerWriteChannel getDischargeMinVoltageChannel() {
-//		return this.channel(ChannelId.DIS_MIN_V);
-//	}
-//
-//	private IntegerWriteChannel getDischargeMaxAmpereChannel() {
-//		return this.channel(ChannelId.DIS_MAX_A);
-//	}
-//
-//	private IntegerWriteChannel getChargeMaxVoltageChannel() {
-//		return this.channel(ChannelId.CHA_MAX_V);
-//	}
-//
-//	private IntegerWriteChannel getChargeMaxAmpereChannel() {
-//		return this.channel(ChannelId.CHA_MAX_A);
-//	}
-//
-//	private IntegerWriteChannel getEnLimitChannel() {
-//		return this.channel(ChannelId.EN_LIMIT);
-//	}
-//
-//	private IntegerWriteChannel getBatterySocChannel() {
-//		return this.channel(ChannelId.BAT_SOC);
-//	}
-//
-//	private IntegerWriteChannel getBatterySohChannel() {
-//		return this.channel(ChannelId.BAT_SOH);
-//	}
-//
-//	private IntegerWriteChannel getBatteryTempChannel() {
-//		return this.channel(ChannelId.BAT_TEMP);
-//	}
-
 }
