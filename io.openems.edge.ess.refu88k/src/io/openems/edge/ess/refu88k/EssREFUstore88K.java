@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import io.openems.common.channel.AccessMode;
 import io.openems.common.channel.Unit;
+import io.openems.common.exceptions.OpenemsException;
 import io.openems.common.exceptions.OpenemsError.OpenemsNamedException;
 import io.openems.common.types.OpenemsType;
 import io.openems.edge.battery.api.Battery;
@@ -36,15 +37,21 @@ import io.openems.edge.bridge.modbus.api.task.FC16WriteRegistersTask;
 import io.openems.edge.bridge.modbus.api.task.FC3ReadRegistersTask;
 import io.openems.edge.common.channel.Doc;
 import io.openems.edge.common.channel.EnumReadChannel;
+import io.openems.edge.common.channel.EnumWriteChannel;
 import io.openems.edge.common.channel.IntegerWriteChannel;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.event.EdgeEventConstants;
 import io.openems.edge.common.modbusslave.ModbusSlave;
 import io.openems.edge.common.modbusslave.ModbusSlaveTable;
+import io.openems.edge.common.sum.GridMode;
 import io.openems.edge.common.taskmanager.Priority;
 import io.openems.edge.ess.api.ManagedSymmetricEss;
 import io.openems.edge.ess.api.SymmetricEss;
+import io.openems.edge.ess.power.api.Constraint;
+import io.openems.edge.ess.power.api.Phase;
 import io.openems.edge.ess.power.api.Power;
+import io.openems.edge.ess.power.api.Pwr;
+import io.openems.edge.ess.power.api.Relationship;
 
 @Designate(ocd = Config.class, factory = true)
 @Component(//
@@ -61,21 +68,27 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 	private final Logger log = LoggerFactory.getLogger(EssREFUstore88K.class);
 
 	public static final int DEFAULT_UNIT_ID = 1;
-	protected static final int MAX_APPARENT_POWER = 88000;
+	protected static final int MAX_APPARENT_POWER = 50_000;
 
 	/*
 	 * Is Power allowed? This is set to false on error or if the inverter is not
 	 * fully initialized.
 	 */
-	private boolean isActivePowerAllowed = true;
+	private boolean isPowerAllowed = true;
 
 	@Reference
 	private Power power;
+	
 
 	@Reference
 	protected ConfigurationAdmin cm;
 
 	private Battery battery;
+	
+	@Reference(policy = ReferencePolicy.STATIC, policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
+	protected void setBattery(Battery battery) {
+		this.battery = battery;
+	}
 
 //	Konstruktor - Initialisierung der Channels
 	public EssREFUstore88K() {
@@ -85,6 +98,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 				ManagedSymmetricEss.ChannelId.values(), //
 				ChannelId.values() //
 		);
+		this.channel(SymmetricEss.ChannelId.MAX_APPARENT_POWER).setNextValue(MAX_APPARENT_POWER);
 	}
 
 	@Reference(policy = ReferencePolicy.STATIC, policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
@@ -105,7 +119,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 	private void handleStateMachine() {
 
 		// by default: block Power
-		this.isActivePowerAllowed = false;
+		this.isPowerAllowed = false;
 		
 		EnumReadChannel operatingStateChannel = this.channel(ChannelId.ST);
 		OperatingState operatingState = operatingStateChannel.value().asEnum();
@@ -148,14 +162,14 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 			 * The inverter feeds and derating is active. The IGBT's are working and AC
 			 * relays are closed.
 			 */
-			this.checkIfActivePowerIsAllowed();
+			this.checkIfPowerIsAllowed();
 			break;
 		case MPPT:
 			/*
 			 * The inverter feeds with max possible power. The IGBT's are working and AC
 			 * relays are closed.
 			 */
-			this.checkIfActivePowerIsAllowed();
+			this.checkIfPowerIsAllowed();
 			break;
 		case SHUTTING_DOWN:
 			/*
@@ -167,7 +181,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 			 * The inverter is in fault state. The IGBT's are locked and AC relays are open.
 			 */
 
-			this.doFaultHandling();
+			// this.doFaultHandling();
 			break;
 
 		case UNDEFINED:
@@ -176,60 +190,85 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 		}
 	}
 	
-	private void checkIfActivePowerIsAllowed() {
+	private void checkIfPowerIsAllowed() {
 		// If the battery system is not ready yet set power to zero to avoid damaging or
 		// improper system states
-		this.isActivePowerAllowed = battery.getReadyForWorking().value().orElse(false);
+		this.isPowerAllowed = battery.getReadyForWorking().value().orElse(false);
+
+		
+		// Read some Channels from Battery
+		int disMinV = battery.getDischargeMinVoltage().value().orElse(0);
+		int chaMaxV = battery.getChargeMaxVoltage().value().orElse(0);
+		int disMaxA = battery.getDischargeMaxCurrent().value().orElse(0);
+		int chaMaxA = battery.getChargeMaxCurrent().value().orElse(0);
+
+		// Update Power Constraints
+		// TODO: The actual AC allowed charge and discharge should come from the KACO
+		// Blueplanet instead of calculating it from DC parameters.
+		final double EFFICIENCY_FACTOR = 0.9;
+
+		// FIXME
+		// allowedCharge += battery.getVoltage().value().orElse(0) *
+		// battery.getChargeMaxCurrent().value().orElse(0) * -1;
+		// allowedDischarge += battery.getVoltage().value().orElse(0) *
+		// battery.getDischargeMaxCurrent().value().orElse(0);
+
+		this.getAllowedCharge().setNextValue(chaMaxA * chaMaxV * -1 * EFFICIENCY_FACTOR);
+		this.getAllowedDischarge().setNextValue(disMaxA * disMinV * EFFICIENCY_FACTOR);
 	}
 
 	private void doStandbyHandling() {
-		this.isActivePowerAllowed = false;
+		this.isPowerAllowed = false;
 		this.exitStandbyMode();
 	}
 
 	private void exitStandbyMode() {
-		IntegerWriteChannel pcsSetOperation = this.channel(ChannelId.PCS_SET_OPERATION);
+		EnumWriteChannel pcsSetOperation = this.channel(ChannelId.PCS_SET_OPERATION);
 		try {
-			pcsSetOperation.setNextWriteValue(4);
+			pcsSetOperation.setNextWriteValue(OperatingState.MPPT);
 		} catch (OpenemsNamedException e) {
 			log.error("problem occurred while trying to start grid mode" + e.getMessage());
 		}
 	}
 
-	@SuppressWarnings("unused")
-	private void enterStandbyMode() {
-		IntegerWriteChannel pcsSetOperation = this.channel(ChannelId.PCS_SET_OPERATION);
-		try {
-			pcsSetOperation.setNextWriteValue(3);
-		} catch (OpenemsNamedException e) {
-			log.error("problem occurred while trying to start grid mode" + e.getMessage());
-		}
-	}
+
+
 
 	private void doGridConnectedHandling() {
-		IntegerWriteChannel pcsSetOperation = this.channel(ChannelId.PCS_SET_OPERATION);
+		EnumWriteChannel pcsSetOperation = this.channel(ChannelId.PCS_SET_OPERATION);
 		try {
-			pcsSetOperation.setNextWriteValue(1);
+			pcsSetOperation.setNextWriteValue(OperatingState.OFF);
 		} catch (OpenemsNamedException e) {
 			log.error("problem occurred while trying to start grid mode" + e.getMessage());
 		}
-
 	}
 
-	private void doFaultHandling() {
-		// find out the reason what is wrong an react
-		// for a first try, switch system off, it will be restarted
-		stopSystem();
-	}
+//	private void doFaultHandling() {
+//		// find out the reason what is wrong an react
+//		// for a first try, switch system off, it will be restarted
+//		stopSystem();
+//	}
+	
+//	@SuppressWarnings("unused")
+//	private void stopSystem() {
+//		EnumWriteChannel pcsSetOperation = this.channel(ChannelId.PCS_SET_OPERATION);
+//		try {
+//			pcsSetOperation.setNextWriteValue(OperatingState.SLEEPING);
+//		} catch (OpenemsNamedException e) {
+//			log.error("problem occurred while trying to start grid mode" + e.getMessage());
+//		}
+//	}
+	
+//	@SuppressWarnings("unused")
+//	private void enterStandbyMode() {
+//		EnumWriteChannel pcsSetOperation = this.channel(ChannelId.PCS_SET_OPERATION);
+//		try {
+//			pcsSetOperation.setNextWriteValue(OperatingState.STARTING);
+//		} catch (OpenemsNamedException e) {
+//			log.error("problem occurred while trying to start grid mode" + e.getMessage());
+//		}
+//	}
 
-	private void stopSystem() {
-		IntegerWriteChannel pcsSetOperation = this.channel(ChannelId.PCS_SET_OPERATION);
-		try {
-			pcsSetOperation.setNextWriteValue(2);
-		} catch (OpenemsNamedException e) {
-			log.error("problem occurred while trying to stop system" + e.getMessage());
-		}
-	}
 
 	@Override
 	public ModbusSlaveTable getModbusSlaveTable(AccessMode accessMode) {
@@ -260,36 +299,60 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 	@Override
 	public void applyPower(int activePower, int reactivePower) throws OpenemsNamedException {
 
-		if (!this.isActivePowerAllowed) {
+		if (!this.isPowerAllowed) {
 			this.log.debug("Active power is not allowed!");
 			return;
 		}
 		
 		IntegerWriteChannel wMaxChannel = this.channel(ChannelId.W_MAX);
-		IntegerWriteChannel wMaxLimPctChannel = this.channel(ChannelId.W_MAX_LIM_PCT);
-		IntegerWriteChannel wMaxLim_EnaChannel = this.channel(ChannelId.W_MAX_LIM_ENA);
-
-		// Vorgabe WMax
-		wMaxChannel.setNextWriteValue(MAX_APPARENT_POWER);
+		wMaxChannel.setNextWriteValue(MAX_APPARENT_POWER); 	// Set WMax
 		
-		// Wirkleistungsvorgabe an den Umrichter als Prozentwert bezogen auf WMAX!!
+		/*
+		 * Set Active Power
+		 */
+		
+		IntegerWriteChannel wMaxLimPctChannel = this.channel(ChannelId.W_MAX_LIM_PCT);
+		EnumWriteChannel wMaxLim_EnaChannel = this.channel(ChannelId.W_MAX_LIM_ENA);
+		
+		
+		
+		// Set Active Power as a percentage of WMAX
 		int wSetPct = ((100 * activePower) / MAX_APPARENT_POWER);
 		wMaxLimPctChannel.setNextWriteValue(wSetPct);
-		wMaxLim_EnaChannel.setNextWriteValue(1);
+		wMaxLim_EnaChannel.setNextWriteValue(WMaxLimEna.ENABLED);
 		
-		//TODO
-//		IntegerWriteChannel varMaxLimPctChannel = this.channel(ChannelId.VAR_W_MAX_PCT);
-//		IntegerWriteChannel varMaxLim_EnaChannel = this.channel(ChannelId.VAR_PCT_ENA);
-//		//Blindleistungsvorgabe an den Umrichter als Prozentwert bezogen auf WMAX
-//		int varSetPct = ((100 * reactivePower) / MAX_APPARENT_POWER);
-//		varMaxLimPctChannel.setNextWriteValue(varSetPct);
-//		varMaxLim_EnaChannel.setNextWriteValue(1);
+		/*
+		 * Set Reactive Power
+		 */
+		
+		IntegerWriteChannel varMaxLimPctChannel = this.channel(ChannelId.VAR_W_MAX_PCT);
+		EnumWriteChannel varMaxLim_EnaChannel = this.channel(ChannelId.VAR_PCT_ENA);
+
+		// Set Reactive Power as a percentage of WMAX
+		int varSetPct = ((100 * reactivePower) / MAX_APPARENT_POWER);
+		varMaxLimPctChannel.setNextWriteValue(varSetPct);
+		varMaxLim_EnaChannel.setNextWriteValue(VArPctEna.ENABLED);
 
 	}
+	
+	@Override
+	public Constraint[] getStaticConstraints() throws OpenemsException {
+		if (this.isPowerAllowed) {
+			return new Constraint[] { this.createPowerConstraint("Reactive power is not allowed", Phase.ALL,
+					Pwr.REACTIVE, Relationship.EQUALS, 0) };
+		} else {
+			return new Constraint[] {
+					this.createPowerConstraint("KACO inverter not ready", Phase.ALL, Pwr.ACTIVE, Relationship.EQUALS,
+							0),
+					this.createPowerConstraint("Reactive power is not allowed", Phase.ALL, Pwr.REACTIVE,
+							Relationship.EQUALS, 0) };
+		}
+	}
+
 
 	@Override
 	public int getPowerPrecision() {
-		return 880;
+		return MAX_APPARENT_POWER / 100;
 	}
 
 	/*
@@ -303,11 +366,11 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 		 */
 		ID_1(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
 		L_1(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
-		MN(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
-		MD(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
-		OPT(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
-		VR(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
-		SN(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
+		MN(Doc.of(OpenemsType.STRING).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
+		MD(Doc.of(OpenemsType.STRING).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
+		OPT(Doc.of(OpenemsType.STRING).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
+		VR(Doc.of(OpenemsType.STRING).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
+		SN(Doc.of(OpenemsType.STRING).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
 		DA(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_WRITE)), //
 		PAD_1(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
 
@@ -399,7 +462,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 		L_123(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
 		CONN(Doc.of(Conn.values())), //
 		W_MAX_LIM_PCT(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_WRITE)), // % WMax
-		W_MAX_LIM_ENA(Doc.of(WMaxLimEna.values())), //
+		W_MAX_LIM_ENA(Doc.of(WMaxLimEna.values()).accessMode(AccessMode.READ_WRITE)), //
 		OUT_PF_SET(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_WRITE)), // // cos()
 		OUT_PF_SET_ENA(Doc.of(OutPFSetEna.values())), //
 		VAR_W_MAX_PCT(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_WRITE)), // // % WMax
@@ -498,7 +561,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 						m(EssREFUstore88K.ChannelId.PH_VPH_B, new UnsignedWordElement(SUNSPEC_103 + 12),
 								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
 						m(EssREFUstore88K.ChannelId.V_SF, new UnsignedWordElement(SUNSPEC_103 + 13)),
-						m(EssREFUstore88K.ChannelId.W, new SignedWordElement(SUNSPEC_103 + 14),
+						m(SymmetricEss.ChannelId.ACTIVE_POWER, new SignedWordElement(SUNSPEC_103 + 14),
 								ElementToChannelConverter.SCALE_FACTOR_1),
 						m(EssREFUstore88K.ChannelId.W_SF, new SignedWordElement(SUNSPEC_103 + 15)),
 						m(EssREFUstore88K.ChannelId.HZ, new SignedWordElement(SUNSPEC_103 + 16),

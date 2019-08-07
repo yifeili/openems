@@ -29,12 +29,15 @@ import io.openems.edge.bridge.modbus.api.BridgeModbus;
 import io.openems.edge.bridge.modbus.api.ElementToChannelConverter;
 import io.openems.edge.bridge.modbus.api.ModbusProtocol;
 import io.openems.edge.bridge.modbus.api.element.BitsWordElement;
+import io.openems.edge.bridge.modbus.api.element.SignedWordElement;
 import io.openems.edge.bridge.modbus.api.element.UnsignedDoublewordElement;
 import io.openems.edge.bridge.modbus.api.element.UnsignedWordElement;
 import io.openems.edge.bridge.modbus.api.task.FC16WriteRegistersTask;
 import io.openems.edge.bridge.modbus.api.task.FC3ReadRegistersTask;
 import io.openems.edge.common.channel.BooleanWriteChannel;
 import io.openems.edge.common.channel.EnumReadChannel;
+import io.openems.edge.common.channel.EnumWriteChannel;
+import io.openems.edge.common.channel.IntegerWriteChannel;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.event.EdgeEventConstants;
 import io.openems.edge.common.modbusslave.ModbusSlave;
@@ -55,6 +58,7 @@ public class BMWBattery extends AbstractOpenemsModbusComponent
 
 	protected static final int SYSTEM_ON = 1;
 	protected final static int SYSTEM_OFF = 0;
+	private static final Integer CLOSE_CONTACTORS = 4;
 
 
 	@Reference
@@ -284,9 +288,9 @@ public class BMWBattery extends AbstractOpenemsModbusComponent
 			if (!cOpt.isPresent()) {
 				return;
 			}
-			int max_current = (int) (cOpt.get() * 0.001);
+			int max_current = (int) (cOpt.get() * 1);
 			log.debug("callback battery range, max charge current, value: " + max_current);
-			this.channel(Battery.ChannelId.CHARGE_MAX_CURRENT).setNextValue(max_current);
+			this.channel(Battery.ChannelId.DISCHARGE_MAX_CURRENT).setNextValue(max_current);
 		});
 
 		// !!!!! TODO What values are needed !!!!! Is this correct??
@@ -297,9 +301,9 @@ public class BMWBattery extends AbstractOpenemsModbusComponent
 			if (!cOpt.isPresent()) {
 				return;
 			}
-			int max_current = (int) (cOpt.get() * 0.001);
+			int max_current = (int) (cOpt.get() * -1);
 			log.debug("callback battery range, max discharge current, value: " + max_current);
-			this.channel(Battery.ChannelId.DISCHARGE_MAX_CURRENT).setNextValue(max_current);
+			this.channel(Battery.ChannelId.CHARGE_MAX_CURRENT).setNextValue(max_current);
 		});
 
 	}
@@ -366,12 +370,21 @@ public class BMWBattery extends AbstractOpenemsModbusComponent
 		return "SoC:" + this.getSoc().value() //
 				+ "|Discharge:" + this.getDischargeMinVoltage().value() + ";" + this.getDischargeMaxCurrent().value() //
 				+ "|Charge:" + this.getChargeMaxVoltage().value() + ";" + this.getChargeMaxCurrent().value() + "|State:"
-				+ this.getStateMachineState();
+				+ this.getStateMachineState()
+				+ "|State:" + this.channel(BMWChannelId.BMS_STATE)
+				;
 	}
 
 	private void startSystem() {
 		//TODO Currently not necessary, Battery starts itself?!
 		this.log.debug("Start system");
+		IntegerWriteChannel commandChannel = this.channel(BMWChannelId.BMS_STATE_COMMAND);
+		try {
+			commandChannel.setNextWriteValue(CLOSE_CONTACTORS);
+		} catch (OpenemsNamedException e) {
+			// TODO Auto-generated catch block
+			log.error("Problem occurred during send start command");
+		}
 	}
 
 	private void stopSystem() {
@@ -396,14 +409,15 @@ public class BMWBattery extends AbstractOpenemsModbusComponent
 
 				new FC16WriteRegistersTask(1399,
 						m(BMWChannelId.HEART_BEAT, new UnsignedWordElement(1399)), //
-						m(new BitsWordElement(1400, this) //
-								.bit(15, BMWChannelId.BMS_STATE_COMMAND_RESET) //
-								.bit(14, BMWChannelId.BMS_STATE_COMMAND_CLEAR_ERROR) //
-								.bit(3, BMWChannelId.BMS_STATE_COMMAND_CLOSE_PRECHARGE) //
-								.bit(2, BMWChannelId.BMS_STATE_COMMAND_CLOSE_CONTACTOR) //
-								.bit(1, BMWChannelId.BMS_STATE_COMMAND_WAKE_UP_FROM_STOP) //
-								.bit(0, BMWChannelId.BMS_STATE_COMMAND_ENABLE_BATTERY) //
-						), //
+						m(BMWChannelId.BMS_STATE_COMMAND, new UnsignedWordElement(1400)), //
+//						m(new BitsWordElement(1400, this) //
+//								.bit(15, BMWChannelId.BMS_STATE_COMMAND_RESET) //
+//								.bit(14, BMWChannelId.BMS_STATE_COMMAND_CLEAR_ERROR) //
+//								.bit(3, BMWChannelId.BMS_STATE_COMMAND_CLOSE_PRECHARGE) //
+//								.bit(2, BMWChannelId.BMS_STATE_COMMAND_CLOSE_CONTACTOR) //
+//								.bit(1, BMWChannelId.BMS_STATE_COMMAND_WAKE_UP_FROM_STOP) //
+//								.bit(0, BMWChannelId.BMS_STATE_COMMAND_ENABLE_BATTERY) //
+//						), //
 						m(BMWChannelId.OPERATING_STATE_INVERTER, new UnsignedWordElement(1401)), //
 						m(BMWChannelId.DC_LINK_VOLTAGE, new UnsignedWordElement(1402), ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
 						m(BMWChannelId.DC_LINK_CURRENT, new UnsignedWordElement(1403)), //
@@ -429,13 +443,13 @@ public class BMWBattery extends AbstractOpenemsModbusComponent
 						m(BMWChannelId.MAXIMUM_OPERATING_VOLTAGE, new UnsignedWordElement(1008), ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
 						m(BMWChannelId.MINIMUM_OPERATING_VOLTAGE, new UnsignedWordElement(1009), ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
 						m(BMWChannelId.MAXIMUM_LIMIT_DYNAMIC_CURRENT, new UnsignedWordElement(1010)), //
-						m(BMWChannelId.MINIMUM_LIMIT_DYNAMIC_CURRENT, new UnsignedWordElement(1011)), //
+						m(BMWChannelId.MINIMUM_LIMIT_DYNAMIC_CURRENT, new SignedWordElement(1011)), //
 						m(BMWChannelId.MAXIMUM_LIMIT_DYNAMIC_VOLTAGE, new UnsignedWordElement(1012), ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
 						m(BMWChannelId.MINIMUM_LIMIT_DYNAMIC_VOLTAGE, new UnsignedWordElement(1013), ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //						
 						m(BMWChannelId.NUMBER_OF_STRINGS_CONNECTED, new UnsignedWordElement(1014)), //
 						m(BMWChannelId.NUMBER_OF_STRINGS_INSTALLED, new UnsignedWordElement(1015)), //						
 						m(BMWChannelId.SOC_ALL_STRINGS, new UnsignedWordElement(1016), ElementToChannelConverter.SCALE_FACTOR_MINUS_2), //
-						m(BMWChannelId.SOC_CONNECTED_STRINGS, new UnsignedWordElement(1017), ElementToChannelConverter.SCALE_FACTOR_MINUS_2), //
+						m(Battery.ChannelId.SOC, new UnsignedWordElement(1017), ElementToChannelConverter.SCALE_FACTOR_MINUS_2), //
 						m(BMWChannelId.REMAINING_CHARGE_CAPACITY, new UnsignedWordElement(1018)), //
 						m(BMWChannelId.REMAINING_DISCHARGE_CAPACITY, new UnsignedWordElement(1019)), //
 						m(BMWChannelId.REMAINING_CHARGE_ENERGY, new UnsignedWordElement(1020)), //

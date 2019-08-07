@@ -5,16 +5,16 @@ import io.openems.common.types.OptionsEnum;
 public enum BmsState implements OptionsEnum {
 	UNDEFINED(-1, "Undefined"), //
 	OFF(0, "Off"), //
-	INIT(1, "Init"), //
-	STANDBY(2, "Standby"),
-	READY(3, "Ready"),
-	OPERATION(4, "Operation"),
-	ERROR(5, "Error"),
-	PRE_HEAT(6, "Pre-Heat"),
-	PRE_HEAT_COMPLETED(7, "Pre-Heat completed"),
-	PRE_CHARGE(8, "Precharge"),
-	PRE_CHARGE_COMPLETED(9, "Precharge completed"),
-	STATE_UNKNOWN(15, "Unknown undefined")
+	INIT(2, "Init"), //
+	STANDBY(4, "Standby"),
+	READY(8, "Ready"),
+	OPERATION(16, "Operation"),
+	ERROR(32, "Error"),
+	PRE_HEAT(64, "Pre-Heat"),
+	PRE_HEAT_COMPLETED(128, "Pre-Heat completed"),
+	PRE_CHARGE(256, "Precharge"),
+	PRE_CHARGE_COMPLETED(512, "Precharge completed"),
+	STATE_UNKNOWN(32768, "Unknown undefined")
 	;
 
 	private final int value;
