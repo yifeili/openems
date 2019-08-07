@@ -215,6 +215,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 
 		this.getAllowedCharge().setNextValue(chaMaxA * chaMaxV * -1 * EFFICIENCY_FACTOR);
 		this.getAllowedDischarge().setNextValue(disMaxA * disMinV * EFFICIENCY_FACTOR);
+		
 	}
 
 	private void doStandbyHandling() {
@@ -300,7 +301,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 	public void applyPower(int activePower, int reactivePower) throws OpenemsNamedException {
 
 		if (!this.isPowerAllowed) {
-			this.log.debug("Active power is not allowed!");
+			this.log.debug("Power is not allowed!");
 			return;
 		}
 		
@@ -338,11 +339,10 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 	@Override
 	public Constraint[] getStaticConstraints() throws OpenemsException {
 		if (this.isPowerAllowed) {
-			return new Constraint[] { this.createPowerConstraint("Reactive power is not allowed", Phase.ALL,
-					Pwr.REACTIVE, Relationship.EQUALS, 0) };
+			return Power.NO_CONSTRAINTS;
 		} else {
 			return new Constraint[] {
-					this.createPowerConstraint("KACO inverter not ready", Phase.ALL, Pwr.ACTIVE, Relationship.EQUALS,
+					this.createPowerConstraint("REFU inverter not ready", Phase.ALL, Pwr.ACTIVE, Relationship.EQUALS,
 							0),
 					this.createPowerConstraint("Reactive power is not allowed", Phase.ALL, Pwr.REACTIVE,
 							Relationship.EQUALS, 0) };
@@ -466,7 +466,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 		OUT_PF_SET(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_WRITE)), // // cos()
 		OUT_PF_SET_ENA(Doc.of(OutPFSetEna.values())), //
 		VAR_W_MAX_PCT(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_WRITE)), // // % WMax
-		VAR_PCT_ENA(Doc.of(VArPctEna.values())), //
+		VAR_PCT_ENA(Doc.of(VArPctEna.values()).accessMode(AccessMode.READ_WRITE)), //
 		W_MAX_LIM_PCT_SF(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
 		OUT_PF_SET_SF(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
 		VAR_PCT_SF(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
