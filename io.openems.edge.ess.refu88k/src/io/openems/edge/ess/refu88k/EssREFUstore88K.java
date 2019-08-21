@@ -69,7 +69,15 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 
 	public static final int DEFAULT_UNIT_ID = 1;
 	protected static final int MAX_APPARENT_POWER = 50_000;
-
+	
+	/*
+	 * Constants State Machine
+	 */
+	private static final Integer CONNECT_TO_GRID = 1;
+	private static final Integer STOP_SYSTEM = 2;
+	private static final Integer ENTER_STANDBY_MODE = 3;
+	private static final Integer EXIT_STANDBY_MODE = 4;
+	
 	/*
 	 * Is Power allowed? This is set to false on error or if the inverter is not
 	 * fully initialized.
@@ -226,7 +234,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 	private void exitStandbyMode() {
 		EnumWriteChannel pcsSetOperation = this.channel(ChannelId.PCS_SET_OPERATION);
 		try {
-			pcsSetOperation.setNextWriteValue(OperatingState.MPPT);
+			pcsSetOperation.setNextWriteValue(EXIT_STANDBY_MODE);
 		} catch (OpenemsNamedException e) {
 			log.error("problem occurred while trying to start grid mode" + e.getMessage());
 		}
@@ -238,7 +246,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 	private void doGridConnectedHandling() {
 		EnumWriteChannel pcsSetOperation = this.channel(ChannelId.PCS_SET_OPERATION);
 		try {
-			pcsSetOperation.setNextWriteValue(OperatingState.OFF);
+			pcsSetOperation.setNextWriteValue(CONNECT_TO_GRID);
 		} catch (OpenemsNamedException e) {
 			log.error("problem occurred while trying to start grid mode" + e.getMessage());
 		}
@@ -254,21 +262,21 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 //	private void stopSystem() {
 //		EnumWriteChannel pcsSetOperation = this.channel(ChannelId.PCS_SET_OPERATION);
 //		try {
-//			pcsSetOperation.setNextWriteValue(OperatingState.SLEEPING);
+//			pcsSetOperation.setNextWriteValue(STOP_SYSTEM);
 //		} catch (OpenemsNamedException e) {
 //			log.error("problem occurred while trying to start grid mode" + e.getMessage());
 //		}
 //	}
 	
-//	@SuppressWarnings("unused")
-//	private void enterStandbyMode() {
-//		EnumWriteChannel pcsSetOperation = this.channel(ChannelId.PCS_SET_OPERATION);
-//		try {
-//			pcsSetOperation.setNextWriteValue(OperatingState.STARTING);
-//		} catch (OpenemsNamedException e) {
-//			log.error("problem occurred while trying to start grid mode" + e.getMessage());
-//		}
-//	}
+	@SuppressWarnings("unused")
+	private void enterStandbyMode() {
+		EnumWriteChannel pcsSetOperation = this.channel(ChannelId.PCS_SET_OPERATION);
+		try {
+			pcsSetOperation.setNextWriteValue(ENTER_STANDBY_MODE);
+		} catch (OpenemsNamedException e) {
+			log.error("problem occurred while trying to start grid mode" + e.getMessage());
+		}
+	}
 
 
 	@Override
