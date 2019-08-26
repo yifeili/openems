@@ -367,11 +367,12 @@ public class BMWBattery extends AbstractOpenemsModbusComponent
 
 	@Override
 	public String debugLog() {
-		return "SoC:" + this.getSoc().value() //
+		return "State:" + this.getStateMachineState()
+				+ " | SoC:" + this.getSoc().value() //
+				+ " | Voltage:" + this.getDischargeMinVoltage().value() 
 //				+ "|Discharge:" + this.getDischargeMinVoltage().value() + ";" + this.getDischargeMaxCurrent().value() //
 //				+ "|Charge:" + this.getChargeMaxVoltage().value() + ";" + this.getChargeMaxCurrent().value() + "|State:"
-				+ this.getStateMachineState()
-				+ "|State:" + this.channel(BMWChannelId.BMS_STATE)
+//				+ this.channel(BMWChannelId.BMS_STATE)
 				;
 	}
 
@@ -440,12 +441,10 @@ public class BMWBattery extends AbstractOpenemsModbusComponent
 						m(BMWChannelId.INFO_BITS, new UnsignedWordElement(1005)), //
 						m(BMWChannelId.MAXIMUM_OPERATING_CURRENT, new UnsignedWordElement(1006)), //
 						m(BMWChannelId.MINIMUM_OPERATING_CURRENT, new UnsignedWordElement(1007)), //
-
 						m(Battery.ChannelId.CHARGE_MAX_VOLTAGE, new UnsignedWordElement(1008), ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
 						m(Battery.ChannelId.DISCHARGE_MIN_VOLTAGE, new UnsignedWordElement(1009), ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
 						m(Battery.ChannelId.DISCHARGE_MAX_CURRENT, new UnsignedWordElement(1010)), //
 						m(Battery.ChannelId.CHARGE_MAX_CURRENT, new SignedWordElement(1011)), //
-						
 						m(BMWChannelId.MAXIMUM_LIMIT_DYNAMIC_VOLTAGE, new UnsignedWordElement(1012), ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
 						m(BMWChannelId.MINIMUM_LIMIT_DYNAMIC_VOLTAGE, new UnsignedWordElement(1013), ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //						
 						m(BMWChannelId.NUMBER_OF_STRINGS_CONNECTED, new UnsignedWordElement(1014)), //
@@ -461,9 +460,7 @@ public class BMWBattery extends AbstractOpenemsModbusComponent
 						m(BMWChannelId.NOMINAL_CAPACITY, new UnsignedWordElement(1024)), //
 						m(BMWChannelId.TOTAL_CAPACITY, new UnsignedWordElement(1025)), //
 						m(Battery.ChannelId.SOH, new UnsignedWordElement(1026), ElementToChannelConverter.SCALE_FACTOR_MINUS_2), //
-						
 						m(Battery.ChannelId.VOLTAGE, new UnsignedWordElement(1027), ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
-						
 						m(BMWChannelId.DC_VOLTAGE_AVERAGE, new UnsignedWordElement(1028), ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
 						m(BMWChannelId.DC_CURRENT, new UnsignedWordElement(1029), ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
 						m(BMWChannelId.AVERAGE_TEMPERATURE, new UnsignedWordElement(1030)), //

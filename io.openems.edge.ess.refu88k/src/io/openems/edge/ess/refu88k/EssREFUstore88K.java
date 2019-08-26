@@ -16,7 +16,6 @@ import org.osgi.service.event.EventHandler;
 import org.osgi.service.metatype.annotations.Designate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import io.openems.common.channel.AccessMode;
 import io.openems.common.channel.Unit;
 import io.openems.common.exceptions.OpenemsException;
@@ -43,7 +42,6 @@ import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.event.EdgeEventConstants;
 import io.openems.edge.common.modbusslave.ModbusSlave;
 import io.openems.edge.common.modbusslave.ModbusSlaveTable;
-import io.openems.edge.common.sum.GridMode;
 import io.openems.edge.common.taskmanager.Priority;
 import io.openems.edge.ess.api.ManagedSymmetricEss;
 import io.openems.edge.ess.api.SymmetricEss;
@@ -199,18 +197,29 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 		// If the battery system is not ready yet set power to zero to avoid damaging or
 		// improper system states
 		this.isPowerAllowed = battery.getReadyForWorking().value().orElse(false);
-
 		
-		// Read some Channels from Battery
-//		int disMinV = battery.getDischargeMinVoltage().value().orElse(0);
-//		int chaMaxV = battery.getChargeMaxVoltage().value().orElse(0);
-		
+		// Read important Channels from battery
 		int optV = battery.getVoltage().value().orElse(0);
 		int disMaxA = battery.getDischargeMaxCurrent().value().orElse(0);
 		int chaMaxA = battery.getChargeMaxCurrent().value().orElse(0);
-
-		this.getAllowedCharge().setNextValue(chaMaxA * optV * EFFICIENCY_FACTOR);
-		this.getAllowedDischarge().setNextValue(disMaxA * optV * EFFICIENCY_FACTOR);
+		
+		// Calculate allowedCharge and allowed Discharge from battery
+		//TODO: Calculate absolute Value!!
+				
+		
+		// Determine allowedCharge and allowedDischarge from Inverter
+		if(chaMaxA * optV * EFFICIENCY_FACTOR < MAX_APPARENT_POWER * -1) {
+			this.getAllowedCharge().setNextValue(MAX_APPARENT_POWER * -1);
+		} else {
+			this.getAllowedCharge().setNextValue(chaMaxA * optV * EFFICIENCY_FACTOR);
+		}
+		
+		if(disMaxA * optV * EFFICIENCY_FACTOR > MAX_APPARENT_POWER) {
+			this.getAllowedDischarge().setNextValue(MAX_APPARENT_POWER);
+		} else {
+			this.getAllowedDischarge().setNextValue(disMaxA * optV * EFFICIENCY_FACTOR);
+		}
+		
 		
 	}
 
@@ -314,6 +323,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 		
 		
 		// Set Active Power as a percentage of WMAX
+		
 		int wSetPct = ((100 * activePower) / MAX_APPARENT_POWER);
 		wMaxLimPctChannel.setNextWriteValue(wSetPct);
 		wMaxLim_EnaChannel.setNextWriteValue(WMaxLimEna.ENABLED);
@@ -702,9 +712,9 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 	@Override
 	public String debugLog() {
 		return "State:" + this.channel(ChannelId.ST).value().asOptionString() //
-				+ ",L:" + this.channel(SymmetricEss.ChannelId.ACTIVE_POWER).value().asString() //
-//				+ "Allowed Charge:" + this.getAllowedCharge().value() //
-//				+ "Allowed Discharge:" + this.getAllowedDischarge().value() //
+				+ " | L:" + this.channel(SymmetricEss.ChannelId.ACTIVE_POWER).value().asString() //
+				+ " | Allowed Charge:" + this.getAllowedCharge().value() //
+				+ " | Allowed Discharge:" + this.getAllowedDischarge().value() //
 				;
 	}
 }
