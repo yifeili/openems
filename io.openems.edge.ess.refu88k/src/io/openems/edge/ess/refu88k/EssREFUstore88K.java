@@ -66,17 +66,12 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 		implements ManagedSymmetricEss, SymmetricEss, OpenemsComponent, EventHandler, ModbusSlave {
 
 	private final Logger log = LoggerFactory.getLogger(EssREFUstore88K.class);
-
+	private Config config;
+	
 	public static final int DEFAULT_UNIT_ID = 1;
 	protected static final int MAX_APPARENT_POWER = 50_000;
+	final double EFFICIENCY_FACTOR = 0.98;
 	
-	/*
-	 * Constants State Machine
-	 */
-	private static final Integer CONNECT_TO_GRID = 1;
-	private static final Integer STOP_SYSTEM = 2;
-	private static final Integer ENTER_STANDBY_MODE = 3;
-	private static final Integer EXIT_STANDBY_MODE = 4;
 	
 	/*
 	 * Is Power allowed? This is set to false on error or if the inverter is not
@@ -116,7 +111,9 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 
 	@Activate
 	void activate(ComponentContext context, Config config) {
-		super.activate(context, config.id(), config.alias(), config.enabled(), DEFAULT_UNIT_ID, this.cm, "Modbus", config.modbus_id()); //
+		super.activate(context, config.id(), config.alias(), config.enabled(), DEFAULT_UNIT_ID, this.cm, "Modbus",
+				config.modbus_id()); //
+		this.config = config;
 	}
 
 	@Deactivate
@@ -205,24 +202,15 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 
 		
 		// Read some Channels from Battery
-		int disMinV = battery.getDischargeMinVoltage().value().orElse(0);
-		int chaMaxV = battery.getChargeMaxVoltage().value().orElse(0);
+//		int disMinV = battery.getDischargeMinVoltage().value().orElse(0);
+//		int chaMaxV = battery.getChargeMaxVoltage().value().orElse(0);
+		
+		int optV = battery.getVoltage().value().orElse(0);
 		int disMaxA = battery.getDischargeMaxCurrent().value().orElse(0);
 		int chaMaxA = battery.getChargeMaxCurrent().value().orElse(0);
 
-		// Update Power Constraints
-		// TODO: The actual AC allowed charge and discharge should come from the KACO
-		// Blueplanet instead of calculating it from DC parameters.
-		final double EFFICIENCY_FACTOR = 0.9;
-
-		// FIXME
-		// allowedCharge += battery.getVoltage().value().orElse(0) *
-		// battery.getChargeMaxCurrent().value().orElse(0) * -1;
-		// allowedDischarge += battery.getVoltage().value().orElse(0) *
-		// battery.getDischargeMaxCurrent().value().orElse(0);
-
-		this.getAllowedCharge().setNextValue(chaMaxA * chaMaxV * -1 * EFFICIENCY_FACTOR);
-		this.getAllowedDischarge().setNextValue(disMaxA * disMinV * EFFICIENCY_FACTOR);
+		this.getAllowedCharge().setNextValue(chaMaxA * optV * EFFICIENCY_FACTOR);
+		this.getAllowedDischarge().setNextValue(disMaxA * optV * EFFICIENCY_FACTOR);
 		
 	}
 
@@ -234,7 +222,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 	private void exitStandbyMode() {
 		EnumWriteChannel pcsSetOperation = this.channel(ChannelId.PCS_SET_OPERATION);
 		try {
-			pcsSetOperation.setNextWriteValue(EXIT_STANDBY_MODE);
+			pcsSetOperation.setNextWriteValue(PCSSetOperation.EXIT_STANDBY_MODE);
 		} catch (OpenemsNamedException e) {
 			log.error("problem occurred while trying to start grid mode" + e.getMessage());
 		}
@@ -246,7 +234,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 	private void doGridConnectedHandling() {
 		EnumWriteChannel pcsSetOperation = this.channel(ChannelId.PCS_SET_OPERATION);
 		try {
-			pcsSetOperation.setNextWriteValue(CONNECT_TO_GRID);
+			pcsSetOperation.setNextWriteValue(PCSSetOperation.CONNECT_TO_GRID);
 		} catch (OpenemsNamedException e) {
 			log.error("problem occurred while trying to start grid mode" + e.getMessage());
 		}
@@ -262,7 +250,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 //	private void stopSystem() {
 //		EnumWriteChannel pcsSetOperation = this.channel(ChannelId.PCS_SET_OPERATION);
 //		try {
-//			pcsSetOperation.setNextWriteValue(STOP_SYSTEM);
+//			pcsSetOperation.setNextWriteValue(PCSSetOperation.STOP_SYSTEM);
 //		} catch (OpenemsNamedException e) {
 //			log.error("problem occurred while trying to start grid mode" + e.getMessage());
 //		}
@@ -272,7 +260,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 	private void enterStandbyMode() {
 		EnumWriteChannel pcsSetOperation = this.channel(ChannelId.PCS_SET_OPERATION);
 		try {
-			pcsSetOperation.setNextWriteValue(ENTER_STANDBY_MODE);
+			pcsSetOperation.setNextWriteValue(PCSSetOperation.ENTER_STANDBY_MODE);
 		} catch (OpenemsNamedException e) {
 			log.error("problem occurred while trying to start grid mode" + e.getMessage());
 		}
@@ -714,6 +702,9 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 	@Override
 	public String debugLog() {
 		return "State:" + this.channel(ChannelId.ST).value().asOptionString() //
-				+ ",L:" + this.channel(SymmetricEss.ChannelId.ACTIVE_POWER).value().asString(); //
+				+ ",L:" + this.channel(SymmetricEss.ChannelId.ACTIVE_POWER).value().asString() //
+//				+ "Allowed Charge:" + this.getAllowedCharge().value() //
+//				+ "Allowed Discharge:" + this.getAllowedDischarge().value() //
+				;
 	}
 }

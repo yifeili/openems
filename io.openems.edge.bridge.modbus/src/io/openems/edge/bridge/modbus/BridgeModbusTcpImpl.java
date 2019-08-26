@@ -46,6 +46,7 @@ public class BridgeModbusTcpImpl extends AbstractModbusBridge
 	 * The configured IP address.
 	 */
 	private InetAddress ipAddress = null;
+	private int port = Modbus.DEFAULT_PORT;
 
 	public enum ChannelId implements io.openems.edge.common.channel.ChannelId {
 		;
@@ -73,6 +74,7 @@ public class BridgeModbusTcpImpl extends AbstractModbusBridge
 	protected void activate(ComponentContext context, ConfigTcp config) throws UnknownHostException {
 		super.activate(context, config.id(), config.alias(), config.enabled(), config.logVerbosity());
 		this.setIpAddress(InetAddress.getByName(config.ip()));
+		this.port = config.port();
 	}
 
 	@Deactivate
@@ -104,7 +106,7 @@ public class BridgeModbusTcpImpl extends AbstractModbusBridge
 			 * create new connection
 			 */
 			TCPMasterConnection connection = new TCPMasterConnection(this.getIpAddress());
-			connection.setPort(Modbus.DEFAULT_PORT);
+			connection.setPort(this.port);
 			this._connection = connection;
 		}
 		if (!this._connection.isConnected()) {
