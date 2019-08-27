@@ -115,7 +115,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 	void activate(ComponentContext context, Config config) {
 		super.activate(context, config.id(), config.alias(), config.enabled(), DEFAULT_UNIT_ID, this.cm, "Modbus",
 				config.modbus_id()); //
-		this.config = config;
+		this.config = config;			
 	}
 
 	@Deactivate
@@ -146,7 +146,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 			 * The inverter is initialised but not grid connected. The IGBT's are locked and
 			 * AC relays are open.
 			 */
-			this.doStandbyHandling();
+			this.doStandbyHandling();				
 			break;
 		case SLEEPING:
 			break;
@@ -189,6 +189,43 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 			/*
 			 * The inverter is in fault state. The IGBT's are locked and AC relays are open.
 			 */
+			break;
+		case UNDEFINED:
+			// Do nothing because these states are only temporarily reached
+			break;
+		}
+	}
+	
+	private void offHandleStateMachine() {
+
+		// by default: block Power
+		this.isPowerAllowed = false;
+		
+		EnumReadChannel operatingStateChannel = this.channel(ChannelId.ST);
+		OperatingState operatingState = operatingStateChannel.value().asEnum();
+
+		switch (operatingState) {
+		case OFF:
+			break;
+		case STANDBY:
+			break;
+		case SLEEPING:
+			break;
+		case STARTING:
+			this.enterStandbyMode();
+			break;
+		case STARTED:
+			this.enterStandbyMode();
+			break;
+		case THROTTLED:
+			this.enterStandbyMode();
+			break;
+		case MPPT:
+			this.enterStandbyMode();
+			break;
+		case SHUTTING_DOWN:
+			break;
+		case FAULT:
 			break;
 		case UNDEFINED:
 			// Do nothing because these states are only temporarily reached
@@ -263,8 +300,6 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 	}
 
 
-
-
 	private void doGridConnectedHandling() {
 		checkIfPowerIsAllowed();
 		if (isPowerRequired && isPowerAllowed) {
@@ -288,8 +323,11 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 		}
 	}
 	
-	@SuppressWarnings("unused")
+
 	private void enterStandbyMode() {
+		
+		
+		
 		EnumWriteChannel pcsSetOperation = this.channel(ChannelId.PCS_SET_OPERATION);
 		try {
 			pcsSetOperation.setNextWriteValue(PCSSetOperation.ENTER_STANDBY_MODE);
@@ -315,7 +353,11 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 		}
 		switch (event.getTopic()) {
 		case EdgeEventConstants.TOPIC_CYCLE_AFTER_PROCESS_IMAGE:
-			handleStateMachine();
+			if(!config.inverterOff()) {
+				handleStateMachine();				
+			} else {
+				offHandleStateMachine();
+			}
 			break;
 		}
 	}
