@@ -1,8 +1,6 @@
 package io.openems.edge.ess.refu88k;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
-
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
@@ -40,7 +38,6 @@ import io.openems.edge.bridge.modbus.api.task.FC3ReadRegistersTask;
 import io.openems.edge.common.channel.Doc;
 import io.openems.edge.common.channel.EnumReadChannel;
 import io.openems.edge.common.channel.EnumWriteChannel;
-import io.openems.edge.common.channel.IntegerReadChannel;
 import io.openems.edge.common.channel.IntegerWriteChannel;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.event.EdgeEventConstants;
@@ -172,7 +169,8 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 			 * The inverter feeds and derating is active. The IGBT's are working and AC
 			 * relays are closed.
 			 */
-			this.checkIfPowerIsAllowed();			
+			this.checkIfPowerIsAllowed();
+			this.timeNoPowerRequired();
 			break;
 		case MPPT:
 			/*
@@ -180,6 +178,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 			 * relays are closed.
 			 */
 			this.checkIfPowerIsAllowed();
+			this.timeNoPowerRequired();
 			break;
 		case SHUTTING_DOWN:
 			/*
@@ -190,10 +189,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 			/*
 			 * The inverter is in fault state. The IGBT's are locked and AC relays are open.
 			 */
-
-			// this.doFaultHandling();
 			break;
-
 		case UNDEFINED:
 			// Do nothing because these states are only temporarily reached
 			break;
@@ -238,6 +234,19 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 
 	}
 	
+	private void timeNoPowerRequired() {
+		if (!isPowerRequired) {
+			if (timeNoPower == null) {
+				timeNoPower = LocalDateTime.now();
+			}
+			if ((timeNoPower.plusSeconds(config.timeLimitNoPower())).isBefore(LocalDateTime.now())) {
+				this.stopSystem();
+			} 
+			} else {				
+				timeNoPower = null;
+		} 
+	}
+	
 
 	private void doStandbyHandling() {
 		this.isPowerAllowed = false;
@@ -269,21 +278,15 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
  
 	}
 
-//	private void doFaultHandling() {
-//		// find out the reason what is wrong an react
-//		// for a first try, switch system off, it will be restarted
-//		stopSystem();
-//	}
 	
-//	@SuppressWarnings("unused")
-//	private void stopSystem() {
-//		EnumWriteChannel pcsSetOperation = this.channel(ChannelId.PCS_SET_OPERATION);
-//		try {
-//			pcsSetOperation.setNextWriteValue(PCSSetOperation.STOP_SYSTEM);
-//		} catch (OpenemsNamedException e) {
-//			log.error("problem occurred while trying to start grid mode" + e.getMessage());
-//		}
-//	}
+	private void stopSystem() {
+		EnumWriteChannel pcsSetOperation = this.channel(ChannelId.PCS_SET_OPERATION);
+		try {
+			pcsSetOperation.setNextWriteValue(PCSSetOperation.STOP_SYSTEM);
+		} catch (OpenemsNamedException e) {
+			log.error("problem occurred while trying to start grid mode" + e.getMessage());
+		}
+	}
 	
 	@SuppressWarnings("unused")
 	private void enterStandbyMode() {
