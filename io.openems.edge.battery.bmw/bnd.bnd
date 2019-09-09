@@ -13,6 +13,7 @@ Export-Package: \
 	io.openems.edge.battery.api;version=latest,\
 	io.openems.edge.bridge.modbus,\
 	io.openems.edge.common;version=latest,\
+	io.openems.edge.ess.api;version=latest,\
 	slf4j.api
 
 -testpath: ${testpath}

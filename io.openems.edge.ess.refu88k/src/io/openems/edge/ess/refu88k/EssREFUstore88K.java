@@ -1,6 +1,8 @@
 package io.openems.edge.ess.refu88k;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
+
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
@@ -69,7 +71,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 	
 	public static final int DEFAULT_UNIT_ID = 1;
 	protected static final int MAX_APPARENT_POWER = 50_000;
-	final double EFFICIENCY_FACTOR = 0.98;
+	protected static final double EFFICIENCY_FACTOR = 0.98;
 	
 	
 	/*
@@ -197,9 +199,6 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 	}
 	
 	private void offHandleStateMachine() {
-
-		// by default: block Power
-		this.isPowerAllowed = false;
 		
 		EnumReadChannel operatingStateChannel = this.channel(ChannelId.ST);
 		OperatingState operatingState = operatingStateChannel.value().asEnum();
@@ -212,16 +211,16 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 		case SLEEPING:
 			break;
 		case STARTING:
-			this.enterStandbyMode();
+			this.stopInverter();
 			break;
 		case STARTED:
-			this.enterStandbyMode();
+			this.stopInverter();
 			break;
 		case THROTTLED:
-			this.enterStandbyMode();
+			this.stopInverter();
 			break;
 		case MPPT:
-			this.enterStandbyMode();
+			this.stopInverter();
 			break;
 		case SHUTTING_DOWN:
 			break;
@@ -251,13 +250,13 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 		if(absAllowedCharge > MAX_APPARENT_POWER) {
 			this.getAllowedCharge().setNextValue(MAX_APPARENT_POWER * -1);
 		} else {
-			this.getAllowedCharge().setNextValue(chaMaxA * optV * EFFICIENCY_FACTOR);
+			this.getAllowedCharge().setNextValue(absAllowedCharge * -1);
 		}
 		
 		if(absAllowedDischarge > MAX_APPARENT_POWER) {
 			this.getAllowedDischarge().setNextValue(MAX_APPARENT_POWER);
 		} else {
-			this.getAllowedDischarge().setNextValue(disMaxA * optV * EFFICIENCY_FACTOR);
+			this.getAllowedDischarge().setNextValue(absAllowedDischarge);
 		}		
 	}
 	
@@ -277,7 +276,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 				timeNoPower = LocalDateTime.now();
 			}
 			if ((timeNoPower.plusSeconds(config.timeLimitNoPower())).isBefore(LocalDateTime.now())) {
-				this.stopSystem();
+				this.enterStartedMode();
 			} 
 			} else {				
 				timeNoPower = null;
@@ -314,26 +313,70 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 	}
 
 	
-	private void stopSystem() {
+	private void enterStartedMode() {		
 		EnumWriteChannel pcsSetOperation = this.channel(ChannelId.PCS_SET_OPERATION);
 		try {
-			pcsSetOperation.setNextWriteValue(PCSSetOperation.STOP_SYSTEM);
+			pcsSetOperation.setNextWriteValue(PCSSetOperation.ENTER_STARTED_MODE);
 		} catch (OpenemsNamedException e) {
 			log.error("problem occurred while trying to start grid mode" + e.getMessage());
 		}
 	}
 	
 
-	private void enterStandbyMode() {
+	private void stopInverter() {
 		
+		this.isPowerAllowed = false;
 		
+		IntegerWriteChannel wMaxLimPctChannel = this.channel(ChannelId.W_MAX_LIM_PCT);
+		EnumWriteChannel wMaxLim_EnaChannel = this.channel(ChannelId.W_MAX_LIM_ENA);
 		
-		EnumWriteChannel pcsSetOperation = this.channel(ChannelId.PCS_SET_OPERATION);
+		IntegerWriteChannel varMaxLimPctChannel = this.channel(ChannelId.VAR_W_MAX_PCT);
+		EnumWriteChannel varMaxLim_EnaChannel = this.channel(ChannelId.VAR_PCT_ENA);
+				
+		
+		// Set Active Power to Zero
 		try {
-			pcsSetOperation.setNextWriteValue(PCSSetOperation.ENTER_STANDBY_MODE);
+			wMaxLimPctChannel.setNextWriteValue(0);
 		} catch (OpenemsNamedException e) {
-			log.error("problem occurred while trying to start grid mode" + e.getMessage());
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
+		try {
+			wMaxLim_EnaChannel.setNextWriteValue(WMaxLimEna.ENABLED);
+		} catch (OpenemsNamedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		// Set Reactive Power to Zero
+		try {
+			varMaxLimPctChannel.setNextWriteValue(0);
+		} catch (OpenemsNamedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		try {
+			varMaxLim_EnaChannel.setNextWriteValue(VArPctEna.ENABLED);
+		} catch (OpenemsNamedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+		
+		
+		int activePower = Math.abs(getActivePower().value().orElse(111));
+		int reactivePower = Math.abs(getReactivePower().value().orElse(111));
+		
+		if(activePower <= 110 && reactivePower <= 110) {
+			EnumWriteChannel pcsSetOperation = this.channel(ChannelId.PCS_SET_OPERATION);
+			try {
+				pcsSetOperation.setNextWriteValue(PCSSetOperation.ENTER_STANDBY_MODE);
+			} catch (OpenemsNamedException e) {
+				log.error("problem occurred while trying to start grid mode" + e.getMessage());
+			}
+		} else {
+			return;
+		}	
+
 	}
 
 
@@ -354,9 +397,9 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 		switch (event.getTopic()) {
 		case EdgeEventConstants.TOPIC_CYCLE_AFTER_PROCESS_IMAGE:
 			if(!config.inverterOff()) {
-				handleStateMachine();				
+				this.handleStateMachine();				
 			} else {
-				offHandleStateMachine();
+				this.offHandleStateMachine();
 			}
 			break;
 		}
@@ -374,39 +417,35 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 			this.log.debug("Power is not allowed!");
 			return;
 		}
+
 		
-		this.checkIfPowerIsRequired(activePower, reactivePower);
-	
 		IntegerWriteChannel wMaxChannel = this.channel(ChannelId.W_MAX);
 		wMaxChannel.setNextWriteValue(MAX_APPARENT_POWER); 	// Set WMax
-		
-		/*
-		 * Set Active Power
-		 */
 		
 		IntegerWriteChannel wMaxLimPctChannel = this.channel(ChannelId.W_MAX_LIM_PCT);
 		EnumWriteChannel wMaxLim_EnaChannel = this.channel(ChannelId.W_MAX_LIM_ENA);
 		
+		IntegerWriteChannel varMaxLimPctChannel = this.channel(ChannelId.VAR_W_MAX_PCT);
+		EnumWriteChannel varMaxLim_EnaChannel = this.channel(ChannelId.VAR_PCT_ENA);
 		
-		
-		// Set Active Power as a percentage of WMAX
-
+		this.checkIfPowerIsRequired(activePower, reactivePower);
+			
+			
+		/*
+		 * Set Active Power as a percentage of WMAX
+		 */
 		int wSetPct = ((100 * activePower) / MAX_APPARENT_POWER);
 		wMaxLimPctChannel.setNextWriteValue(wSetPct);
 		wMaxLim_EnaChannel.setNextWriteValue(WMaxLimEna.ENABLED);
 		
-		
+			
 		/*
-		 * Set Reactive Power
+		 * Set Reactive Power as a percentage of WMAX
 		 */
-		
-		IntegerWriteChannel varMaxLimPctChannel = this.channel(ChannelId.VAR_W_MAX_PCT);
-		EnumWriteChannel varMaxLim_EnaChannel = this.channel(ChannelId.VAR_PCT_ENA);
-
-		// Set Reactive Power as a percentage of WMAX
 		int varSetPct = ((100 * reactivePower) / MAX_APPARENT_POWER);
 		varMaxLimPctChannel.setNextWriteValue(varSetPct);
 		varMaxLim_EnaChannel.setNextWriteValue(VArPctEna.ENABLED);
+
 
 	}
 	
@@ -735,8 +774,11 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 
 				new FC16WriteRegistersTask(SUNSPEC_123 + 4, //
 						m(EssREFUstore88K.ChannelId.CONN, new UnsignedWordElement(SUNSPEC_123 + 4)),
-						m(EssREFUstore88K.ChannelId.W_MAX_LIM_PCT, new SignedWordElement(SUNSPEC_123 + 5),
+						
+						m(EssREFUstore88K.ChannelId.W_MAX_LIM_PCT, new SignedWordElement(SUNSPEC_123 + 5), // W_MAX_LIM_PCT
 								ElementToChannelConverter.SCALE_FACTOR_MINUS_1)),
+	
+				
 				new FC16WriteRegistersTask(SUNSPEC_123 + 9, //
 						m(EssREFUstore88K.ChannelId.W_MAX_LIM_ENA, new UnsignedWordElement(SUNSPEC_123 + 9)),
 						m(EssREFUstore88K.ChannelId.OUT_PF_SET, new SignedWordElement(SUNSPEC_123 + 10),

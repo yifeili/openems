@@ -36,11 +36,13 @@ import io.openems.edge.bridge.modbus.api.task.FC3ReadRegistersTask;
 import io.openems.edge.common.channel.BooleanWriteChannel;
 import io.openems.edge.common.channel.EnumReadChannel;
 import io.openems.edge.common.channel.IntegerWriteChannel;
+import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.event.EdgeEventConstants;
 import io.openems.edge.common.modbusslave.ModbusSlave;
 import io.openems.edge.common.modbusslave.ModbusSlaveTable;
 import io.openems.edge.common.taskmanager.Priority;
+import io.openems.edge.ess.api.SymmetricEss;
 
 @Designate(ocd = Config.class, factory = true)
 @Component( //
@@ -54,13 +56,17 @@ public class BMWBattery extends AbstractOpenemsModbusComponent
 		
 		// , // JsonApi // TODO
 
-	protected static final int SYSTEM_ON = 1;
-	protected final static int SYSTEM_OFF = 0;
+	private static final Integer OPEN_CONTACTORS = 0;
 	private static final Integer CLOSE_CONTACTORS = 4;
-
 
 	@Reference
 	protected ConfigurationAdmin cm;
+
+	
+//	@Reference(policy = ReferencePolicy.STATIC, policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
+//	protected void setEss(SymmetricEss ess) {
+//		this.ess = ess;
+//	}
 
 	private final Logger log = LoggerFactory.getLogger(BMWBattery.class);
 	private String modbusBridgeId;
@@ -82,6 +88,9 @@ public class BMWBattery extends AbstractOpenemsModbusComponent
 				BMWChannelId.values() //
 		);
 	}
+	
+	@Reference
+	private ComponentManager manager;
 
 	@Reference(policy = ReferencePolicy.STATIC, policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
 	protected void setModbus(BridgeModbus modbus) {
@@ -99,7 +108,7 @@ public class BMWBattery extends AbstractOpenemsModbusComponent
 				config.modbus_id());
 		this.modbusBridgeId = config.modbus_id();
 		initializeCallbacks();
-
+	
 	}
 
 
@@ -138,7 +147,7 @@ public class BMWBattery extends AbstractOpenemsModbusComponent
 					unsuccessfulStarts++;
 					this.stopSystem();
 					this.setStateMachineState(State.STOPPING);
-					if (unsuccessfulStarts >= config.maxStartAppempts()) {
+					if (unsuccessfulStarts >= config.maxStartAttempts()) {
 						errorDelayIsOver = LocalDateTime.now().plusSeconds(config.startUnsuccessfulDelay());
 						this.setStateMachineState(State.ERRORDELAY);
 						unsuccessfulStarts = 0;
@@ -306,15 +315,34 @@ public class BMWBattery extends AbstractOpenemsModbusComponent
 
 	}
 
+	
 	@Override
 	public void handleEvent(Event event) {
 		if (!this.isEnabled()) {
 			return;
 		}
 		switch (event.getTopic()) {
-
 		case EdgeEventConstants.TOPIC_CYCLE_AFTER_PROCESS_IMAGE:
-			handleBatteryState();
+			
+			if(config.batteryOff()) {
+				SymmetricEss ess;
+				try {
+					ess = this.manager.getComponent(this.config.Inverter_id());
+				} catch (OpenemsNamedException e1) {
+					// TODO Auto-generated catch block
+				
+					e1.printStackTrace();
+					return;
+				}
+				int inverterState = ess.getState().value().orElse(0);
+				if(inverterState == 8) {
+					this.shutDownBattery();					
+				} else {
+					return;
+				}
+			} else {
+				this.handleBatteryState();	
+			}
 			break;
 		}
 	}
@@ -331,6 +359,32 @@ public class BMWBattery extends AbstractOpenemsModbusComponent
 			startSystem();
 			break;
 		}
+	}
+	
+	public void shutDownBattery() {
+		SymmetricEss ess;
+		try {
+			ess = this.manager.getComponent(this.config.Inverter_id());
+		} catch (OpenemsNamedException e1) {
+			// TODO Auto-generated catch block
+		
+			e1.printStackTrace();
+			return;
+		}
+		int activePowerInverter = ess.getActivePower().value().orElse(0);
+		int reactivePowerInverter = ess.getReactivePower().value().orElse(0);
+		
+		if (activePowerInverter == 0 && reactivePowerInverter == 0) {
+			IntegerWriteChannel commandChannel = this.channel(BMWChannelId.BMS_STATE_COMMAND);
+			try {
+				commandChannel.setNextWriteValue(OPEN_CONTACTORS);
+			} catch (OpenemsNamedException e) {
+				// TODO Auto-generated catch block
+				log.error("Problem occurred during send start command");
+			}
+		}
+	
+		
 	}
 
 	private boolean isSystemRunning() {
