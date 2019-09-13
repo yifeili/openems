@@ -35,6 +35,7 @@ import io.openems.edge.bridge.modbus.api.task.FC16WriteRegistersTask;
 import io.openems.edge.bridge.modbus.api.task.FC3ReadRegistersTask;
 import io.openems.edge.common.channel.BooleanWriteChannel;
 import io.openems.edge.common.channel.EnumReadChannel;
+import io.openems.edge.common.channel.IntegerReadChannel;
 import io.openems.edge.common.channel.IntegerWriteChannel;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
@@ -328,16 +329,18 @@ public class BMWBattery extends AbstractOpenemsModbusComponent
 				SymmetricEss ess;
 				try {
 					ess = this.manager.getComponent(this.config.Inverter_id());
+				//Just temporarily for REFU: do not switch off if inverter is not in standby("8")
+					EnumReadChannel c = ess.channel("St");
+					int inverterState = c.value().orElse(0);
+					if(inverterState == 8) {
+						this.shutDownBattery();					
+					} else {
+						return;
+					}
 				} catch (OpenemsNamedException e1) {
 					// TODO Auto-generated catch block
 				
 					e1.printStackTrace();
-					return;
-				}
-				int inverterState = ess.getState().value().orElse(0);
-				if(inverterState == 8) {
-					this.shutDownBattery();					
-				} else {
 					return;
 				}
 			} else {
