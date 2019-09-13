@@ -9,7 +9,6 @@ import io.openems.common.channel.Unit;
 import io.openems.common.types.OpenemsType;
 import io.openems.edge.common.channel.Channel;
 import io.openems.edge.common.channel.Doc;
-import io.openems.edge.common.channel.BooleanWriteChannel.MirrorToDebugChannel;
 import io.openems.edge.common.component.OpenemsComponent;
 
 /**
@@ -145,7 +144,7 @@ public abstract class AbstractDoc<T> implements Doc {
 		this.onInitCallback.add(callback);
 		return this.self();
 	}
-	
+
 	/**
 	 * Gets the callbacks for initialization of the actual Channel
 	 * 
