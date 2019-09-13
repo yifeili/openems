@@ -685,7 +685,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 						m(EssREFUstore88K.ChannelId.VA, new SignedWordElement(SUNSPEC_103 + 18),
 								ElementToChannelConverter.SCALE_FACTOR_1),
 						m(EssREFUstore88K.ChannelId.VA_SF, new SignedWordElement(SUNSPEC_103 + 19)),
-						m(EssREFUstore88K.ChannelId.VA_R, new SignedWordElement(SUNSPEC_103 + 20),
+						m(SymmetricEss.ChannelId.REACTIVE_POWER, new SignedWordElement(SUNSPEC_103 + 20),
 								ElementToChannelConverter.SCALE_FACTOR_1),
 						m(EssREFUstore88K.ChannelId.VA_R_SF, new SignedWordElement(SUNSPEC_103 + 21)),
 						new DummyRegisterElement(SUNSPEC_103 + 22, SUNSPEC_103 + 23),
@@ -828,6 +828,8 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 				+ " | Reactive Power:" + this.channel(SymmetricEss.ChannelId.REACTIVE_POWER).value().asString() //
 				+ " | Allowed Charge:" + this.getAllowedCharge().value() //
 				+ " | Allowed Discharge:" + this.getAllowedDischarge().value() //
+				+ " | Allowed ChargeCurrent:" + this.battery.getChargeMaxCurrent() //
+				+ " | Allowed DischargeCurrent:" + this.battery.getDischargeMaxCurrent() //
 				;
 	}
 }

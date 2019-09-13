@@ -421,7 +421,10 @@ public class BMWBattery extends AbstractOpenemsModbusComponent
 	public String debugLog() {
 		return "State:" + this.getStateMachineState()
 				+ " | SoC:" + this.getSoc().value() //
-				+ " | Voltage:" + this.getDischargeMinVoltage().value() 
+				+ " | Voltage:" + this.getVoltage().value()
+				+ " | Max Operating Current:" + this.channel(BMWChannelId.MAXIMUM_OPERATING_CURRENT).value().asString() //
+				+ " | Min Operating Current:" + this.channel(BMWChannelId.MINIMUM_OPERATING_CURRENT).value().asString() //
+
 //				+ "|Discharge:" + this.getDischargeMinVoltage().value() + ";" + this.getDischargeMaxCurrent().value() //
 //				+ "|Charge:" + this.getChargeMaxVoltage().value() + ";" + this.getChargeMaxCurrent().value() + "|State:"
 //				+ this.channel(BMWChannelId.BMS_STATE)
@@ -492,7 +495,7 @@ public class BMWBattery extends AbstractOpenemsModbusComponent
 						m(BMWChannelId.WARNING_BITS_2, new UnsignedWordElement(1004)), //
 						m(BMWChannelId.INFO_BITS, new UnsignedWordElement(1005)), //
 						m(BMWChannelId.MAXIMUM_OPERATING_CURRENT, new UnsignedWordElement(1006)), //
-						m(BMWChannelId.MINIMUM_OPERATING_CURRENT, new UnsignedWordElement(1007)), //
+						m(BMWChannelId.MINIMUM_OPERATING_CURRENT, new SignedWordElement(1007)), //
 						m(Battery.ChannelId.CHARGE_MAX_VOLTAGE, new UnsignedWordElement(1008), ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
 						m(Battery.ChannelId.DISCHARGE_MIN_VOLTAGE, new UnsignedWordElement(1009), ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
 						m(Battery.ChannelId.DISCHARGE_MAX_CURRENT, new UnsignedWordElement(1010)), //
