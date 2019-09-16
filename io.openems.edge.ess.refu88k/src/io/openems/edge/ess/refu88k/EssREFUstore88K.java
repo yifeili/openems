@@ -70,7 +70,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 	private Config config;
 
 	public static final int DEFAULT_UNIT_ID = 1;
-	protected static final int MAX_APPARENT_POWER = 50_000;
+	protected static final int MAX_APPARENT_POWER = 80_000;
 	protected static final double EFFICIENCY_FACTOR = 0.98;
 
 	/*

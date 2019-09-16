@@ -1,16 +1,11 @@
-Bundle-Name: OpenEMS Edge Soltaro Battery  
+Bundle-Name: OpenEMS Edge BYD Commercial Battery  
 Bundle-Vendor: FENECON GmbH
 Bundle-License: https://opensource.org/licenses/EPL-2.0
 Bundle-Version: 1.0.0.${tstamp}
 Export-Package: \
 	io.openems.edge.battery.api,\
-	io.openems.edge.battery.soltaro,\
-	io.openems.edge.battery.soltaro.cluster.versiona,\
-	io.openems.edge.battery.soltaro.single.versionb,\
-	io.openems.edge.battery.soltaro.single.versiona,\
-	io.openems.edge.battery.soltaro.cluster.versionb,\
-	io.openems.edge.battery.byd.single131
-	
+	io.openems.edge.battery.bydcommercial
+
 -includeresource: {readme.adoc}
 
 -buildpath: ${buildpath},\
@@ -24,3 +19,5 @@ Export-Package: \
 
 javac.source: 1.8
 javac.target: 1.8
+
+

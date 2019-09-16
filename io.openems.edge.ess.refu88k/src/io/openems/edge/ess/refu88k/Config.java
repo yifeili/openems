@@ -33,6 +33,10 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 	@AttributeDefinition(name = "Watchdog", description = "Sets the watchdog timer interval in seconds, 0=disable")
 	int watchdoginterval() default 0;
+	
+	@AttributeDefinition(name = "Maximum Apparent Power", description = "Maximum apparent power")
+	int maxApparentPower() default 80000;
+	
 
 	@AttributeDefinition(name = "Battery-ID", description = "ID of Battery.")
 	String battery_id();
