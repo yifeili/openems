@@ -122,8 +122,8 @@ public class BatteryBoxC130 extends AbstractOpenemsModbusComponent
 	}
 
 	private void initializeCallbacks() {
-		this.channel(ChannelId.BMS_CONTACTOR_CONTROL).onChange(value -> {
-			ContactorControl cc = value.asEnum();
+		this.channel(ChannelId.BMS_CONTACTOR_CONTROL).onChange((oldValue, newValue) -> {
+			ContactorControl cc = newValue.asEnum();
 
 			switch (cc) {
 			case CONNECTION_INITIATING:
@@ -172,7 +172,7 @@ public class BatteryBoxC130 extends AbstractOpenemsModbusComponent
 	}
 
 	private void handleStateMachine() {
-		log.info("SingleRack.handleStateMachine(): State: " + this.getStateMachineState());
+		log.info("BatteryCommercialC130.handleStateMachine(): State: " + this.getStateMachineState());
 		boolean readyForWorking = false;
 		switch (this.getStateMachineState()) {
 		case ERROR:
