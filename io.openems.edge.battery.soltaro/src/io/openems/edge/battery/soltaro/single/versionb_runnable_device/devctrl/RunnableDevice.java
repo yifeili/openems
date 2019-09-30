@@ -6,11 +6,9 @@ public interface RunnableDevice {
 	
 	void start() throws OpenemsException;
 	void stop() throws OpenemsException;
-	void standby() throws OpenemsException;
 	
 	boolean isRunning();
 	boolean isError();
 	boolean isStopped();
-	boolean isStandBy();
 
 }

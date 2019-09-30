@@ -19,7 +19,9 @@ public class Running extends BaseState implements State {
 	@Override
 	public void act() throws OpenemsException {
 
+		
 		//do. s.th... if system is running there is nothing to do?!
+		// check cell voltages, print warning, reduce max power....
 		
 	}
 

@@ -10,6 +10,7 @@ import org.junit.Test;
 
 import io.openems.edge.battery.soltaro.single.versionb_runnable_device.devctrl.StateEnum;
 import io.openems.edge.battery.soltaro.single.versionb_runnable_device.devctrl.state.Undefined;
+import io.openems.edge.battery.soltaro.versionb.runnable_device.helper.DeviceFactory;
 
 public class TestStateUndefined {
 
@@ -22,10 +23,8 @@ public class TestStateUndefined {
 
 	@Test
 	public final void testUndefined() {
-
 		assertNotNull(sut);
 		assertNull(sut.getStateBefore());
-
 	}
 
 	@Test
@@ -40,7 +39,7 @@ public class TestStateUndefined {
 	}
 
 	@Test
-	public final void testGetNextStateErroe() {
+	public final void testGetNextStateError() {
 		sut = new Undefined(DeviceFactory.getErrorDevice());
 		assertEquals(StateEnum.ERROR, sut.getNextState());
 	}

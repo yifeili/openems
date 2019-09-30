@@ -11,10 +11,8 @@ public class Stopped extends BaseState implements State {
 		super(device);
 	}
 
-	private RunnableDevice device;
-	
 	@Override
-	public StateEnum getNextState() {		
+	public StateEnum getNextState() {	
 		return StateEnum.STARTING;
 	}
 

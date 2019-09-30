@@ -25,5 +25,12 @@ public abstract class BaseState implements State {
 		this.stateBefore = stateBefore;
 	}
 	
+	protected boolean isDeviceUndefined() {
+		if (this.device == null) {
+			return true;
+		}
+		
+		return !(this.device.isError() || this.device.isRunning() || this.device.isStopped());
+	}
 
 }

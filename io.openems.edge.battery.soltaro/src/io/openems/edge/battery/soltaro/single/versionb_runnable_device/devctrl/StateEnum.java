@@ -9,9 +9,9 @@ public enum StateEnum implements OptionsEnum {
 	STOPPED("Stopped", 1), //
 	STARTING("Running", 2), //
 	RUNNING("Running", 3), //
-	STOPPING("Stopping", 4), //
+	//STOPPING("Stopping", 4), //
 	ERROR("Error", 5), // 
-	STANDBY("Standby", 6), //
+	//STANDBY("Standby", 6), //
 	
 	;
 

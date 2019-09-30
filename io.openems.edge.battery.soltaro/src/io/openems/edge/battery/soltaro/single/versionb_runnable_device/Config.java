@@ -8,7 +8,7 @@ import io.openems.edge.battery.soltaro.BatteryState;
 @ObjectClassDefinition( //
 		name = "BMS Soltaro Single Rack Version B", //
 		description = "Implements the Soltaro battery rack system.")
-@interface Config {
+public @interface Config {
 
 	@AttributeDefinition(name = "Component-ID", description = "Unique ID of this Component")
 	String id() default "bms0";
@@ -48,7 +48,6 @@ import io.openems.edge.battery.soltaro.BatteryState;
 	
 	@AttributeDefinition(name = "Pending Tolerance", description = "time in seconds, that is waited if system status cannot be determinated e.g. in case of reading errors")
 	int pendingTolerance() default 15;
-	
 
 	@AttributeDefinition(name = "SoC Low Alarm", description = "Sets the value for BMS SoC protection (0..100)", min = "0", max = "100")
 	int SoCLowAlarm() default 0;

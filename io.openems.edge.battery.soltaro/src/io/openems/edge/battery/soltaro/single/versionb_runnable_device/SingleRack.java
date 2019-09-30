@@ -27,6 +27,7 @@ import io.openems.edge.battery.soltaro.ResetState;
 import io.openems.edge.battery.soltaro.State;
 import io.openems.edge.battery.soltaro.single.versionb.Enums.AutoSetFunction;
 import io.openems.edge.battery.soltaro.single.versionb.Enums.ContactorControl;
+import io.openems.edge.battery.soltaro.single.versionb_runnable_device.devctrl.CommunicationDevice;
 import io.openems.edge.battery.soltaro.single.versionb_runnable_device.devctrl.RunnableDevice;
 import io.openems.edge.bridge.modbus.api.AbstractOpenemsModbusComponent;
 import io.openems.edge.bridge.modbus.api.BridgeModbus;
@@ -55,7 +56,7 @@ import io.openems.edge.common.taskmanager.Priority;
 
 
 public class SingleRack extends AbstractOpenemsModbusComponent
-		implements Battery, OpenemsComponent, ModbusSlave, RunnableDevice { 
+		implements Battery, OpenemsComponent, ModbusSlave, RunnableDevice, CommunicationDevice { 
 		
 		// , // JsonApi // TODO
 
@@ -138,7 +139,6 @@ public class SingleRack extends AbstractOpenemsModbusComponent
 	}
 
 	private void handleStateMachine() {
-		boolean readyForWorking = false;
 		switch (this.getStateMachineState()) {
 		case ERROR:
 			if (handleOneCellDriftHandlingCounter > 5) {
@@ -207,7 +207,6 @@ public class SingleRack extends AbstractOpenemsModbusComponent
 				this.setStateMachineState(State.ONE_CELL_DRIFTING);
 			} else {
 				this.setStateMachineState(State.RUNNING);
-				readyForWorking = true;
 			}
 			break;
 		case STOPPING:
@@ -260,7 +259,7 @@ public class SingleRack extends AbstractOpenemsModbusComponent
 			break;
 		}
 
-		this.getReadyForWorking().setNextValue(readyForWorking);
+		
 	}
 
 	private void handleOneCellDrifting() {
@@ -918,6 +917,7 @@ public class SingleRack extends AbstractOpenemsModbusComponent
 		}
 	}
 
+	//TODO to make it more simple remove "impl modbus" and return in this component only the tasks		
 	@Override
 	protected ModbusProtocol defineModbusProtocol() {
 
@@ -1534,12 +1534,6 @@ public class SingleRack extends AbstractOpenemsModbusComponent
 	}
 
 	@Override
-	public void standby() throws OpenemsException {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
 	public boolean isRunning() {
 		// TODO Auto-generated method stub
 		return false;
@@ -1552,9 +1546,9 @@ public class SingleRack extends AbstractOpenemsModbusComponent
 	}
 
 	@Override
-	public boolean isStandBy() {
-		// TODO Auto-generated method stub
+	public boolean isCommunicationAvailable() {
+		//TODO get the bridge and check for availability
+		
 		return false;
 	}
-
 }
