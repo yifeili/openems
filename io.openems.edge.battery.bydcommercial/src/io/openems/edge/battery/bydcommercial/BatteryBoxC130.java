@@ -1087,8 +1087,8 @@ public class BatteryBoxC130 extends AbstractOpenemsModbusComponent
 				.text("sampling wire fault")), //
 		PRECHARGE_TAKING_TOO_LONG(Doc.of(Level.FAULT) //
 				.text("precharge time was too long")), //
-		NORMAL((Doc.of(Level.FAULT)) //
-				.text("there is no battery fault")), //
+		NORMAL((Doc.of(Level.OK)) //
+				.text("Everything ok! :)")), //
 		FAULT((Doc.of(Level.FAULT)) //
 				.text("battery fault state")), //
 		STATE_MACHINE(Doc.of(State.values()) //
