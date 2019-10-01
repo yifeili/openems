@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import io.openems.edge.battery.soltaro.single.versionb_runnable_device.Config;
-import io.openems.edge.battery.soltaro.single.versionb_runnable_device.devctrl.RunnableDevice;
+import io.openems.edge.battery.soltaro.single.versionb_runnable_device.devctrl.SoltaroBMS;
 import io.openems.edge.battery.soltaro.single.versionb_runnable_device.devctrl.State;
 import io.openems.edge.battery.soltaro.single.versionb_runnable_device.devctrl.StateEnum;
 
@@ -16,7 +16,7 @@ public class StateController {
 	}
 
 	
-	public static void init(RunnableDevice device, Config config) {
+	public static void init(SoltaroBMS device, Config config) {
 		states = new HashMap<>();
 		
 		states.put(StateEnum.UNDEFINED, new Undefined(device));

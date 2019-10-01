@@ -3,7 +3,7 @@ package io.openems.edge.battery.soltaro.single.versionb_runnable_device.devctrl.
 import java.time.LocalDateTime;
 
 import io.openems.common.exceptions.OpenemsException;
-import io.openems.edge.battery.soltaro.single.versionb_runnable_device.devctrl.RunnableDevice;
+import io.openems.edge.battery.soltaro.single.versionb_runnable_device.devctrl.SoltaroBMS;
 import io.openems.edge.battery.soltaro.single.versionb_runnable_device.devctrl.State;
 import io.openems.edge.battery.soltaro.single.versionb_runnable_device.devctrl.StateEnum;
 
@@ -13,7 +13,7 @@ public class Starting extends BaseState implements State {
 	LocalDateTime startTime = null;
 	int maxTimeToStartInSeconds;
 	
-	public Starting(RunnableDevice device, int maxTimeToStartInSeconds) {
+	public Starting(SoltaroBMS device, int maxTimeToStartInSeconds) {
 		super(device);
 		this.maxTimeToStartInSeconds = maxTimeToStartInSeconds;
 	}

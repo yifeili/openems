@@ -1,19 +1,27 @@
 package io.openems.edge.battery.soltaro.single.versionb_runnable_device.devctrl.state;
 
 import io.openems.common.exceptions.OpenemsException;
-import io.openems.edge.battery.soltaro.single.versionb_runnable_device.devctrl.RunnableDevice;
+import io.openems.edge.battery.soltaro.single.versionb_runnable_device.devctrl.SoltaroBMS;
 import io.openems.edge.battery.soltaro.single.versionb_runnable_device.devctrl.State;
 import io.openems.edge.battery.soltaro.single.versionb_runnable_device.devctrl.StateEnum;
 
 public class Running extends BaseState implements State {
 	
-	public Running(RunnableDevice device) {
+	public Running(SoltaroBMS device) {
 		super(device);
 	}
 
 	@Override
 	public StateEnum getNextState() {		
-		return null;
+		if (this.isDeviceUndefined()) {
+			return StateEnum.UNDEFINED;
+		}
+		
+		if (this.device.isError()) {
+			return StateEnum.ERROR;
+		}
+		
+		return StateEnum.RUNNING;
 	}
 
 	@Override

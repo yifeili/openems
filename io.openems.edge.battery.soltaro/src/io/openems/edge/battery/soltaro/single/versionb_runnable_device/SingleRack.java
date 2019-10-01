@@ -3,7 +3,10 @@ package io.openems.edge.battery.soltaro.single.versionb_runnable_device;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -27,8 +30,7 @@ import io.openems.edge.battery.soltaro.ResetState;
 import io.openems.edge.battery.soltaro.State;
 import io.openems.edge.battery.soltaro.single.versionb.Enums.AutoSetFunction;
 import io.openems.edge.battery.soltaro.single.versionb.Enums.ContactorControl;
-import io.openems.edge.battery.soltaro.single.versionb_runnable_device.devctrl.CommunicationDevice;
-import io.openems.edge.battery.soltaro.single.versionb_runnable_device.devctrl.RunnableDevice;
+import io.openems.edge.battery.soltaro.single.versionb_runnable_device.devctrl.SoltaroBMS;
 import io.openems.edge.bridge.modbus.api.AbstractOpenemsModbusComponent;
 import io.openems.edge.bridge.modbus.api.BridgeModbus;
 import io.openems.edge.bridge.modbus.api.ElementToChannelConverter;
@@ -36,6 +38,7 @@ import io.openems.edge.bridge.modbus.api.ModbusProtocol;
 import io.openems.edge.bridge.modbus.api.element.AbstractModbusElement;
 import io.openems.edge.bridge.modbus.api.element.BitsWordElement;
 import io.openems.edge.bridge.modbus.api.element.DummyRegisterElement;
+import io.openems.edge.bridge.modbus.api.element.ModbusElement;
 import io.openems.edge.bridge.modbus.api.element.SignedWordElement;
 import io.openems.edge.bridge.modbus.api.element.UnsignedWordElement;
 import io.openems.edge.bridge.modbus.api.task.FC16WriteRegistersTask;
@@ -56,7 +59,7 @@ import io.openems.edge.common.taskmanager.Priority;
 
 
 public class SingleRack extends AbstractOpenemsModbusComponent
-		implements Battery, OpenemsComponent, ModbusSlave, RunnableDevice, CommunicationDevice { 
+		implements Battery, OpenemsComponent, ModbusSlave, SoltaroBMS { 
 		
 		// , // JsonApi // TODO
 
@@ -916,7 +919,7 @@ public class SingleRack extends AbstractOpenemsModbusComponent
 			log.error("Error while setting parameter for soc low protection!" + e.getMessage());
 		}
 	}
-
+	
 	//TODO to make it more simple remove "impl modbus" and return in this component only the tasks		
 	@Override
 	protected ModbusProtocol defineModbusProtocol() {
@@ -1549,6 +1552,12 @@ public class SingleRack extends AbstractOpenemsModbusComponent
 	public boolean isCommunicationAvailable() {
 		//TODO get the bridge and check for availability
 		
+		return false;
+	}
+
+	@Override
+	public boolean isErrorLevel2() {
+		// TODO Auto-generated method stub
 		return false;
 	}
 }

@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Queue;
 
 import io.openems.common.exceptions.OpenemsException;
-import io.openems.edge.battery.soltaro.single.versionb_runnable_device.devctrl.RunnableDevice;
+import io.openems.edge.battery.soltaro.single.versionb_runnable_device.devctrl.SoltaroBMS;
 import io.openems.edge.battery.soltaro.single.versionb_runnable_device.devctrl.State;
 import io.openems.edge.battery.soltaro.single.versionb_runnable_device.devctrl.StateEnum;
 
@@ -22,9 +22,10 @@ public class Error extends BaseState implements State {
 	private Queue<StateEnum> statesBefore;
 	
 	private LocalDateTime startsUnsuccessfulTime;
+	private LocalDateTime errorLevel2DelayTime;
 	
 	public Error( //
-			RunnableDevice device, //
+			SoltaroBMS device, //
 			int maxStartAttempts, //
 			int startUnsuccessfulDelaySeconds, //
 			int errorLevel2DelaySeconds //
@@ -62,6 +63,24 @@ public class Error extends BaseState implements State {
 			return StateEnum.ERROR;
 		}
 		
+		if (this.errorLevel2DelayTime != null) {
+			if (LocalDateTime.now().minusSeconds(this.errorLevel2DelaySeconds).isAfter(errorLevel2DelayTime)) {
+				// waiting period is over
+				this.errorLevel2DelayTime = null;
+				return StateEnum.STOPPED;
+			} else {
+				return StateEnum.ERROR;
+			}
+		}
+		
+		// If there is an error level 2
+		//system should remain in error state for 'errorLevel2DelaySeconds' seconds
+		if (this.device.isErrorLevel2()) {
+			errorLevel2DelayTime = LocalDateTime.now();
+			return StateEnum.ERROR;
+		}
+		
+		
 		if (this.device.isStopped()) {
 			return StateEnum.STOPPED;
 		}
@@ -69,8 +88,10 @@ public class Error extends BaseState implements State {
 		return null;
 	}
 
+
 	private void resetInternalVariables() {
 		this.startsUnsuccessfulTime = null;
+		this.errorLevel2DelayTime = null;
 		this.statesBefore.clear();		
 	}
 

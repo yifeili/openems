@@ -15,7 +15,7 @@ import io.openems.edge.battery.soltaro.versionb.runnable_device.helper.DeviceFac
 
 public class TestStateError {
 
-	private static final int LEVEL_2_DELAY = 1;
+	private static final int LEVEL_2_DELAY = 2;
 	private static final int START_UNSUCCESSFUL_DELAY = 2;
 	private static final int MAX_START_ATTEMPTS = 2;
 	private static final int SECURITY_TIME_BUFFER_MS = 10;
@@ -114,7 +114,49 @@ public class TestStateError {
 			fail(e.getMessage());
 		}
 	}
+	
+	@Test
+	public final void testGerErrorStateAfterLevel2Error() {
+		//next state is error when we are in a delay
+				try {
+					// 1st try to start, next state should be stopped
+				sut = new Error(DeviceFactory.getErrorDevice(), MAX_START_ATTEMPTS, START_UNSUCCESSFUL_DELAY, LEVEL_2_DELAY);
+				sut.setStateBefore(StateEnum.RUNNING);
+				sut.act();
+				StateEnum nextState = sut.getNextState();
+				assertEquals(StateEnum.ERROR, nextState);
+				
+				} catch (OpenemsException e) {
+					fail(e.getMessage());
+				}
+	}
 
+	@Test
+	public final void testWaitingPeriodAfterLevel2Error() {
+		//next state is error when we are in a delay
+				try {
+
+				sut = new Error(DeviceFactory.getErrorDevice(), MAX_START_ATTEMPTS, START_UNSUCCESSFUL_DELAY, LEVEL_2_DELAY);
+				sut.setStateBefore(StateEnum.RUNNING);
+				sut.act();
+				StateEnum nextState = sut.getNextState();
+				assertEquals(StateEnum.ERROR, nextState);
+				
+				// Wait half of the period, state should still be error
+				Thread.sleep(LEVEL_2_DELAY * 1000 / 2);
+				nextState = sut.getNextState();
+				assertEquals(StateEnum.ERROR, nextState);
+						
+				// Wait the other half of the period + buffer, state should be STOPPED
+				Thread.sleep(LEVEL_2_DELAY * 1000 / 2 + SECURITY_TIME_BUFFER_MS);
+				nextState = sut.getNextState();
+				assertEquals(StateEnum.STOPPED, nextState);
+				
+				} catch (OpenemsException | InterruptedException e) {
+					fail(e.getMessage());
+				}
+	}
+	
 	@Test
 	public final void testAct() {
 	}

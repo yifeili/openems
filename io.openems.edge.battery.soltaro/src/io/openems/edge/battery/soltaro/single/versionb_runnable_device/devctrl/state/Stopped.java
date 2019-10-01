@@ -1,13 +1,13 @@
 package io.openems.edge.battery.soltaro.single.versionb_runnable_device.devctrl.state;
 
 import io.openems.common.exceptions.OpenemsException;
-import io.openems.edge.battery.soltaro.single.versionb_runnable_device.devctrl.RunnableDevice;
+import io.openems.edge.battery.soltaro.single.versionb_runnable_device.devctrl.SoltaroBMS;
 import io.openems.edge.battery.soltaro.single.versionb_runnable_device.devctrl.State;
 import io.openems.edge.battery.soltaro.single.versionb_runnable_device.devctrl.StateEnum;
 
 public class Stopped extends BaseState implements State {
 
-	public Stopped(RunnableDevice device) {
+	public Stopped(SoltaroBMS device) {
 		super(device);
 	}
 

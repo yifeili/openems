@@ -1,16 +1,16 @@
 package io.openems.edge.battery.soltaro.single.versionb_runnable_device.devctrl.state;
 
-import io.openems.edge.battery.soltaro.single.versionb_runnable_device.devctrl.RunnableDevice;
+import io.openems.edge.battery.soltaro.single.versionb_runnable_device.devctrl.SoltaroBMS;
 import io.openems.edge.battery.soltaro.single.versionb_runnable_device.devctrl.State;
 import io.openems.edge.battery.soltaro.single.versionb_runnable_device.devctrl.StateEnum;
 
 public abstract class BaseState implements State {
 	
-	RunnableDevice device;
+	SoltaroBMS device;
 	private StateEnum stateBefore;
 	
 
-	public BaseState(RunnableDevice device) {
+	public BaseState(SoltaroBMS device) {
 		super();
 		this.device = device;
 	}
@@ -27,6 +27,10 @@ public abstract class BaseState implements State {
 	
 	protected boolean isDeviceUndefined() {
 		if (this.device == null) {
+			return true;
+		}
+		
+		if (!this.device.isCommunicationAvailable()) {
 			return true;
 		}
 		
