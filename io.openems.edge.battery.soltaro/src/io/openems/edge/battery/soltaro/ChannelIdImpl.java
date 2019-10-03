@@ -4,8 +4,7 @@ import io.openems.edge.common.channel.ChannelId;
 import io.openems.edge.common.channel.Doc;
 
 public class ChannelIdImpl implements ChannelId {
-	;
-
+	
 	private final String name;
 	private final Doc doc;
 

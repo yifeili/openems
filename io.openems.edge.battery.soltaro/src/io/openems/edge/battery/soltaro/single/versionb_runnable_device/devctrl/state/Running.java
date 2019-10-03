@@ -21,7 +21,11 @@ public class Running extends BaseState implements State {
 			return StateEnum.ERROR;
 		}
 		
-		return StateEnum.RUNNING;
+		if (this.device.isRunning()) {
+			return StateEnum.RUNNING;
+		}
+		
+		return StateEnum.UNDEFINED;
 	}
 
 	@Override
