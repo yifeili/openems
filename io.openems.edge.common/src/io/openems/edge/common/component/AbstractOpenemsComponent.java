@@ -148,7 +148,7 @@ public abstract class AbstractOpenemsComponent implements OpenemsComponent {
 	 * @param channelId the given Channel-ID
 	 * @return the newly created Channel
 	 */
-	protected Channel<?> addChannel(io.openems.edge.common.channel.ChannelId channelId) {
+	public Channel<?> addChannel(io.openems.edge.common.channel.ChannelId channelId) {
 		Doc doc = channelId.doc();
 		Channel<?> channel = doc.createChannelInstance(this, channelId);
 		this.addChannel(channel);

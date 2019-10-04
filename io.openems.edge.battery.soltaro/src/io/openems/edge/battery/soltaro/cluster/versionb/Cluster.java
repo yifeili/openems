@@ -376,7 +376,7 @@ public class Cluster extends AbstractOpenemsModbusComponent
 		return false;
 	}
 
-	protected Channel<?> addChannel(io.openems.edge.common.channel.ChannelId channelId) {
+	public Channel<?> addChannel(io.openems.edge.common.channel.ChannelId channelId) {
 		return super.addChannel(channelId);
 	}
 
