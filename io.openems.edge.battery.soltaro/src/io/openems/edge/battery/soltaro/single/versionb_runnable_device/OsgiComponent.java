@@ -24,10 +24,11 @@ import io.openems.common.exceptions.OpenemsError.OpenemsNamedException;
 import io.openems.common.exceptions.OpenemsException;
 import io.openems.edge.battery.api.Battery;
 import io.openems.edge.battery.soltaro.ModuleParameters;
+import io.openems.edge.battery.soltaro.single.versionb_runnable_device.devctrl.CommunicationBridge;
 import io.openems.edge.battery.soltaro.single.versionb_runnable_device.devctrl.State;
 import io.openems.edge.battery.soltaro.single.versionb_runnable_device.devctrl.StateEnum;
-import io.openems.edge.battery.soltaro.single.versionb_runnable_device.devctrl.state.CommandDevice;
 import io.openems.edge.battery.soltaro.single.versionb_runnable_device.devctrl.state.StateController;
+import io.openems.edge.bridge.modbus.AbstractModbusBridge;
 import io.openems.edge.bridge.modbus.api.AbstractOpenemsModbusComponent;
 import io.openems.edge.bridge.modbus.api.BridgeModbus;
 import io.openems.edge.bridge.modbus.api.ModbusProtocol;
@@ -35,6 +36,7 @@ import io.openems.edge.bridge.modbus.api.task.Task;
 import io.openems.edge.common.channel.Channel;
 import io.openems.edge.common.channel.IntegerWriteChannel;
 import io.openems.edge.common.channel.WriteChannel;
+import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.event.EdgeEventConstants;
 import io.openems.edge.common.modbusslave.ModbusSlave;
@@ -47,14 +49,18 @@ import io.openems.edge.common.modbusslave.ModbusSlaveTable;
 		configurationPolicy = ConfigurationPolicy.REQUIRE, //
 		property = EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_AFTER_PROCESS_IMAGE //
 )
-public class OsgiComponent extends AbstractOpenemsModbusComponent implements EventHandler, OpenemsComponent, Battery, ModbusSlave, CommandDevice {
-	
+public class OsgiComponent extends AbstractOpenemsModbusComponent implements EventHandler, OpenemsComponent, Battery, ModbusSlave, CommunicationBridge {
+
+	// , // JsonApi // TODO
 	private SingleRack bms;
 	
 	private State currentState;
 	private Config config;
 	@Reference
 	protected ConfigurationAdmin cm;
+	
+	@Reference
+	protected ComponentManager componentManager;
 	
 	private final Logger log = LoggerFactory.getLogger(OsgiComponent.class);
 	
@@ -117,8 +123,11 @@ public class OsgiComponent extends AbstractOpenemsModbusComponent implements Eve
 	}
 
 	@Activate
-	void activate(ComponentContext context, Config config) {
-		bms = new SingleRack(config.numberOfSlaves(), config.ReduceTasks(), this, this);
+	void activate(ComponentContext context, Config config) throws OpenemsNamedException {
+		
+		AbstractModbusBridge modbusBridge = this.componentManager.getComponent(config.modbus_id());
+		
+		bms = new SingleRack(config.numberOfSlaves(), config.ReduceTasks(), this, this, modbusBridge);
 		this.config = config;
 
 		// adds dynamically created channels and save them into a map to access them
@@ -174,8 +183,21 @@ public class OsgiComponent extends AbstractOpenemsModbusComponent implements Eve
 		}
 	}
 	
+
+	
 	private void initializeCallbacks() {
 
+		this.channel(SingleRackChannelId.CLUSTER_1_SOC).onChange((oldValue, newValue) -> {
+			@SuppressWarnings("unchecked")
+			Optional<Integer> socOpt = (Optional<Integer>) newValue.asOptional();
+			if (!socOpt.isPresent()) {
+				return;
+			}
+			int soc = socOpt.get();
+			log.debug("callback soc, value: " + soc);
+			this.channel(Battery.ChannelId.SOC).setNextValue(soc);
+		});
+		
 		this.channel(SingleRackChannelId.CLUSTER_1_VOLTAGE).onChange((oldValue, newValue) -> {
 			@SuppressWarnings("unchecked")
 			Optional<Integer> vOpt = (Optional<Integer>) newValue.asOptional();
@@ -186,7 +208,7 @@ public class OsgiComponent extends AbstractOpenemsModbusComponent implements Eve
 			log.debug("callback voltage, value: " + voltage_volt);
 			this.channel(Battery.ChannelId.VOLTAGE).setNextValue(voltage_volt);
 		});
-
+		
 		this.channel(SingleRackChannelId.CLUSTER_1_MIN_CELL_VOLTAGE).onChange((oldValue, newValue) -> {
 			@SuppressWarnings("unchecked")
 			Optional<Integer> vOpt = (Optional<Integer>) newValue.asOptional();

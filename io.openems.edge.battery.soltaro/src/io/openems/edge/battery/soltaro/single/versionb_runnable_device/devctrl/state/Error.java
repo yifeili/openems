@@ -75,7 +75,7 @@ public class Error extends BaseState implements State {
 		
 		// If there is an error level 2
 		//system should remain in error state for 'errorLevel2DelaySeconds' seconds
-		if (this.device.isErrorLevel2()) {
+		if (this.device.isErrorAlarmLevel2()) {
 			errorLevel2DelayTime = LocalDateTime.now();
 			return StateEnum.ERROR;
 		}

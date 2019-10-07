@@ -75,7 +75,7 @@ public class TestStateStarting {
 	@Test
 	public final void testAct() {
 		try {
-			Starting sut = new Starting(null, MAX_TIME_TO_START);
+			Starting sut = new Starting(DeviceFactory.getStoppedDevice(), MAX_TIME_TO_START);
 			sut.act();
 		} catch (Exception e) {
 			fail("No exception should happen because in undefined there is nothing to do");

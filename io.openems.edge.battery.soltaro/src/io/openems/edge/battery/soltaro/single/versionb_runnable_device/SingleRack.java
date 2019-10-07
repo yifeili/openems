@@ -4,18 +4,19 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.openems.common.channel.Unit;
 import io.openems.common.exceptions.OpenemsException;
-import io.openems.edge.battery.api.Battery;
 import io.openems.edge.battery.soltaro.ChannelIdImpl;
 import io.openems.edge.battery.soltaro.ModuleParameters;
 import io.openems.edge.battery.soltaro.single.versionb_runnable_device.Enums.ContactorControl;
+import io.openems.edge.battery.soltaro.single.versionb_runnable_device.devctrl.CommunicationBridge;
 import io.openems.edge.battery.soltaro.single.versionb_runnable_device.devctrl.SoltaroBMS;
-import io.openems.edge.battery.soltaro.single.versionb_runnable_device.devctrl.state.CommandDevice;
+import io.openems.edge.bridge.modbus.AbstractModbusBridge;
 import io.openems.edge.bridge.modbus.api.AbstractOpenemsModbusComponent;
 import io.openems.edge.bridge.modbus.api.ElementToChannelConverter;
 import io.openems.edge.bridge.modbus.api.element.AbstractModbusElement;
@@ -35,8 +36,6 @@ import io.openems.edge.common.taskmanager.Priority;
 
 public class SingleRack implements SoltaroBMS {
 
-	// , // JsonApi // TODO
-
 	private int numberOfSlaves;
 
 	protected static final int SYSTEM_ON = 1;
@@ -44,38 +43,35 @@ public class SingleRack implements SoltaroBMS {
 
 	private static final String KEY_TEMPERATURE = "_TEMPERATURE";
 	private static final String KEY_VOLTAGE = "_VOLTAGE";
-	private static final Integer SYSTEM_RESET = 0x1;
+//	private static final Integer SYSTEM_RESET = 0x1;
 	private static final String NUMBER_FORMAT = "%03d"; // creates string number with leading zeros
-	private static final double MAX_TOLERANCE_CELL_VOLTAGE_CHANGES_MILLIVOLT = 50;
-	private static final double MAX_TOLERANCE_CELL_VOLTAGES_MILLIVOLT = 400;
+//	private static final double MAX_TOLERANCE_CELL_VOLTAGE_CHANGES_MILLIVOLT = 50;
+//	private static final double MAX_TOLERANCE_CELL_VOLTAGES_MILLIVOLT = 400;
 
-	private static final Object SYSTEM_SLEEP = 0x1;
+//	private static final Integer SYSTEM_SLEEP = 0x1;
 
 	private final Logger log = LoggerFactory.getLogger(SingleRack.class);
 
 	private Map<String, Channel<?>> channelMap;
 
-	private CommandDevice commandDevice;
+	private CommunicationBridge communicationBridge;
 
 	private boolean reduceTasks;
 
+	private AbstractModbusBridge modbusBridge;
 
-	public SingleRack(int numberOfSlaves, boolean reduceTasks, CommandDevice commandDevice,
-			AbstractOpenemsModbusComponent modbusComponent) {
+	public SingleRack(int numberOfSlaves, boolean reduceTasks, CommunicationBridge communicationBridge,
+			AbstractOpenemsModbusComponent modbusComponent, AbstractModbusBridge modbusBridge) {
 		this.numberOfSlaves = numberOfSlaves;
 		this.reduceTasks = reduceTasks;
-		this.commandDevice = commandDevice;
+		this.communicationBridge = communicationBridge;
+		this.modbusBridge = modbusBridge;
 		channelMap = createDynamicChannels(modbusComponent);
-	}
-
-	private void setCapacity() {
-		int capacity = this.numberOfSlaves * ModuleParameters.CAPACITY_WH.getValue() / 1000;
-		this.commandDevice.setValue(Battery.ChannelId.CAPACITY, capacity);
 	}
 
 	private void writeValue(ChannelId channelId, Object value) {
 		try {
-			this.commandDevice.setWriteValue(channelId, value);
+			this.communicationBridge.setWriteValue(channelId, value);
 		} catch (Exception e) {
 			System.out.println("Error while trying to write value '" + value + "' to channel " + channelId + "!");
 		}
@@ -83,63 +79,33 @@ public class SingleRack implements SoltaroBMS {
 
 	private Object readValue(ChannelId channelId) {
 		try {
-			return this.commandDevice.readValue(channelId);
+			return this.communicationBridge.readValue(channelId);
 		} catch (Exception e) {
 			System.out.println("Error while trying to read value from channel " + channelId + "!");
 		}
 		return null;
 	}
 
-	private void resetSystem() {
-		writeValue(SingleRackChannelId.SYSTEM_RESET, SYSTEM_RESET);
-	}
+//	private void resetSystem() {
+//		writeValue(SingleRackChannelId.SYSTEM_RESET, SYSTEM_RESET);
+//	}
+//
+//	private void sleepSystem() {
+//		writeValue(SingleRackChannelId.SLEEP, SYSTEM_SLEEP);
+//	}
+//
+//	private void setWatchdog(int time_seconds) {
+//		writeValue(SingleRackChannelId.EMS_COMMUNICATION_TIMEOUT, time_seconds);
+//	}
 
-	private void sleepSystem() {
-		writeValue(SingleRackChannelId.SLEEP, SYSTEM_SLEEP);
-	}
-
-	private void setWatchdog(int time_seconds) {
-		writeValue(SingleRackChannelId.EMS_COMMUNICATION_TIMEOUT, time_seconds);
-	}
-
-	private boolean isSystemRunning() {
-		ContactorControl cc = (ContactorControl) readValue(SingleRackChannelId.BMS_CONTACTOR_CONTROL);
-		return cc == ContactorControl.ON_GRID;
-	}
-
-	private boolean isSystemStopped() {
-		ContactorControl cc = (ContactorControl) readValue(SingleRackChannelId.BMS_CONTACTOR_CONTROL);
-		return cc == ContactorControl.CUT_OFF;
-	}
-
-	/**
-	 * Checks whether system has an undefined state, e.g. rack 1 & 2 are configured,
-	 * but only rack 1 is running. This state can only be reached at startup coming
-	 * from state undefined
-	 */
-	private boolean isSystemStatePending() {
-		return !isSystemRunning() && !isSystemStopped();
-	}
-
-	private boolean isAlarmLevel2Error() {
-
-		return (boolean) readValue(SingleRackChannelId.ALARM_LEVEL_2_CELL_VOLTAGE_HIGH)
-				|| (boolean) readValue(SingleRackChannelId.ALARM_LEVEL_2_TOTAL_VOLTAGE_HIGH)
-				|| (boolean) readValue(SingleRackChannelId.ALARM_LEVEL_2_CHA_CURRENT_HIGH)
-				|| (boolean) readValue(SingleRackChannelId.ALARM_LEVEL_2_CELL_VOLTAGE_LOW)
-				|| (boolean) readValue(SingleRackChannelId.ALARM_LEVEL_2_TOTAL_VOLTAGE_LOW)
-				|| (boolean) readValue(SingleRackChannelId.ALARM_LEVEL_2_DISCHA_CURRENT_HIGH)
-				|| (boolean) readValue(SingleRackChannelId.ALARM_LEVEL_2_CELL_CHA_TEMP_HIGH)
-				|| (boolean) readValue(SingleRackChannelId.ALARM_LEVEL_2_CELL_CHA_TEMP_LOW)
-				|| (boolean) readValue(SingleRackChannelId.ALARM_LEVEL_2_SOC_LOW)
-				|| (boolean) readValue(SingleRackChannelId.ALARM_LEVEL_2_TEMPERATURE_DIFFERENCE_HIGH)
-				|| (boolean) readValue(SingleRackChannelId.ALARM_LEVEL_2_POLES_TEMPERATURE_DIFFERENCE_HIGH)
-				|| (boolean) readValue(SingleRackChannelId.ALARM_LEVEL_2_CELL_VOLTAGE_DIFFERENCE_HIGH)
-				|| (boolean) readValue(SingleRackChannelId.ALARM_LEVEL_2_INSULATION_LOW)
-				|| (boolean) readValue(SingleRackChannelId.ALARM_LEVEL_2_TOTAL_VOLTAGE_DIFFERENCE_HIGH)
-				|| (boolean) readValue(SingleRackChannelId.ALARM_LEVEL_2_CELL_DISCHA_TEMP_HIGH)
-				|| (boolean) readValue(SingleRackChannelId.ALARM_LEVEL_2_CELL_DISCHA_TEMP_LOW);
-	}
+//	/**
+//	 * Checks whether system has an undefined state, e.g. rack 1 & 2 are configured,
+//	 * but only rack 1 is running. This state can only be reached at startup coming
+//	 * from state undefined
+//	 */
+//	private boolean isSystemStatePending() {
+//		return !isRunning() && !isSystemStopped();
+//	}
 
 	private boolean isSlaveCommunicationError() {
 		boolean b = false;
@@ -191,10 +157,11 @@ public class SingleRack implements SoltaroBMS {
 
 	@Override
 	public boolean isError() {
-		return isAlarmLevel2Error() || isSlaveCommunicationError();
+		return isErrorAlarmLevel2() || isSlaveCommunicationError();
 	}
 
-	private void startSystem() {
+	@Override
+	public void start() throws OpenemsException {
 		ContactorControl cc = (ContactorControl) readValue(SingleRackChannelId.BMS_CONTACTOR_CONTROL);
 
 		// To avoid hardware damages do not send start command if system has already
@@ -203,15 +170,12 @@ public class SingleRack implements SoltaroBMS {
 			return;
 		}
 
-		try {
-			log.debug("write value to contactor control channel: value: " + SYSTEM_ON);
-			writeValue(SingleRackChannelId.BMS_CONTACTOR_CONTROL, SYSTEM_ON);
-		} catch (Exception e) {
-			log.error("Error while trying to start system\n" + e.getMessage());
-		}
+		log.debug("write value to contactor control channel: value: " + SYSTEM_ON);
+		writeValue(SingleRackChannelId.BMS_CONTACTOR_CONTROL, SYSTEM_ON);
 	}
 
-	private void stopSystem() {
+	@Override
+	public void stop() throws OpenemsException {
 		ContactorControl cc = (ContactorControl) readValue(SingleRackChannelId.BMS_CONTACTOR_CONTROL);
 		// To avoid hardware damages do not send stop command if system has already
 		// stopped
@@ -219,52 +183,60 @@ public class SingleRack implements SoltaroBMS {
 			return;
 		}
 
-		try {
-			log.debug("write value to contactor control channel: value: " + SYSTEM_OFF);
-			writeValue(SingleRackChannelId.BMS_CONTACTOR_CONTROL, SYSTEM_OFF);
-		} catch (Exception e) {
-			log.error("Error while trying to stop system\n" + e.getMessage());
-		}
-	}
-
-	private void setSoCLowAlarm(int soCLowAlarm) {
-		try {
-			writeValue(SingleRackChannelId.STOP_PARAMETER_SOC_LOW_PROTECTION, soCLowAlarm);
-			writeValue(SingleRackChannelId.STOP_PARAMETER_SOC_LOW_PROTECTION_RECOVER, soCLowAlarm);
-		} catch (Exception e) {
-			log.error("Error while setting parameter for soc low protection!" + e.getMessage());
-		}
-	}
-	
-
-	@Override
-	public void start() throws OpenemsException {
-		this.startSystem();
-	}
-
-	@Override
-	public void stop() throws OpenemsException {
-		this.stopSystem();
+		log.debug("write value to contactor control channel: value: " + SYSTEM_OFF);
+		writeValue(SingleRackChannelId.BMS_CONTACTOR_CONTROL, SYSTEM_OFF);
 	}
 
 	@Override
 	public boolean isRunning() {
-		return this.isSystemRunning();
+		return hasContactorControlThisValue(ContactorControl.ON_GRID);
 	}
 
 	@Override
 	public boolean isStopped() {
-		return this.isSystemStopped();
+		return hasContactorControlThisValue(ContactorControl.CUT_OFF);
+	}
+
+	private boolean hasContactorControlThisValue(ContactorControl value) {
+		ContactorControl cc = (ContactorControl) readValue(SingleRackChannelId.BMS_CONTACTOR_CONTROL);
+		return cc == value;
 	}
 
 	@Override
-	public boolean isCommunicationAvailable() {
-		return false; // TODO
+	public boolean isCommunicationAvailable() {	
+			if (modbusBridge == null) {
+				return false;	
+			}
+			
+			 Channel<Boolean> slaveCommunicationFailedChannel = modbusBridge.getSlaveCommunicationFailedChannel();		 
+			 Optional<Boolean> communicationFailedOpt = slaveCommunicationFailedChannel.value().asOptional();
+			 
+			 // If the channel value is present and it is set then the communication is broken
+			 if (communicationFailedOpt.isPresent() && communicationFailedOpt.get()) {
+				 return false;
+			 }
+			  
+			 return true;
 	}
 
 	@Override
-	public boolean isErrorLevel2() {
-		return this.isAlarmLevel2Error();
+	public boolean isErrorAlarmLevel2() {
+		return (boolean) readValue(SingleRackChannelId.ALARM_LEVEL_2_CELL_VOLTAGE_HIGH)
+				|| (boolean) readValue(SingleRackChannelId.ALARM_LEVEL_2_TOTAL_VOLTAGE_HIGH)
+				|| (boolean) readValue(SingleRackChannelId.ALARM_LEVEL_2_CHA_CURRENT_HIGH)
+				|| (boolean) readValue(SingleRackChannelId.ALARM_LEVEL_2_CELL_VOLTAGE_LOW)
+				|| (boolean) readValue(SingleRackChannelId.ALARM_LEVEL_2_TOTAL_VOLTAGE_LOW)
+				|| (boolean) readValue(SingleRackChannelId.ALARM_LEVEL_2_DISCHA_CURRENT_HIGH)
+				|| (boolean) readValue(SingleRackChannelId.ALARM_LEVEL_2_CELL_CHA_TEMP_HIGH)
+				|| (boolean) readValue(SingleRackChannelId.ALARM_LEVEL_2_CELL_CHA_TEMP_LOW)
+				|| (boolean) readValue(SingleRackChannelId.ALARM_LEVEL_2_SOC_LOW)
+				|| (boolean) readValue(SingleRackChannelId.ALARM_LEVEL_2_TEMPERATURE_DIFFERENCE_HIGH)
+				|| (boolean) readValue(SingleRackChannelId.ALARM_LEVEL_2_POLES_TEMPERATURE_DIFFERENCE_HIGH)
+				|| (boolean) readValue(SingleRackChannelId.ALARM_LEVEL_2_CELL_VOLTAGE_DIFFERENCE_HIGH)
+				|| (boolean) readValue(SingleRackChannelId.ALARM_LEVEL_2_INSULATION_LOW)
+				|| (boolean) readValue(SingleRackChannelId.ALARM_LEVEL_2_TOTAL_VOLTAGE_DIFFERENCE_HIGH)
+				|| (boolean) readValue(SingleRackChannelId.ALARM_LEVEL_2_CELL_DISCHA_TEMP_HIGH)
+				|| (boolean) readValue(SingleRackChannelId.ALARM_LEVEL_2_CELL_DISCHA_TEMP_LOW);
 	}
 
 	Collection<Task> getTasks(AbstractOpenemsModbusComponent modbusComponent) {
@@ -378,7 +350,7 @@ public class SingleRack implements SoltaroBMS {
 				modbusComponent.m(SingleRackChannelId.CLUSTER_1_CURRENT, new UnsignedWordElement(0x2101),
 						ElementToChannelConverter.SCALE_FACTOR_2), //
 				modbusComponent.m(SingleRackChannelId.CLUSTER_1_CHARGE_INDICATION, new UnsignedWordElement(0x2102)),
-				modbusComponent.m(Battery.ChannelId.SOC, new UnsignedWordElement(0x2103)),
+				modbusComponent.m(SingleRackChannelId.CLUSTER_1_SOC, new UnsignedWordElement(0x2103)),
 				modbusComponent.m(SingleRackChannelId.CLUSTER_1_SOH, new UnsignedWordElement(0x2104)),
 				modbusComponent.m(SingleRackChannelId.CLUSTER_1_MAX_CELL_VOLTAGE_ID, new UnsignedWordElement(0x2105)), //
 				modbusComponent.m(SingleRackChannelId.CLUSTER_1_MAX_CELL_VOLTAGE, new UnsignedWordElement(0x2106)), //

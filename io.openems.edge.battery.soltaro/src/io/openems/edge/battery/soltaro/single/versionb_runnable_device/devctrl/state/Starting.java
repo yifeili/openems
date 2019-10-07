@@ -43,7 +43,7 @@ public class Starting extends BaseState implements State {
 
 	@Override
 	public void act() throws OpenemsException {
-	
+		this.device.start();
 	}
 
 	@Override

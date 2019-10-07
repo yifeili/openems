@@ -15,7 +15,7 @@ public class DeviceFactory {
 			@Override public boolean isRunning() { return true; }
 			@Override public boolean isError() { return false; }
 			@Override public boolean isCommunicationAvailable() { return true; }
-			@Override public boolean isErrorLevel2() { return false; }
+			@Override public boolean isErrorAlarmLevel2() { return false; }
 		};
 	}
 	
@@ -27,7 +27,7 @@ public class DeviceFactory {
 			@Override public boolean isRunning() { return false; }
 			@Override public boolean isError() { return false; }
 			@Override public boolean isCommunicationAvailable() { return true; }
-			@Override public boolean isErrorLevel2() { return false; }
+			@Override public boolean isErrorAlarmLevel2() { return false; }
 		};
 	}
 	
@@ -39,7 +39,7 @@ public class DeviceFactory {
 			@Override public boolean isRunning() { return false; }
 			@Override public boolean isError() { return true; }
 			@Override public boolean isCommunicationAvailable() { return true; }
-			@Override public boolean isErrorLevel2() { return true; }
+			@Override public boolean isErrorAlarmLevel2() { return true; }
 		};
 	}
 	
@@ -51,7 +51,7 @@ public class DeviceFactory {
 			@Override public boolean isRunning() { return false; }
 			@Override public boolean isError() { return false; }
 			@Override public boolean isCommunicationAvailable() { return false; }
-			@Override public boolean isErrorLevel2() { return false; }
+			@Override public boolean isErrorAlarmLevel2() { return false; }
 		};
 	}
 

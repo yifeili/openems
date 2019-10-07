@@ -334,6 +334,8 @@ public enum SingleRackChannelId implements io.openems.edge.common.channel.Channe
 			.unit(Unit.MILLIAMPERE)), //
 	CLUSTER_1_SOH(Doc.of(OpenemsType.INTEGER) //
 			.unit(Unit.THOUSANDTH)), //
+	CLUSTER_1_SOC(Doc.of(OpenemsType.INTEGER) //
+			.unit(Unit.PERCENT)), //
 	CLUSTER_1_MAX_CELL_VOLTAGE_ID(Doc.of(OpenemsType.INTEGER) //
 			.unit(Unit.NONE)), //
 	CLUSTER_1_MAX_CELL_VOLTAGE(Doc.of(OpenemsType.INTEGER) //

@@ -51,7 +51,7 @@ public class CommandDevice implements SoltaroBMS {
 	}
 
 	@Override
-	public boolean isErrorLevel2() {
+	public boolean isErrorAlarmLevel2() {
 		// TODO Auto-generated method stub
 		return false;
 	}
