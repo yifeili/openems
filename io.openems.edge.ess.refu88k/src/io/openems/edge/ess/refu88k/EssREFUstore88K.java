@@ -67,7 +67,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 	private Config config;
 
 	public static final int DEFAULT_UNIT_ID = 1;
-	protected static final int MAX_APPARENT_POWER = 80_000;
+	protected final int MAX_APPARENT_POWER = config.maxApparentPower();
 	protected static final double EFFICIENCY_FACTOR = 0.98;
 
 	/*
@@ -430,8 +430,9 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 		}
 
 		IntegerWriteChannel wMaxChannel = this.channel(REFUStore88KChannelId.W_MAX);
-		wMaxChannel.setNextWriteValue(MAX_APPARENT_POWER); // Set WMax
-
+		wMaxChannel.setNextWriteValue(MAX_APPARENT_POWER); // Set Max Apparent Power
+		
+		
 		IntegerWriteChannel wMaxLimPctChannel = this.channel(REFUStore88KChannelId.W_MAX_LIM_PCT);
 		EnumWriteChannel wMaxLim_EnaChannel = this.channel(REFUStore88KChannelId.W_MAX_LIM_ENA);
 
