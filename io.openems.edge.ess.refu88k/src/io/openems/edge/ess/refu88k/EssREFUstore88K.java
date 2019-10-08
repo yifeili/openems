@@ -67,7 +67,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 	private Config config;
 
 	public static final int DEFAULT_UNIT_ID = 1;
-	protected static final int MAX_APPARENT_POWER = 80_000;
+	private int MAX_APPARENT_POWER = 0;
 	protected static final double EFFICIENCY_FACTOR = 0.98;
 
 	/*
@@ -114,6 +114,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 				config.modbus_id()); //
 		this.initializeBattery(config.battery_id());
 		this.config = config;
+		this.MAX_APPARENT_POWER = config.maxApparentPower();
 	}
 
 	@Deactivate
