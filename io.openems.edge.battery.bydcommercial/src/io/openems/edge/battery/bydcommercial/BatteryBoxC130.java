@@ -1161,6 +1161,7 @@ public class BatteryBoxC130 extends AbstractOpenemsModbusComponent
 
 				), //
 
+				
 				new FC3ReadRegistersTask(0x2140, Priority.LOW, //
 						m(new BitsWordElement(0x2140, this) //
 								.bit(0, BatteryBoxC130.ChannelId.ALARM_LEVEL_2_CELL_VOLTAGE_HIGH) //
