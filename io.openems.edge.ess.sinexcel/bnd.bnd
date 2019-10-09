@@ -19,6 +19,7 @@ Export-Package: \
 	io.openems.edge.bridge.modbus;version=latest,\
 	io.openems.edge.common;version=latest,\
 	io.openems.edge.ess.api;version=latest,\
+	io.openems.edge.io.api;version=latest,\
 	io.openems.edge.meter.api;version=latest,\
 	slf4j.api
 

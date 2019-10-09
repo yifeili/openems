@@ -127,6 +127,9 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 	protected void deactivate() {
 		super.deactivate();
 	}
+	
+	
+
 
 	public EssSinexcel() throws OpenemsNamedException {
 		super(//
@@ -137,6 +140,7 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 		);
 		this.channel(SymmetricEss.ChannelId.MAX_APPARENT_POWER).setNextValue(EssSinexcel.MAX_APPARENT_POWER);
 		this.stateMachine = new StateMachine(this);
+
 	}
 
 //	private void getNoOfCells() throws OpenemsNamedException {
@@ -166,6 +170,10 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 		});
 	}
 
+//	private void setgridModestate() throws OpenemsNamedException{
+//		
+//	}
+	
 	/**
 	 * Sets the Battery Ranges. Executed on TOPIC_CYCLE_AFTER_PROCESS_IMAGE.
 	 * 
@@ -209,6 +217,7 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 	 * @throws OpenemsNamedException on error
 	 */
 	public void inverterOn() throws OpenemsNamedException {
+		System.out.println("inverter on method");
 		EnumWriteChannel setdataModOnCmd = this.channel(SinexcelChannelId.MOD_ON_CMD);
 		setdataModOnCmd.setNextWriteValue(FalseTrue.TRUE); // true = START
 	}
@@ -219,8 +228,33 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 	 * @throws OpenemsNamedException on error
 	 */
 	public void inverterOff() throws OpenemsNamedException {
+		System.out.println("inverter off method");
 		EnumWriteChannel setdataModOffCmd = this.channel(SinexcelChannelId.MOD_OFF_CMD);
 		setdataModOffCmd.setNextWriteValue(FalseTrue.TRUE); // true = STOP
+	}
+	
+	/**
+	 * Set the grid mode to On-Grid.
+	 * 
+	 * @throws OpenemsNamedException on error
+	 */
+	public void hardSetGridOnMode() throws OpenemsNamedException {
+		System.out.println("inverter hard setting mode while switching");		
+		
+		EnumWriteChannel setdataGridOnCmd = this.channel(SinexcelChannelId.ON_GRID_CMD);
+		setdataGridOnCmd.setNextWriteValue(FalseTrue.TRUE); // 
+	}
+	
+	/**
+	 * Set the grid mode to Off-Grid.
+	 * 
+	 * @throws OpenemsNamedException on error
+	 */
+	public void hardSetGridOffMode() throws OpenemsNamedException {
+		System.out.println("inverter hard setting mode while switching");
+		
+		EnumWriteChannel setdataGridOffCmd = this.channel(SinexcelChannelId.OFF_GRID_CMD);
+		setdataGridOffCmd.setNextWriteValue(FalseTrue.TRUE); // 
 	}
 
 	/**
@@ -727,6 +761,7 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 			try {
 				this.setBatteryRanges();
 				this.doHandlingSlowFloatVoltage();
+				//this.setgridModestate();
 				this.stateMachine.run();
 			} catch (OpenemsNamedException e) {
 				this.logError(this.log, "EventHandler failed: " + e.getMessage());

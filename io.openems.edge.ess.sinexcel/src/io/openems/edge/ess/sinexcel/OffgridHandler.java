@@ -1,37 +1,40 @@
 package io.openems.edge.ess.sinexcel;
 
-import io.openems.common.exceptions.OpenemsError.OpenemsNamedException;
-import io.openems.edge.common.sum.GridMode;
-import io.openems.edge.ess.sinexcel.StateMachine.State;
+//import java.util.Optional;
+
 //import org.slf4j.Logger;
 //import org.slf4j.LoggerFactory;
 
-public class OngridHandler {
-	// private final Logger log = LoggerFactory.getLogger(OngridHandler.class);
+//import io.openems.common.exceptions.OpenemsException;
+import io.openems.common.exceptions.OpenemsError.OpenemsNamedException;
+import io.openems.edge.common.sum.GridMode;
+import io.openems.edge.ess.sinexcel.StateMachine.State;
+
+public class OffgridHandler {
+
+//	private final Logger log = LoggerFactory.getLogger(OngridHandler.class);
 	private final StateMachine parent;
 
-	public OngridHandler(StateMachine parent) {
+
+	public OffgridHandler(StateMachine parent) {
 		this.parent = parent;
 	}
 
 	protected StateMachine.State run() throws IllegalArgumentException, OpenemsNamedException {
-		System.out.println("Inside ongrid run");
+		System.out.println("Inside Off grid");
 		GridMode gridMode = this.parent.parent.getGridMode().getNextValue().asEnum();
 		switch (gridMode) {
 		case ON_GRID:
-			return this.doOngrid();
+			return StateMachine.State.GOING_ONGRID;
 		case UNDEFINED:
-			return this.doOngrid();
+			return StateMachine.State.UNDEFINED;
 		case OFF_GRID:
-			return StateMachine.State.GOING_OFFGRID;
+			return this.doOffgrid();
 		}
-		return StateMachine.State.ONGRID;
+		return StateMachine.State.OFFGRID;
 	}
 
-	private State doOngrid() throws OpenemsNamedException {
-		
-		
-		
+	private State doOffgrid() throws OpenemsNamedException {
 		
 		CurrentState currentState = this.parent.getSinexcelState();
 
@@ -52,10 +55,7 @@ public class OngridHandler {
 			break;
 
 		}
-		return State.ONGRID;
+		return State.OFFGRID;
 	}
-
-	// Assumptions : undefined and ongrid mode is same, as there is only one
-	// operations, which is to Softstart()
 
 }

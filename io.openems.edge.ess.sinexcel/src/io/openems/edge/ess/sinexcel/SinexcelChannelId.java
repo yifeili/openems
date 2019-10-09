@@ -238,7 +238,23 @@ public enum SinexcelChannelId implements ChannelId {
 				});
 			})),
 	STATE_20(Doc.of(Level.INFO) //
-			.text("Off Grid")), //
+			.text("Off Grid")
+			.onInit(c -> { //
+				StateChannel channel = (StateChannel) c;
+				EssSinexcel self = (EssSinexcel) channel.getComponent();
+				((StateChannel) channel).onChange((oldValue, newValue) -> {
+					Optional<Boolean> value = newValue.asOptional();
+					if (!value.isPresent()) {
+						self.getGridMode().setNextValue(GridMode.UNDEFINED);
+					} else {
+						if (value.get()) {
+							self.getGridMode().setNextValue(GridMode.OFF_GRID);
+						} else {
+							self.getGridMode().setNextValue(GridMode.ON_GRID);
+						}
+					}
+				});
+			})), //
 	STATE_21(Doc.of(Level.WARNING) //
 			.text("AC OVP")), //
 	STATE_22(Doc.of(Level.WARNING) //
