@@ -4,11 +4,11 @@ public interface SoltaroBMS extends RunnableDevice, CommunicationDevice {
 	
 	boolean isErrorAlarmLevel2();
 	
-//	void writeStartCommand();
-//	void writeStopCommand();
-//	void writeSleepCommand();
-//	void writeResetCommand();
-//	void writeWatchdog(int seconds);
+	void writeStartCommand();
+	void writeStopCommand();
+	void writeSleepCommand();
+	void writeResetCommand();
+	void writeWatchdog(int seconds);
 //	.....
 
 }

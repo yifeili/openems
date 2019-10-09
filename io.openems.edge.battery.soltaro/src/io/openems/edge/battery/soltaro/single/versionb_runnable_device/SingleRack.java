@@ -45,10 +45,12 @@ public class SingleRack implements SoltaroBMS {
 	private static final String KEY_VOLTAGE = "_VOLTAGE";
 //	private static final Integer SYSTEM_RESET = 0x1;
 	private static final String NUMBER_FORMAT = "%03d"; // creates string number with leading zeros
+
+	private static final Integer SYSTEM_SLEEP = 0x1;
+	private static final Integer SYSTEM_RESET = 0x1;
+
 //	private static final double MAX_TOLERANCE_CELL_VOLTAGE_CHANGES_MILLIVOLT = 50;
 //	private static final double MAX_TOLERANCE_CELL_VOLTAGES_MILLIVOLT = 400;
-
-//	private static final Integer SYSTEM_SLEEP = 0x1;
 
 	private final Logger log = LoggerFactory.getLogger(SingleRack.class);
 
@@ -86,26 +88,6 @@ public class SingleRack implements SoltaroBMS {
 		return null;
 	}
 
-//	private void resetSystem() {
-//		writeValue(SingleRackChannelId.SYSTEM_RESET, SYSTEM_RESET);
-//	}
-//
-//	private void sleepSystem() {
-//		writeValue(SingleRackChannelId.SLEEP, SYSTEM_SLEEP);
-//	}
-//
-//	private void setWatchdog(int time_seconds) {
-//		writeValue(SingleRackChannelId.EMS_COMMUNICATION_TIMEOUT, time_seconds);
-//	}
-
-//	/**
-//	 * Checks whether system has an undefined state, e.g. rack 1 & 2 are configured,
-//	 * but only rack 1 is running. This state can only be reached at startup coming
-//	 * from state undefined
-//	 */
-//	private boolean isSystemStatePending() {
-//		return !isRunning() && !isSystemStopped();
-//	}
 
 	private boolean isSlaveCommunicationError() {
 		boolean b = false;
@@ -162,6 +144,16 @@ public class SingleRack implements SoltaroBMS {
 
 	@Override
 	public void start() throws OpenemsException {
+		writeStartCommand();
+	}
+
+	@Override
+	public void stop() throws OpenemsException {
+		writeStopCommand();
+	}
+	
+	@Override
+	public void writeStartCommand() {
 		ContactorControl cc = (ContactorControl) readValue(SingleRackChannelId.BMS_CONTACTOR_CONTROL);
 
 		// To avoid hardware damages do not send start command if system has already
@@ -175,7 +167,7 @@ public class SingleRack implements SoltaroBMS {
 	}
 
 	@Override
-	public void stop() throws OpenemsException {
+	public void writeStopCommand() {
 		ContactorControl cc = (ContactorControl) readValue(SingleRackChannelId.BMS_CONTACTOR_CONTROL);
 		// To avoid hardware damages do not send stop command if system has already
 		// stopped
@@ -185,6 +177,21 @@ public class SingleRack implements SoltaroBMS {
 
 		log.debug("write value to contactor control channel: value: " + SYSTEM_OFF);
 		writeValue(SingleRackChannelId.BMS_CONTACTOR_CONTROL, SYSTEM_OFF);
+	}
+
+	@Override
+	public void writeSleepCommand() {
+		writeValue(SingleRackChannelId.SLEEP, SYSTEM_SLEEP);
+	}
+
+	@Override
+	public void writeResetCommand() {
+		writeValue(SingleRackChannelId.SYSTEM_RESET, SYSTEM_RESET);
+	}
+
+	@Override
+	public void writeWatchdog(int seconds) {
+		writeValue(SingleRackChannelId.EMS_COMMUNICATION_TIMEOUT, seconds);
 	}
 
 	@Override
@@ -933,5 +940,4 @@ public class SingleRack implements SoltaroBMS {
 		}
 		return map;
 	}
-
 }
