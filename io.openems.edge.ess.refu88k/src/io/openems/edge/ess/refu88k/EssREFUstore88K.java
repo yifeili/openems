@@ -18,7 +18,6 @@ import org.osgi.service.event.EventHandler;
 import org.osgi.service.metatype.annotations.Designate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import io.openems.common.channel.AccessMode;
 import io.openems.common.exceptions.OpenemsError.OpenemsNamedException;
 import io.openems.common.exceptions.OpenemsException;
@@ -167,6 +166,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 			 * The inverter is initialised but not grid connected. The IGBT's are locked and
 			 * AC relays are open.
 			 */
+			this.setWatchdogTimer();
 			this.doStandbyHandling();
 			break;
 		case SLEEPING:
@@ -216,6 +216,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 			break;
 		}
 	}
+
 
 	private void offHandleStateMachine() {
 
@@ -300,6 +301,12 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 		} else {
 			timeNoPower = null;
 		}
+	}
+	
+	
+	private void setWatchdogTimer() {
+		this.isPowerAllowed = false;
+		 
 	}
 
 	private void doStandbyHandling() {
@@ -665,8 +672,24 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 						m(REFUStore88KChannelId.READ_WRITE_PARAM_VALUE_U8, new UnsignedWordElement(SUNSPEC_64041 + 10)),
 						m(REFUStore88KChannelId.READ_WRITE_PARAM_VALUE_S8, new SignedWordElement(SUNSPEC_64041 + 11))),
 
-				new FC16WriteRegistersTask(SUNSPEC_64800 + 6, //
-						m(REFUStore88KChannelId.PCS_SET_OPERATION, new SignedWordElement(SUNSPEC_64800 + 6))));
+				new FC16WriteRegistersTask(SUNSPEC_64800, //
+						m(REFUStore88KChannelId.ID_64800,new UnsignedWordElement(SUNSPEC_64800)),
+						m(REFUStore88KChannelId.L_64800, new UnsignedWordElement(SUNSPEC_64800 + 1)),
+						m(REFUStore88KChannelId.LOC_REM_CTL, new SignedWordElement(SUNSPEC_64800 + 2)),
+						m(REFUStore88KChannelId.PCS_HB, new SignedWordElement(SUNSPEC_64800 + 3)),
+						m(REFUStore88KChannelId.CONTROLLER_HB, new SignedWordElement(SUNSPEC_64800 + 4)),
+						new DummyRegisterElement(SUNSPEC_64800 + 5),
+						m(REFUStore88KChannelId.PCS_SET_OPERATION, new SignedWordElement(SUNSPEC_64800 + 6)),
+						m(REFUStore88KChannelId.MAX_BAT_A_CHA, new SignedWordElement(SUNSPEC_64800 + 7)),
+						m(REFUStore88KChannelId.MAX_BAT_A_DISCHA, new SignedWordElement(SUNSPEC_64800 + 8)),
+						m(REFUStore88KChannelId.MAX_A, new SignedWordElement(SUNSPEC_64800 + 9)),
+						m(REFUStore88KChannelId.MAX_A_CUR, new SignedWordElement(SUNSPEC_64800 + 10)),
+						m(REFUStore88KChannelId.MAX_BAT_A_SF, new SignedWordElement(SUNSPEC_64800 + 11)),
+						m(REFUStore88KChannelId.MAX_A_SF, new SignedWordElement(SUNSPEC_64800 + 12)),
+						m(REFUStore88KChannelId.MAX_A_CUR_SF, new SignedWordElement(SUNSPEC_64800 + 13)),
+						m(REFUStore88KChannelId.PADDING_1, new SignedWordElement(SUNSPEC_64800 + 14)),
+						m(REFUStore88KChannelId.PADDING_2, new SignedWordElement(SUNSPEC_64800 + 15)))
+				);
 
 	}
 

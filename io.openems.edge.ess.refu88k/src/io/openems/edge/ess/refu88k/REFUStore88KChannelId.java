@@ -154,7 +154,21 @@ public enum REFUStore88KChannelId implements ChannelId {
 	/*
 	 * Sunspec Model No: 64800
 	 */
-	PCS_SET_OPERATION(Doc.of(OperatingState.values()).accessMode(AccessMode.READ_WRITE)), //
+	ID_64800(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
+	L_64800(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
+	LOC_REM_CTL(Doc.of(LocRemCtl.values()).accessMode(AccessMode.READ_WRITE)), //
+	PCS_HB(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_WRITE)), //
+	CONTROLLER_HB(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_WRITE)), //
+	PCS_SET_OPERATION(Doc.of(PCSSetOperation.values()).accessMode(AccessMode.READ_WRITE)), //
+	MAX_BAT_A_CHA(Doc.of(OpenemsType.INTEGER).unit(Unit.AMPERE).accessMode(AccessMode.READ_WRITE)), //
+	MAX_BAT_A_DISCHA(Doc.of(OpenemsType.INTEGER).unit(Unit.AMPERE).accessMode(AccessMode.READ_WRITE)), //
+	MAX_A(Doc.of(OpenemsType.INTEGER).unit(Unit.AMPERE).accessMode(AccessMode.READ_WRITE)), //
+	MAX_A_CUR(Doc.of(OpenemsType.INTEGER).unit(Unit.PERCENT).accessMode(AccessMode.READ_WRITE)), //
+	MAX_BAT_A_SF(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_WRITE)), //
+	MAX_A_SF(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_WRITE)), //
+	MAX_A_CUR_SF(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_WRITE)), //
+	PADDING_1(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_WRITE)),
+	PADDING_2(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_WRITE)),
 	;
 	private final Doc doc;
 
