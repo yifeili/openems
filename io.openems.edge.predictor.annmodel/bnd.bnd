@@ -1,0 +1,29 @@
+Bundle-Name: OpenEMS Edge Predictor ANN Model
+Bundle-Vendor: FENECON GmbH
+Bundle-License: https://opensource.org/licenses/EPL-2.0 
+Bundle-Version:					1.0.0.${tstamp}
+Bundle-Description: \
+	The provider bundle for io.openems.edge.predictor.annmodel.
+
+Export-Package:  \
+	io.openems.edge.predictor.api
+
+Private-Package: \
+	io.openems.edge.predictor.ann.model,\
+	io.openems.edge.predictor.annmodel.production
+
+-includeresource: {readme.md}
+
+-buildpath: \
+	osgi.enroute.base.api;version=2.1,\
+	io.openems.common;version=latest,\
+	io.openems.edge.predictor.api;version=latest,\
+	io.openems.edge.common;version=latest,\
+	com.google.gson,\
+	com.google.guava
+
+-testpath: ${testpath}
+
+javac.source: 1.8
+javac.target: 1.8
+
