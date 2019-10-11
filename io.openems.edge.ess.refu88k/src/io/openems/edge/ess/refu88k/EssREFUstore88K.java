@@ -166,7 +166,6 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 			 * The inverter is initialised but not grid connected. The IGBT's are locked and
 			 * AC relays are open.
 			 */
-			this.setWatchdogTimer();
 			this.doStandbyHandling();
 			break;
 		case SLEEPING:
@@ -304,14 +303,49 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 	}
 	
 	
-	private void setWatchdogTimer() {
-		this.isPowerAllowed = false;
-		 
-	}
 
 	private void doStandbyHandling() {
 		this.isPowerAllowed = false;
+		// this.setWatchdogTimer();
 		this.exitStandbyMode();
+	}
+	
+	
+	
+	//TODO setWatchdogTimer() not finish!!!
+	private void setWatchdogTimer() {
+		IntegerWriteChannel readWriteParamId = this.channel(REFUStore88KChannelId.READ_WRITE_PARAM_ID);
+		IntegerWriteChannel readWriteParamIndex = this.channel(REFUStore88KChannelId.READ_WRITE_PARAM_INDEX);
+		
+		// Set readWritePramId to PasswordID for entering password!
+		try {
+			readWriteParamId.setNextWriteValue(2030);
+		} catch (OpenemsNamedException e) {
+			log.error("problem occurred while trying set readWriteParamId" + e.getMessage());
+		}
+		
+		// Read current value of readWriteParamId!
+		int curReadWriteParamId = readWriteParamId.value().orElse(0);
+		
+		if (curReadWriteParamId == 2030) {
+			
+			// Set readWriteParamIndex to 0!
+			try {
+				readWriteParamIndex.setNextWriteValue(0);
+			} catch (OpenemsNamedException e) {
+				log.error("problem occurred while trying set readWriteParamId" + e.getMessage());
+			}
+			
+			// Read current value of readWriteParamIndex!
+			int curReadWriteParamIndex = readWriteParamIndex.value().orElse(0);
+			
+			// Enter password!
+			if (curReadWriteParamIndex == 0) {
+			
+				
+				
+			}
+		}
 	}
 
 	private void exitStandbyMode() {
@@ -319,7 +353,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 		try {
 			pcsSetOperation.setNextWriteValue(PCSSetOperation.EXIT_STANDBY_MODE);
 		} catch (OpenemsNamedException e) {
-			log.error("problem occurred while trying to start grid mode" + e.getMessage());
+			log.error("problem occurred while trying to exit standby mode" + e.getMessage());
 		}
 	}
 
@@ -341,7 +375,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 		try {
 			pcsSetOperation.setNextWriteValue(PCSSetOperation.ENTER_STARTED_MODE);
 		} catch (OpenemsNamedException e) {
-			log.error("problem occurred while trying to start grid mode" + e.getMessage());
+			log.error("problem occurred while trying to enter started mode" + e.getMessage());
 		}
 	}
 
