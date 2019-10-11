@@ -43,7 +43,6 @@ public class SingleRack implements SoltaroBMS {
 
 	private static final String KEY_TEMPERATURE = "_TEMPERATURE";
 	private static final String KEY_VOLTAGE = "_VOLTAGE";
-//	private static final Integer SYSTEM_RESET = 0x1;
 	private static final String NUMBER_FORMAT = "%03d"; // creates string number with leading zeros
 
 	private static final Integer SYSTEM_SLEEP = 0x1;
