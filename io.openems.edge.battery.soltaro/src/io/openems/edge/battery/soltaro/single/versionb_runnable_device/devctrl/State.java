@@ -10,5 +10,4 @@ public interface State {
 	void act() throws OpenemsException;
 	StateEnum getStateEnum();
 	
-
 }

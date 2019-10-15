@@ -4,19 +4,16 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.openems.common.channel.Unit;
-import io.openems.common.exceptions.OpenemsException;
 import io.openems.edge.battery.soltaro.ChannelIdImpl;
 import io.openems.edge.battery.soltaro.ModuleParameters;
 import io.openems.edge.battery.soltaro.single.versionb_runnable_device.Enums.ContactorControl;
 import io.openems.edge.battery.soltaro.single.versionb_runnable_device.devctrl.CommunicationBridge;
 import io.openems.edge.battery.soltaro.single.versionb_runnable_device.devctrl.SoltaroBMS;
-import io.openems.edge.bridge.modbus.AbstractModbusBridge;
 import io.openems.edge.bridge.modbus.api.AbstractOpenemsModbusComponent;
 import io.openems.edge.bridge.modbus.api.ElementToChannelConverter;
 import io.openems.edge.bridge.modbus.api.element.AbstractModbusElement;
@@ -48,9 +45,6 @@ public class SingleRack implements SoltaroBMS {
 	private static final Integer SYSTEM_SLEEP = 0x1;
 	private static final Integer SYSTEM_RESET = 0x1;
 
-//	private static final double MAX_TOLERANCE_CELL_VOLTAGE_CHANGES_MILLIVOLT = 50;
-//	private static final double MAX_TOLERANCE_CELL_VOLTAGES_MILLIVOLT = 400;
-
 	private final Logger log = LoggerFactory.getLogger(SingleRack.class);
 
 	private Map<String, Channel<?>> channelMap;
@@ -59,14 +53,11 @@ public class SingleRack implements SoltaroBMS {
 
 	private boolean reduceTasks;
 
-	private AbstractModbusBridge modbusBridge;
-
 	public SingleRack(int numberOfSlaves, boolean reduceTasks, CommunicationBridge communicationBridge,
-			AbstractOpenemsModbusComponent modbusComponent, AbstractModbusBridge modbusBridge) {
+			AbstractOpenemsModbusComponent modbusComponent) {
 		this.numberOfSlaves = numberOfSlaves;
 		this.reduceTasks = reduceTasks;
 		this.communicationBridge = communicationBridge;
-		this.modbusBridge = modbusBridge;
 		channelMap = createDynamicChannels(modbusComponent);
 	}
 
@@ -74,6 +65,7 @@ public class SingleRack implements SoltaroBMS {
 		try {
 			this.communicationBridge.setWriteValue(channelId, value);
 		} catch (Exception e) {
+			log.error("Error while trying to write value '" + value + "' to channel " + channelId + "!");
 			System.out.println("Error while trying to write value '" + value + "' to channel " + channelId + "!");
 		}
 	}
@@ -82,13 +74,34 @@ public class SingleRack implements SoltaroBMS {
 		try {
 			return this.communicationBridge.readValue(channelId);
 		} catch (Exception e) {
+			log.error("Error while trying to read value from channel " + channelId + "!");
 			System.out.println("Error while trying to read value from channel " + channelId + "!");
 		}
 		return null;
 	}
 
+	@Override
+	public boolean isRunning() {
+		return hasContactorControlThisValue(ContactorControl.ON_GRID);
+	}
 
-	private boolean isSlaveCommunicationError() {
+	@Override
+	public boolean isStopped() {
+		return hasContactorControlThisValue(ContactorControl.CUT_OFF);
+	}
+
+	@Override
+	public boolean isInitiating() {
+		return hasContactorControlThisValue(ContactorControl.CONNECTION_INITIATING);
+	}
+
+	private boolean hasContactorControlThisValue(ContactorControl value) {
+		Integer ccValue = (Integer) readValue(SingleRackChannelId.BMS_CONTACTOR_CONTROL);
+		return ccValue == value.getValue();
+	}
+
+	@Override
+	public boolean isSlaveCommunicationError() {
 		boolean b = false;
 		switch (this.numberOfSlaves) {
 		case 20:
@@ -137,44 +150,12 @@ public class SingleRack implements SoltaroBMS {
 	}
 
 	@Override
-	public boolean isError() {
-		return isErrorAlarmLevel2() || isSlaveCommunicationError();
-	}
-
-	@Override
-	public void start() throws OpenemsException {
-		writeStartCommand();
-	}
-
-	@Override
-	public void stop() throws OpenemsException {
-		writeStopCommand();
-	}
-	
-	@Override
 	public void writeStartCommand() {
-		ContactorControl cc = (ContactorControl) readValue(SingleRackChannelId.BMS_CONTACTOR_CONTROL);
-
-		// To avoid hardware damages do not send start command if system has already
-		// started
-		if (cc == ContactorControl.ON_GRID || cc == ContactorControl.CONNECTION_INITIATING) {
-			return;
-		}
-
-		log.debug("write value to contactor control channel: value: " + SYSTEM_ON);
 		writeValue(SingleRackChannelId.BMS_CONTACTOR_CONTROL, SYSTEM_ON);
 	}
 
 	@Override
 	public void writeStopCommand() {
-		ContactorControl cc = (ContactorControl) readValue(SingleRackChannelId.BMS_CONTACTOR_CONTROL);
-		// To avoid hardware damages do not send stop command if system has already
-		// stopped
-		if (cc == ContactorControl.CUT_OFF) {
-			return;
-		}
-
-		log.debug("write value to contactor control channel: value: " + SYSTEM_OFF);
 		writeValue(SingleRackChannelId.BMS_CONTACTOR_CONTROL, SYSTEM_OFF);
 	}
 
@@ -191,38 +172,6 @@ public class SingleRack implements SoltaroBMS {
 	@Override
 	public void writeWatchdog(int seconds) {
 		writeValue(SingleRackChannelId.EMS_COMMUNICATION_TIMEOUT, seconds);
-	}
-
-	@Override
-	public boolean isRunning() {
-		return hasContactorControlThisValue(ContactorControl.ON_GRID);
-	}
-
-	@Override
-	public boolean isStopped() {
-		return hasContactorControlThisValue(ContactorControl.CUT_OFF);
-	}
-
-	private boolean hasContactorControlThisValue(ContactorControl value) {
-		ContactorControl cc = (ContactorControl) readValue(SingleRackChannelId.BMS_CONTACTOR_CONTROL);
-		return cc == value;
-	}
-
-	@Override
-	public boolean isCommunicationAvailable() {	
-			if (modbusBridge == null) {
-				return false;	
-			}
-			
-			 Channel<Boolean> slaveCommunicationFailedChannel = modbusBridge.getSlaveCommunicationFailedChannel();		 
-			 Optional<Boolean> communicationFailedOpt = slaveCommunicationFailedChannel.value().asOptional();
-			 
-			 // If the channel value is present and it is set then the communication is broken
-			 if (communicationFailedOpt.isPresent() && communicationFailedOpt.get()) {
-				 return false;
-			 }
-			  
-			 return true;
 	}
 
 	@Override
@@ -245,6 +194,11 @@ public class SingleRack implements SoltaroBMS {
 				|| (boolean) readValue(SingleRackChannelId.ALARM_LEVEL_2_CELL_DISCHA_TEMP_LOW);
 	}
 
+	@Override
+	public boolean isCommunicationAvailable() {
+		return communicationBridge.isCommunicationAvailable();
+	}
+	
 	Collection<Task> getTasks(AbstractOpenemsModbusComponent modbusComponent) {
 		Collection<Task> tasks = new ArrayList<>();
 

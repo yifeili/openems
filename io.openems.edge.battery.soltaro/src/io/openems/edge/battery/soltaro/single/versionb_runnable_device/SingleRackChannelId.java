@@ -445,8 +445,8 @@ public enum SingleRackChannelId implements io.openems.edge.common.channel.Channe
 	SLAVE_TEMPERATURE_COMMUNICATION_ERROR_LOW(Doc.of(OpenemsType.INTEGER) //
 			.unit(Unit.NONE)), //
 
-	// StateChannels
-	ALARM_FLAG_STATUS_DISCHARGE_TEMPERATURE_LOW(Doc.of(Level.OK) //
+	// StateChannels //TODO change them to Doc.of(Openemstype.Boolean)
+	ALARM_FLAG_STATUS_DISCHARGE_TEMPERATURE_LOW(Doc.of(OpenemsType.BOOLEAN) //
 			.text("Alarm flag status discharge temperature low")), //
 	ALARM_FLAG_STATUS_DISCHARGE_TEMPERATURE_HIGH(Doc.of(Level.OK) //
 			.text("Alarm flag status discharge temperature high")), //
@@ -678,7 +678,7 @@ public enum SingleRackChannelId implements io.openems.edge.common.channel.Channe
 			.text("Intranet communication fault")), //
 	FAILURE_TEMP_SAMPLING_LINE(Doc.of(Level.FAULT) //
 			.text("Temperature sampling line fault")), //
-	FAILURE_BALANCING_MODULE(Doc.of(Level.INFO) //
+	FAILURE_BALANCING_MODULE(Doc.of(Level.OK) //
 			.text("Balancing module fault")), //
 	FAILURE_PCB(Doc.of(Level.FAULT) //
 			.text("PCB error")), //

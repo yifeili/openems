@@ -11,6 +11,6 @@ public interface CommunicationBridge {
 	
 	<T> T readValue(ChannelId channelId);
 	
-//	boolean isCommunicationAvailable();
+	boolean isCommunicationAvailable();
 
 }

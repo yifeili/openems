@@ -7,12 +7,12 @@ import java.util.List;
 import java.util.Queue;
 
 import io.openems.common.exceptions.OpenemsException;
-import io.openems.edge.battery.soltaro.single.versionb_runnable_device.devctrl.SoltaroBMS;
+import io.openems.edge.battery.soltaro.single.versionb_runnable_device.SoltaroComponent;
 import io.openems.edge.battery.soltaro.single.versionb_runnable_device.devctrl.State;
 import io.openems.edge.battery.soltaro.single.versionb_runnable_device.devctrl.StateEnum;
 
 /**
- * This class handles errors occurring 
+ * This class handles errors occurring
  */
 public class Error extends BaseState implements State {
 
@@ -20,12 +20,12 @@ public class Error extends BaseState implements State {
 	int startUnsuccessfulDelaySeconds;
 	int errorLevel2DelaySeconds;
 	private Queue<StateEnum> statesBefore;
-	
+
 	private LocalDateTime startsUnsuccessfulTime;
 	private LocalDateTime errorLevel2DelayTime;
-	
+
 	public Error( //
-			SoltaroBMS device, //
+			SoltaroComponent device, //
 			int maxStartAttempts, //
 			int startUnsuccessfulDelaySeconds, //
 			int errorLevel2DelaySeconds //
@@ -38,14 +38,14 @@ public class Error extends BaseState implements State {
 	}
 
 	@Override
-	public StateEnum getNextState() {	
-		
+	public StateEnum getNextState() {
+
 		// No data from the device
 		if (this.isDeviceUndefined()) {
 			this.resetInternalVariables();
 			return StateEnum.UNDEFINED;
 		}
-		
+
 		if (this.startsUnsuccessfulTime != null) {
 			if (LocalDateTime.now().minusSeconds(this.startUnsuccessfulDelaySeconds).isAfter(startsUnsuccessfulTime)) {
 				// waiting period is over
@@ -55,14 +55,15 @@ public class Error extends BaseState implements State {
 				return StateEnum.ERROR;
 			}
 		}
-		
-		// If the last 'maxStartAppempts' states were 'STARTING' 
-		//system should remain in error state for 'startUnsuccessfulDelaySeconds' seconds
+
+		// If the last 'maxStartAppempts' states were 'STARTING'
+		// system should remain in error state for 'startUnsuccessfulDelaySeconds'
+		// seconds
 		if (isMaxStartAttemptsReached()) {
 			startsUnsuccessfulTime = LocalDateTime.now();
 			return StateEnum.ERROR;
 		}
-		
+
 		if (this.errorLevel2DelayTime != null) {
 			if (LocalDateTime.now().minusSeconds(this.errorLevel2DelaySeconds).isAfter(errorLevel2DelayTime)) {
 				// waiting period is over
@@ -72,41 +73,39 @@ public class Error extends BaseState implements State {
 				return StateEnum.ERROR;
 			}
 		}
-		
+
 		// If there is an error level 2
-		//system should remain in error state for 'errorLevel2DelaySeconds' seconds
+		// system should remain in error state for 'errorLevel2DelaySeconds' seconds
 		if (this.device.isErrorAlarmLevel2()) {
 			errorLevel2DelayTime = LocalDateTime.now();
 			return StateEnum.ERROR;
 		}
-		
-		
+
 		if (this.device.isStopped()) {
 			return StateEnum.STOPPED;
 		}
-		
+
 		return null;
 	}
-
 
 	private void resetInternalVariables() {
 		this.startsUnsuccessfulTime = null;
 		this.errorLevel2DelayTime = null;
-		this.statesBefore.clear();		
+		this.statesBefore.clear();
 	}
 
 	private boolean isMaxStartAttemptsReached() {
-		if (this.statesBefore.size() <= this.maxStartAppempts) {			
+		if (this.statesBefore.size() <= this.maxStartAppempts) {
 			return false;
 		}
-		
+
 		List<StateEnum> list = new ArrayList<StateEnum>(this.statesBefore);
 		for (int i = list.size() - 1; i >= list.size() - this.maxStartAppempts; i--) {
 			if (list.get(i) != StateEnum.STARTING) {
 				return false;
 			}
 		}
-		
+
 		return true;
 	}
 
@@ -117,7 +116,7 @@ public class Error extends BaseState implements State {
 
 	@Override
 	public StateEnum getStateEnum() {
-		return StateEnum.ERROR;	
+		return StateEnum.ERROR;
 	}
 
 	@Override
@@ -126,5 +125,4 @@ public class Error extends BaseState implements State {
 		this.statesBefore.add(stateBefore);
 	}
 
-	
 }

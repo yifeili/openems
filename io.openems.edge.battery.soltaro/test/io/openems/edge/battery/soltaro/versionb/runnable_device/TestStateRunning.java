@@ -9,7 +9,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import io.openems.common.exceptions.OpenemsException;
-import io.openems.edge.battery.soltaro.single.versionb_runnable_device.devctrl.SoltaroBMS;
+import io.openems.edge.battery.soltaro.single.versionb_runnable_device.SoltaroComponent;
 import io.openems.edge.battery.soltaro.single.versionb_runnable_device.devctrl.StateEnum;
 import io.openems.edge.battery.soltaro.single.versionb_runnable_device.devctrl.state.Running;
 import io.openems.edge.battery.soltaro.versionb.runnable_device.helper.DeviceFactory;
@@ -51,7 +51,7 @@ public class TestStateRunning {
 
 	@Test
 	public final void testAct() {
-		SoltaroBMS dev = DeviceFactory.getRunningDevice();
+		SoltaroComponent dev = DeviceFactory.getRunningDevice();
 		sut = new Running(dev);		
 		try {
 			sut.act();

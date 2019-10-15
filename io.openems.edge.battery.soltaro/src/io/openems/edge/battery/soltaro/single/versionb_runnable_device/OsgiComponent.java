@@ -44,7 +44,7 @@ import io.openems.edge.common.modbusslave.ModbusSlaveTable;
 
 @Designate(ocd = Config.class, factory = true)
 @Component( //
-		name = "OpenEms.Component.For.Bms.Soltaro.SingleRack.VersionB", //
+		name = "OpenEms.Component.For.Bms.Soltaro.SingleRack.VersionB.NewImplementation", //
 		immediate = true, //
 		configurationPolicy = ConfigurationPolicy.REQUIRE, //
 		property = EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_AFTER_PROCESS_IMAGE //
@@ -52,7 +52,8 @@ import io.openems.edge.common.modbusslave.ModbusSlaveTable;
 public class OsgiComponent extends AbstractOpenemsModbusComponent implements EventHandler, OpenemsComponent, Battery, ModbusSlave, CommunicationBridge {
 
 	// , // JsonApi // TODO
-	private SingleRack bms;
+	
+	SoltaroComponent soltaroComponent;	
 	
 	private State currentState;
 	private Config config;
@@ -63,10 +64,8 @@ public class OsgiComponent extends AbstractOpenemsModbusComponent implements Eve
 	protected ComponentManager componentManager;
 	
 	private final Logger log = LoggerFactory.getLogger(OsgiComponent.class);
-	
 
-	protected OsgiComponent(io.openems.edge.common.channel.ChannelId[] firstInitialChannelIds,
-			io.openems.edge.common.channel.ChannelId[][] furtherInitialChannelIds) {
+	public OsgiComponent() {
 		super(//
 				OpenemsComponent.ChannelId.values(), //
 				Battery.ChannelId.values(), //
@@ -119,19 +118,16 @@ public class OsgiComponent extends AbstractOpenemsModbusComponent implements Eve
 		return "SoC:" + this.getSoc().value() //
 				+ "|Discharge:" + this.getDischargeMinVoltage().value() + ";" + this.getDischargeMaxCurrent().value() //
 				+ "|Charge:" + this.getChargeMaxVoltage().value() + ";" + this.getChargeMaxCurrent().value() //
-				;//+ "|State:" + this.getStateMachineState();
+				+ "|State:" + this.currentState.getStateEnum();
 	}
 
 	@Activate
-	void activate(ComponentContext context, Config config) throws OpenemsNamedException {
-		
-		AbstractModbusBridge modbusBridge = this.componentManager.getComponent(config.modbus_id());
-		
-		bms = new SingleRack(config.numberOfSlaves(), config.ReduceTasks(), this, this, modbusBridge);
+	void activate(ComponentContext context, Config config) throws OpenemsNamedException {		  
+		SingleRack bms = new SingleRack(config.numberOfSlaves(), config.ReduceTasks(), this, this);
+		soltaroComponent = new SoltaroComponent(bms);		
 		this.config = config;
-
-		// adds dynamically created channels and save them into a map to access them
-		// when modbus tasks are created
+		StateController.init(soltaroComponent, config);
+		currentState = StateController.getUndefinedState();
 
 		super.activate(context, config.id(), config.alias(), config.enabled(), config.modbusUnitId(), this.cm, "Modbus",
 				config.modbus_id());
@@ -139,13 +135,13 @@ public class OsgiComponent extends AbstractOpenemsModbusComponent implements Eve
 		initializeCallbacks();
 		setWatchdog(config.watchdog());
 		setSoCLowAlarm(config.SoCLowAlarm());
-		setCapacity();
-		StateController.init(bms, config);
+		setCapacity();		
+	
 	}
 	
 	@Deactivate
 	protected void deactivate() {
-		bms = null;
+		soltaroComponent = null;
 		// TODO remove channels!?
 		super.deactivate();
 	}
@@ -182,8 +178,6 @@ public class OsgiComponent extends AbstractOpenemsModbusComponent implements Eve
 			log.error("Error while setting parameter for soc low protection!" + e.getMessage());
 		}
 	}
-	
-
 	
 	private void initializeCallbacks() {
 
@@ -273,7 +267,7 @@ public class OsgiComponent extends AbstractOpenemsModbusComponent implements Eve
 
 	@Override
 	protected ModbusProtocol defineModbusProtocol() {
-		ModbusProtocol protocol = new ModbusProtocol(this, this.bms.getTasks(this).toArray(new Task[] {})); 
+		ModbusProtocol protocol = new ModbusProtocol(this, this.soltaroComponent.getTasks(this).toArray(new Task[] {})); 
 		return protocol; 
 	}
 
@@ -293,5 +287,28 @@ public class OsgiComponent extends AbstractOpenemsModbusComponent implements Eve
 	public <T> T readValue(io.openems.edge.common.channel.ChannelId channelId) {
 		Channel<T> channel = this.channel(channelId);
 		return channel.getNextValue().get();
+	}
+
+	@Override
+	public boolean isCommunicationAvailable() {
+		
+		AbstractModbusBridge modbusBridge = null;
+		try {
+			modbusBridge = this.componentManager.getComponent(config.modbus_id());
+		} catch (OpenemsNamedException e) {
+			log.error("Error while getting the modbus component");
+			return false;
+		}
+		
+		if (modbusBridge == null) {
+			return false;
+		}
+
+		Channel<Boolean> slaveCommunicationFailedChannel = modbusBridge.getSlaveCommunicationFailedChannel();
+		Optional<Boolean> communicationFailedOpt = slaveCommunicationFailedChannel.value().asOptional();
+
+		// If the channel value is present and it is set then the communication is
+		// broken
+		return communicationFailedOpt.isPresent() && !communicationFailedOpt.get();			 
 	}
 }
