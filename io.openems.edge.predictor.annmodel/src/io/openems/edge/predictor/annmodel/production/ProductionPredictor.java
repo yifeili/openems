@@ -1,22 +1,26 @@
 package io.openems.edge.predictor.annmodel.production;
 
-import java.util.Collection;
+import java.time.Clock;
 
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
-import org.osgi.service.event.Event;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.event.EventConstants;
 import org.osgi.service.event.EventHandler;
 import org.osgi.service.metatype.annotations.Designate;
 
-import io.openems.edge.common.channel.Channel;
-import io.openems.edge.common.component.AbstractOpenemsComponent;
+import io.openems.common.OpenemsConstants;
+import io.openems.common.exceptions.OpenemsError.OpenemsNamedException;
+import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.event.EdgeEventConstants;
+import io.openems.edge.common.sum.Sum;
+import io.openems.edge.predictor.ann.model.AbstractAnnModelPredictor;
 import io.openems.edge.predictor.api.HourlyPrediction;
 import io.openems.edge.predictor.api.ProductionHourlyPredictor;
-
 
 
 @Designate(ocd = Config.class, factory = true)
@@ -24,61 +28,38 @@ import io.openems.edge.predictor.api.ProductionHourlyPredictor;
 		immediate = true, //
 		configurationPolicy = ConfigurationPolicy.REQUIRE, //
 		property = EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_AFTER_PROCESS_IMAGE)
-public class ProductionPredictor extends AbstractOpenemsComponent
-implements ProductionHourlyPredictor, OpenemsComponent, EventHandler{
+public class ProductionPredictor extends AbstractAnnModelPredictor
+		implements ProductionHourlyPredictor, OpenemsComponent, EventHandler {
 
-	protected ProductionPredictor(io.openems.edge.common.channel.ChannelId[] firstInitialChannelIds,
-			io.openems.edge.common.channel.ChannelId[][] furtherInitialChannelIds) {
-		super(firstInitialChannelIds, furtherInitialChannelIds);
-		// TODO Auto-generated constructor stub
+	@Reference
+	protected ComponentManager componentManager;
+
+	public ProductionPredictor() {
+		super(OpenemsConstants.SUM_ID, Sum.ChannelId.PRODUCTION_ACTIVE_ENERGY);
+	}
+
+	public ProductionPredictor(Clock clock) {
+		super(clock, OpenemsConstants.SUM_ID, Sum.ChannelId.PRODUCTION_ACTIVE_ENERGY);
+	}
+
+	@Activate
+	void activate(ComponentContext context, Config config) throws OpenemsNamedException {
+		super.activate(context, config.alias(), config.id(), config.enabled());
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		super.deactivate();
+	}
+
+	@Override
+	protected ComponentManager getComponentManager() {
+		return this.componentManager;
 	}
 
 	@Override
 	public HourlyPrediction get24hPrediction() {
-		// TODO Auto-generated method stub
+		// TODO calling WeatherBitAPI, Getting Production channel Address and Passing the data to ANN model, getting the predictions 
 		return null;
 	}
-
-	@Override
-	public void handleEvent(Event event) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public String id() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public String alias() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public boolean isEnabled() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public ComponentContext getComponentContext() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Channel<?> _channel(String channelName) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Collection<Channel<?>> channels() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 }
