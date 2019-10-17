@@ -70,12 +70,15 @@ public class GoingOffgridHandler {
 		}
 
 		/*
-		 * Requires a stop command to the PCS, and a physical disconnection to the
+		 * To switch the PCS to off-grid mode,
+		 * requires a stop command to the PCS, and a physical disconnection to the
 		 * utility before the PCS can be switched to off-grid mode, followed with a
 		 * start command.
 		 * 
 		 */
-
+		
+	
+		
 		// this.parent.parent.inverterOff();
 		if (this.startedWaiting.plusSeconds(WAIT_SECONDS).isAfter(LocalDateTime.now())) {
 			this.log.info("doWaitFirstSeconds() waiting the first seconds, sending the stop command");

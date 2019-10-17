@@ -28,9 +28,7 @@ public class OngridHandler {
 		return StateMachine.State.ONGRID;
 	}
 
-	private State doOngrid() throws OpenemsNamedException {
-		
-		
+	private State doOngrid() throws OpenemsNamedException {		
 		
 		
 		CurrentState currentState = this.parent.getSinexcelState();

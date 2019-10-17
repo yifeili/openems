@@ -58,6 +58,8 @@ public class StateMachine {
 		
 		GridMode gridMode = this.parent.getGridMode().getNextValue().asEnum();
 		this.log.info("mode is  [" + gridMode + "]");
+		//STATE_28
+		
 		switch (gridMode) {
 		case ON_GRID:
 			return State.ONGRID;

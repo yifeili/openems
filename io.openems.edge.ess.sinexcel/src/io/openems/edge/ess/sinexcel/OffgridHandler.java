@@ -39,23 +39,25 @@ public class OffgridHandler {
 		CurrentState currentState = this.parent.getSinexcelState();
 
 		switch (currentState) {
-		case UNDEFINED:
+		
 		case SLEEPING:
 		case MPPT:
 		case THROTTLED:
 		case STARTED:
-			this.parent.parent.softStart(true);
-			break;
-		case SHUTTINGDOWN:
-		case FAULT:
 		case STANDBY:
+			this.parent.parent.softStart(true);
+			return State.OFFGRID;
+		case UNDEFINED:
+		case SHUTTINGDOWN:
+		case FAULT:		
 		case OFF:
-			this.parent.parent.softStart(false);
 		default:
-			break;
+			this.parent.parent.softStart(false);
+			return State.ERROR;
+			
 
 		}
-		return State.OFFGRID;
+		//return State.OFFGRID;
 	}
 
 }
