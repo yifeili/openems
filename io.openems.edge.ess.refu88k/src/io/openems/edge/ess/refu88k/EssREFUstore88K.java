@@ -1,7 +1,6 @@
 package io.openems.edge.ess.refu88k;
 
 import java.time.LocalDateTime;
-
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
@@ -36,6 +35,7 @@ import io.openems.edge.bridge.modbus.api.task.FC16WriteRegistersTask;
 import io.openems.edge.bridge.modbus.api.task.FC3ReadRegistersTask;
 import io.openems.edge.common.channel.EnumReadChannel;
 import io.openems.edge.common.channel.EnumWriteChannel;
+import io.openems.edge.common.channel.IntegerReadChannel;
 import io.openems.edge.common.channel.IntegerWriteChannel;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.event.EdgeEventConstants;
@@ -99,7 +99,6 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 				ManagedSymmetricEss.ChannelId.values(), //
 				REFUStore88KChannelId.values() //
 		);
-		this.channel(SymmetricEss.ChannelId.MAX_APPARENT_POWER).setNextValue(MAX_APPARENT_POWER);
 	}
 
 	@Reference(policy = ReferencePolicy.STATIC, policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
@@ -147,7 +146,8 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 
 		// by default: block Power
 		this.isPowerAllowed = false;
-
+		this.channel(SymmetricEss.ChannelId.MAX_APPARENT_POWER).setNextValue(MAX_APPARENT_POWER);
+		
 		EnumReadChannel operatingStateChannel = this.channel(REFUStore88KChannelId.ST);
 		OperatingState operatingState = operatingStateChannel.value().asEnum();
 
@@ -475,17 +475,18 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 		wMaxChannel.setNextWriteValue(MAX_APPARENT_POWER); // Set WMax
 
 		IntegerWriteChannel wMaxLimPctChannel = this.channel(REFUStore88KChannelId.W_MAX_LIM_PCT);
+
 		EnumWriteChannel wMaxLim_EnaChannel = this.channel(REFUStore88KChannelId.W_MAX_LIM_ENA);
 
 		IntegerWriteChannel varMaxLimPctChannel = this.channel(REFUStore88KChannelId.VAR_W_MAX_PCT);
 		EnumWriteChannel varMaxLim_EnaChannel = this.channel(REFUStore88KChannelId.VAR_PCT_ENA);
 
 		this.checkIfPowerIsRequired(activePower, reactivePower);
-
+		
 		/*
 		 * Set Active Power as a percentage of WMAX
 		 */
-		int wSetPct = ((100 * activePower) / MAX_APPARENT_POWER);
+ 		int wSetPct = ((1000 * activePower) / MAX_APPARENT_POWER);
 		wMaxLimPctChannel.setNextWriteValue(wSetPct);
 		wMaxLim_EnaChannel.setNextWriteValue(WMaxLimEna.ENABLED);
 
@@ -511,9 +512,10 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 		}
 	}
 
+	
 	@Override
 	public int getPowerPrecision() {
-		return MAX_APPARENT_POWER / 100;
+		return MAX_APPARENT_POWER / 1000;
 	}
 
 	/*
@@ -667,9 +669,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 				new FC16WriteRegistersTask(SUNSPEC_123 + 4, //
 						m(REFUStore88KChannelId.CONN, new UnsignedWordElement(SUNSPEC_123 + 4)),
 
-						m(REFUStore88KChannelId.W_MAX_LIM_PCT, new SignedWordElement(SUNSPEC_123 + 5), // W_MAX_LIM_PCT
-								ElementToChannelConverter.SCALE_FACTOR_MINUS_1)),
-
+						m(REFUStore88KChannelId.W_MAX_LIM_PCT, new SignedWordElement(SUNSPEC_123 + 5))), // W_MAX_LIM_PCT
 				new FC16WriteRegistersTask(SUNSPEC_123 + 9, //
 						m(REFUStore88KChannelId.W_MAX_LIM_ENA, new UnsignedWordElement(SUNSPEC_123 + 9)),
 						m(REFUStore88KChannelId.OUT_PF_SET, new SignedWordElement(SUNSPEC_123 + 10),
