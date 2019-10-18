@@ -12,10 +12,10 @@ Private-Package: \
 	io.openems.edge.predictor.ann.model,\
 	io.openems.edge.predictor.annmodel.production
 
--includeresource: {readme.md}
+-includeresource: {readme.adoc}
 
 -buildpath: \
-	osgi.enroute.base.api;version=2.1,\
+	${buildpath},\
 	io.openems.common;version=latest,\
 	io.openems.edge.predictor.api;version=latest,\
 	io.openems.edge.common;version=latest,\
