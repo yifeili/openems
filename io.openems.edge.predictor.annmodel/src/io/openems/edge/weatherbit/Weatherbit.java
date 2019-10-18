@@ -1,18 +1,15 @@
 package io.openems.edge.weatherbit;
 
-import com.google.gson.JsonObject;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import io.openems.edge.locations.Locations;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-import sun.net.www.http.HttpClient;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -197,10 +194,7 @@ public class Weatherbit {
                 JsonArray dayArray = dayObject.getAsJsonArray("data");
                 JsonArray dataArray = dataObject.getAsJsonArray("data");
 
-                /* TODO Fix this accordingly */
-                for (int i = 0; i < dayArray.size(); i++) {
-                    dataArray.addAll(dataArray.size(), dayArray.get(i));
-                }
+                dataArray.addAll(dayArray);
             }
 
             current = tempEnd;
@@ -251,7 +245,7 @@ public class Weatherbit {
      * @return LinkedHashMap with parsed measurement
      */
     private LinkedHashMap<Date, Double> parseMeasurements(JsonObject jsonObject, String measurement) throws ParseException {
-        LinkedHashMap<Date, Double> map = new LinkedHashMap<Date, Double>();
+        LinkedHashMap<Date, Double> map = new LinkedHashMap<>();
 
         if (jsonObject == null) {
             return map;
