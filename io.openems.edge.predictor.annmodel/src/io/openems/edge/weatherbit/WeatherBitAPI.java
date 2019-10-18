@@ -1,16 +1,15 @@
-package io.openems.edge.predictor.ann.model;
-
-import java.io.IOException;
-import java.util.LinkedHashMap;
+package io.openems.edge.weatherbit;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+
+import java.io.IOException;
+import java.util.LinkedHashMap;
 
 public class WeatherBitAPI {
 
