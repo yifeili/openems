@@ -1,8 +1,10 @@
 import { Component } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import { DefaultTypes } from '../../../../../shared/service/defaulttypes';
-import { Utils } from '../../../../../shared/shared';
+import { Service, Utils } from '../../../../../shared/shared';
 import { AbstractSection, EnergyFlow, Ratio, SvgEnergyFlow, SvgSquare, SvgSquarePosition } from './abstractsection.component';
+import { WidgetClass } from 'src/app/shared/type/widget';
+import { UnitvaluePipe } from 'src/app/shared/pipe/unitvalue/unitvalue.pipe';
 
 @Component({
     selector: '[gridsection]',
@@ -10,8 +12,15 @@ import { AbstractSection, EnergyFlow, Ratio, SvgEnergyFlow, SvgSquare, SvgSquare
 })
 export class GridSectionComponent extends AbstractSection {
 
-    constructor(translate: TranslateService) {
-        super('General.Grid', "left", "#1d1d1d", translate);
+    private unitpipe: UnitvaluePipe;
+
+    constructor(
+        translate: TranslateService,
+        service: Service,
+        unitpipe: UnitvaluePipe,
+    ) {
+        super('General.Grid', "left", "#1d1d1d", translate, service, "Grid");
+        this.unitpipe = unitpipe;
     }
 
     protected getStartAngle(): number {
@@ -71,7 +80,7 @@ export class GridSectionComponent extends AbstractSection {
             return "";
         }
 
-        return value + " W";
+        return this.unitpipe.transform(value, 'kW');
     }
 
     protected initEnergyFlow(radius: number): EnergyFlow {

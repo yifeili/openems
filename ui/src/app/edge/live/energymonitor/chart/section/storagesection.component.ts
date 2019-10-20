@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import { interval } from 'rxjs';
-import { AbstractSection, EnergyFlow, SvgEnergyFlow, SvgSquare, SvgSquarePosition, Ratio } from './abstractsection.component';
 import { DefaultTypes } from '../../../../../shared/service/defaulttypes';
-import { Utils } from '../../../../../shared/shared';
+import { Service, Utils } from '../../../../../shared/shared';
+import { AbstractSection, EnergyFlow, Ratio, SvgEnergyFlow, SvgSquare, SvgSquarePosition } from './abstractsection.component';
+import { UnitvaluePipe } from 'src/app/shared/pipe/unitvalue/unitvalue.pipe';
 
 @Component({
     selector: '[storagesection]',
@@ -12,9 +13,15 @@ import { Utils } from '../../../../../shared/shared';
 export class StorageSectionComponent extends AbstractSection implements OnInit {
 
     private socValue: number
+    private unitpipe: UnitvaluePipe;
 
-    constructor(translate: TranslateService) {
-        super('Edge.Index.Energymonitor.Storage', "down", "#009846", translate);
+    constructor(
+        translate: TranslateService,
+        service: Service,
+        unitpipe: UnitvaluePipe,
+    ) {
+        super('Edge.Index.Energymonitor.Storage', "down", "#009846", translate, service, "Storage");
+        this.unitpipe = unitpipe;
     }
 
     protected getStartAngle(): number {
@@ -81,7 +88,7 @@ export class StorageSectionComponent extends AbstractSection implements OnInit {
             return "storage_40.png"
         } else if (this.socValue < 60) {
             return "storage_60.png"
-        } else if (this.socValue < 86) {
+        } else if (this.socValue < 80) {
             return "storage_80.png"
         } else {
             return "storage_100.png"
@@ -92,7 +99,7 @@ export class StorageSectionComponent extends AbstractSection implements OnInit {
         if (value == null || Number.isNaN(value)) {
             return "";
         }
-        return value + " W";
+        return this.unitpipe.transform(value, 'kW');
     }
 
     protected initEnergyFlow(radius: number): EnergyFlow {

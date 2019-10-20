@@ -7,8 +7,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import io.openems.common.channel.AccessMode;
 import io.openems.common.channel.Level;
 import io.openems.common.channel.Unit;
+import io.openems.common.types.OpenemsType;
 import io.openems.edge.battery.soltaro.ChannelIdImpl;
 import io.openems.edge.bridge.modbus.api.AbstractOpenemsModbusComponent;
 import io.openems.edge.bridge.modbus.api.ElementToChannelConverter;
@@ -17,6 +19,7 @@ import io.openems.edge.bridge.modbus.api.element.BitsWordElement;
 import io.openems.edge.bridge.modbus.api.element.SignedWordElement;
 import io.openems.edge.bridge.modbus.api.element.UnsignedWordElement;
 import io.openems.edge.bridge.modbus.api.task.FC3ReadRegistersTask;
+import io.openems.edge.bridge.modbus.api.task.FC6WriteRegisterTask;
 import io.openems.edge.bridge.modbus.api.task.Task;
 import io.openems.edge.common.channel.Channel;
 import io.openems.edge.common.channel.ChannelId;
@@ -36,10 +39,13 @@ public class SingleRack {
 	private static final String KEY_CHARGE_INDICATION = "CHARGE_INDICATION";
 	private static final String KEY_SOC = "SOC";
 	private static final String KEY_SOH = "SOH";
-	private static final String KEY_MAX_CELL_VOLTAGE_ID = "MAX_CELL_VOLTAGE_ID";
-	private static final String KEY_MAX_CELL_VOLTAGE = "MAX_CELL_VOLTAGE";
-	private static final String KEY_MIN_CELL_VOLTAGE_ID = "MIN_CELL_VOLTAGE_ID";
-	private static final String KEY_MIN_CELL_VOLTAGE = "MIN_CELL_VOLTAGE";
+	public static final String KEY_MAX_CELL_VOLTAGE_ID = "MAX_CELL_VOLTAGE_ID";
+	public static final String KEY_MAX_CELL_VOLTAGE = "MAX_CELL_VOLTAGE";
+	public static final String KEY_MIN_CELL_VOLTAGE_ID = "MIN_CELL_VOLTAGE_ID";
+	public static final String KEY_MIN_CELL_VOLTAGE = "MIN_CELL_VOLTAGE";
+	public static final String KEY_ALARM_LEVEL_1_CELL_VOLTAGE_LOW = "ALARM_LEVEL_1_CELL_VOLTAGE_LOW";
+	public static final String KEY_ALARM_LEVEL_1_CELL_VOLTAGE_DIFF_HIGH = "ALARM_LEVEL_1_CELL_VOLTAGE_DIFF_HIGH";
+	
 	private static final String KEY_MAX_CELL_TEMPERATURE_ID = "MAX_CELL_TEMPERATURE_ID";
 	private static final String KEY_MAX_CELL_TEMPERATURE = "MAX_CELL_TEMPERATURE";
 	private static final String KEY_MIN_CELL_TEMPERATURE_ID = "MIN_CELL_TEMPERATURE_ID";
@@ -57,8 +63,7 @@ public class SingleRack {
 	private static final String KEY_ALARM_LEVEL_2_CELL_VOLTAGE_HIGH = "ALARM_LEVEL_2_CELL_VOLTAGE_HIGH";
 	private static final String KEY_ALARM_LEVEL_1_CELL_DISCHA_TEMP_LOW = "ALARM_LEVEL_1_CELL_DISCHA_TEMP_LOW";
 	private static final String KEY_ALARM_LEVEL_1_CELL_DISCHA_TEMP_HIGH = "ALARM_LEVEL_1_CELL_DISCHA_TEMP_HIGH";
-	private static final String KEY_ALARM_LEVEL_1_TOTAL_VOLTAGE_DIFF_HIGH = "ALARM_LEVEL_1_TOTAL_VOLTAGE_DIFF_HIGH";
-	private static final String KEY_ALARM_LEVEL_1_CELL_VOLTAGE_DIFF_HIGH = "ALARM_LEVEL_1_CELL_VOLTAGE_DIFF_HIGH";
+	private static final String KEY_ALARM_LEVEL_1_TOTAL_VOLTAGE_DIFF_HIGH = "ALARM_LEVEL_1_TOTAL_VOLTAGE_DIFF_HIGH";	
 	private static final String KEY_ALARM_LEVEL_1_GR_TEMPERATURE_HIGH = "ALARM_LEVEL_1_GR_TEMPERATURE_HIGH";
 	private static final String KEY_ALARM_LEVEL_1_CELL_TEMP_DIFF_HIGH = "ALARM_LEVEL_1_CELL_TEMP_DIFF_HIGH";
 	private static final String KEY_ALARM_LEVEL_1_SOC_LOW = "ALARM_LEVEL_1_SOC_LOW";
@@ -66,7 +71,7 @@ public class SingleRack {
 	private static final String KEY_ALARM_LEVEL_1_CELL_CHA_TEMP_HIGH = "ALARM_LEVEL_1_CELL_CHA_TEMP_HIGH";
 	private static final String KEY_ALARM_LEVEL_1_DISCHA_CURRENT_HIGH = "ALARM_LEVEL_1_DISCHA_CURRENT_HIGH";
 	private static final String KEY_ALARM_LEVEL_1_TOTAL_VOLTAGE_LOW = "ALARM_LEVEL_1_TOTAL_VOLTAGE_LOW";
-	private static final String KEY_ALARM_LEVEL_1_CELL_VOLTAGE_LOW = "ALARM_LEVEL_1_CELL_VOLTAGE_LOW";
+	
 	private static final String KEY_ALARM_LEVEL_1_CHA_CURRENT_HIGH = "ALARM_LEVEL_1_CHA_CURRENT_HIGH";
 	private static final String KEY_ALARM_LEVEL_1_TOTAL_VOLTAGE_HIGH = "ALARM_LEVEL_1_TOTAL_VOLTAGE_HIGH";
 	private static final String KEY_ALARM_LEVEL_1_CELL_VOLTAGE_HIGH = "ALARM_LEVEL_1_CELL_VOLTAGE_HIGH";
@@ -84,6 +89,8 @@ public class SingleRack {
 	private static final String KEY_FAILURE_LTC6803 = "FAILURE_LTC6803";
 	private static final String KEY_FAILURE_CONNECTOR_WIRE = "FAILURE_CONNECTOR_WIRE";
 	private static final String KEY_FAILURE_SAMPLING_WIRE = "FAILURE_SAMPLING_WIRE";
+	public static final String KEY_RESET = "RESET";
+	public static final String KEY_SLEEP = "SLEEP";
 
 	private static final String VOLTAGE = "VOLTAGE";
 	private static final String BATTERY = "BATTERY";
@@ -115,6 +122,10 @@ public class SingleRack {
 
 	public Collection<Channel<?>> getChannels() {
 		return channelMap.values();
+	}
+
+	public Channel<?> getChannel(String key) {
+		return channelMap.get(key);
 	}
 	
 	public int getSoC() {
@@ -180,14 +191,22 @@ public class SingleRack {
 		channels.put(KEY_ALARM_LEVEL_1_CELL_TEMP_DIFF_HIGH,
 				parent.addChannel(channelIds.get(KEY_ALARM_LEVEL_1_CELL_TEMP_DIFF_HIGH)));
 		channels.put(KEY_ALARM_LEVEL_1_SOC_LOW, parent.addChannel(channelIds.get(KEY_ALARM_LEVEL_1_SOC_LOW)));
-		channels.put(KEY_ALARM_LEVEL_1_CELL_CHA_TEMP_LOW, parent.addChannel(channelIds.get(KEY_ALARM_LEVEL_1_CELL_CHA_TEMP_LOW)));
-		channels.put(KEY_ALARM_LEVEL_1_CELL_CHA_TEMP_HIGH, parent.addChannel(channelIds.get(KEY_ALARM_LEVEL_1_CELL_CHA_TEMP_HIGH)));
-		channels.put(KEY_ALARM_LEVEL_1_DISCHA_CURRENT_HIGH, parent.addChannel(channelIds.get(KEY_ALARM_LEVEL_1_DISCHA_CURRENT_HIGH)));
-		channels.put(KEY_ALARM_LEVEL_1_TOTAL_VOLTAGE_LOW, parent.addChannel(channelIds.get(KEY_ALARM_LEVEL_1_TOTAL_VOLTAGE_LOW)));
-		channels.put(KEY_ALARM_LEVEL_1_CELL_VOLTAGE_LOW, parent.addChannel(channelIds.get(KEY_ALARM_LEVEL_1_CELL_VOLTAGE_LOW)));
-		channels.put(KEY_ALARM_LEVEL_1_CHA_CURRENT_HIGH, parent.addChannel(channelIds.get(KEY_ALARM_LEVEL_1_CHA_CURRENT_HIGH)));
-		channels.put(KEY_ALARM_LEVEL_1_TOTAL_VOLTAGE_HIGH, parent.addChannel(channelIds.get(KEY_ALARM_LEVEL_1_TOTAL_VOLTAGE_HIGH)));
-		channels.put(KEY_ALARM_LEVEL_1_CELL_VOLTAGE_HIGH, parent.addChannel(channelIds.get(KEY_ALARM_LEVEL_1_CELL_VOLTAGE_HIGH)));
+		channels.put(KEY_ALARM_LEVEL_1_CELL_CHA_TEMP_LOW,
+				parent.addChannel(channelIds.get(KEY_ALARM_LEVEL_1_CELL_CHA_TEMP_LOW)));
+		channels.put(KEY_ALARM_LEVEL_1_CELL_CHA_TEMP_HIGH,
+				parent.addChannel(channelIds.get(KEY_ALARM_LEVEL_1_CELL_CHA_TEMP_HIGH)));
+		channels.put(KEY_ALARM_LEVEL_1_DISCHA_CURRENT_HIGH,
+				parent.addChannel(channelIds.get(KEY_ALARM_LEVEL_1_DISCHA_CURRENT_HIGH)));
+		channels.put(KEY_ALARM_LEVEL_1_TOTAL_VOLTAGE_LOW,
+				parent.addChannel(channelIds.get(KEY_ALARM_LEVEL_1_TOTAL_VOLTAGE_LOW)));
+		channels.put(KEY_ALARM_LEVEL_1_CELL_VOLTAGE_LOW,
+				parent.addChannel(channelIds.get(KEY_ALARM_LEVEL_1_CELL_VOLTAGE_LOW)));
+		channels.put(KEY_ALARM_LEVEL_1_CHA_CURRENT_HIGH,
+				parent.addChannel(channelIds.get(KEY_ALARM_LEVEL_1_CHA_CURRENT_HIGH)));
+		channels.put(KEY_ALARM_LEVEL_1_TOTAL_VOLTAGE_HIGH,
+				parent.addChannel(channelIds.get(KEY_ALARM_LEVEL_1_TOTAL_VOLTAGE_HIGH)));
+		channels.put(KEY_ALARM_LEVEL_1_CELL_VOLTAGE_HIGH,
+				parent.addChannel(channelIds.get(KEY_ALARM_LEVEL_1_CELL_VOLTAGE_HIGH)));
 
 		channels.put(KEY_RUN_STATE, parent.addChannel(channelIds.get(KEY_RUN_STATE)));
 
@@ -206,6 +225,9 @@ public class SingleRack {
 		channels.put(KEY_FAILURE_LTC6803, parent.addChannel(channelIds.get(KEY_FAILURE_LTC6803)));
 		channels.put(KEY_FAILURE_CONNECTOR_WIRE, parent.addChannel(channelIds.get(KEY_FAILURE_CONNECTOR_WIRE)));
 		channels.put(KEY_FAILURE_SAMPLING_WIRE, parent.addChannel(channelIds.get(KEY_FAILURE_SAMPLING_WIRE)));
+		
+		channels.put(KEY_RESET, parent.addChannel(channelIds.get(KEY_RESET)));
+		channels.put(KEY_SLEEP, parent.addChannel(channelIds.get(KEY_SLEEP)));
 
 		// Cell voltages
 		for (int i = 0; i < this.numberOfSlaves; i++) {
@@ -323,23 +345,28 @@ public class SingleRack {
 		this.addEntry(map, KEY_RUN_STATE, Doc.of(Enums.ClusterRunState.values())); //
 
 		this.addEntry(map, KEY_FAILURE_INITIALIZATION, Doc.of(Level.FAULT).text("Initialization failure")); // Bit
-																										// 12
+		// 12
 		this.addEntry(map, KEY_FAILURE_EEPROM, Doc.of(Level.FAULT).text("EEPROM fault")); // Bit 11
-		this.addEntry(map, KEY_FAILURE_INTRANET_COMMUNICATION, Doc.of(Level.FAULT).text("Internal communication fault")); // Bit
-																														// 10
-		this.addEntry(map, KEY_FAILURE_TEMPERATURE_SENSOR_CABLE, Doc.of(Level.FAULT).text("Temperature sensor cable fault")); // Bit
-																															// 9
+		this.addEntry(map, KEY_FAILURE_INTRANET_COMMUNICATION,
+				Doc.of(Level.FAULT).text("Internal communication fault")); // Bit
+																			// 10
+		this.addEntry(map, KEY_FAILURE_TEMPERATURE_SENSOR_CABLE,
+				Doc.of(Level.FAULT).text("Temperature sensor cable fault")); // Bit
+																				// 9
 		this.addEntry(map, KEY_FAILURE_BALANCING_MODULE, Doc.of(Level.OK).text("Balancing module fault")); // Bit 8
 		this.addEntry(map, KEY_FAILURE_TEMPERATURE_PCB, Doc.of(Level.FAULT).text("Temperature PCB error")); // Bit 7
 		this.addEntry(map, KEY_FAILURE_GR_TEMPERATURE, Doc.of(Level.FAULT).text("GR Temperature error")); // Bit 6
 		this.addEntry(map, KEY_FAILURE_TEMP_SENSOR, Doc.of(Level.FAULT).text("Temperature sensor fault")); // Bit 5
 		this.addEntry(map, KEY_FAILURE_TEMP_SAMPLING, Doc.of(Level.FAULT).text("Temperature sampling fault")); // Bit
-																											// 4
+																												// 4
 		this.addEntry(map, KEY_FAILURE_VOLTAGE_SAMPLING, Doc.of(Level.FAULT).text("Voltage sampling fault")); // Bit
-																											// 3
+																												// 3
 		this.addEntry(map, KEY_FAILURE_LTC6803, Doc.of(Level.FAULT).text("LTC6803 fault")); // Bit 2
 		this.addEntry(map, KEY_FAILURE_CONNECTOR_WIRE, Doc.of(Level.FAULT).text("connector wire fault")); // Bit 1
 		this.addEntry(map, KEY_FAILURE_SAMPLING_WIRE, Doc.of(Level.FAULT).text("sampling wire fault")); // Bit 0
+		
+		this.addEntry(map, KEY_SLEEP, Doc.of(OpenemsType.INTEGER).accessMode(AccessMode.READ_WRITE)); 
+		this.addEntry(map, KEY_RESET, Doc.of(OpenemsType.INTEGER).accessMode(AccessMode.READ_WRITE)); 
 
 		// Cell voltages formatted like: "RACK_1_BATTERY_000_VOLTAGE"
 		for (int i = 0; i < this.numberOfSlaves; i++) {
@@ -368,7 +395,9 @@ public class SingleRack {
 				parent.map(channelIds.get(KEY_CURRENT), getUWE(0x101), ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
 				parent.map(channelIds.get(KEY_CHARGE_INDICATION), getUWE(0x102)), //
 				parent.map(channelIds.get(KEY_SOC), getUWE(0x103)). //
-					onUpdateCallback( val -> { parent.recalculateSoc(); } ), //
+						onUpdateCallback(val -> {
+							parent.recalculateSoc();
+						}), //
 				parent.map(channelIds.get(KEY_SOH), getUWE(0x104)), //
 				parent.map(channelIds.get(KEY_MAX_CELL_VOLTAGE_ID), getUWE(0x105)), //
 				parent.map(channelIds.get(KEY_MAX_CELL_VOLTAGE), getUWE(0x106)), //
@@ -434,6 +463,14 @@ public class SingleRack {
 						.bit(12, channelIds.get(KEY_FAILURE_INITIALIZATION))//
 				) //
 		));
+		
+		//Reset and sleep
+		tasks.add(new FC6WriteRegisterTask(this.addressOffset + 0x0004, //
+				parent.map(channelIds.get(KEY_RESET), getUWE(0x0004)
+		)));
+		tasks.add(new FC6WriteRegisterTask(this.addressOffset + 0x001D, //
+				parent.map(channelIds.get(KEY_SLEEP), getUWE(0x001D)
+		)));
 
 		int MAX_ELEMENTS_PER_TASK = 100;
 
@@ -446,17 +483,17 @@ public class SingleRack {
 				AbstractModbusElement<?> ame = parent.map(channelIds.get(key), uwe);
 				elements.add(ame);
 			}
-			
-			//not more than 100 elements per task, because it can cause problems..
+
+			// not more than 100 elements per task, because it can cause problems..
 			int taskCount = (elements.size() / MAX_ELEMENTS_PER_TASK) + 1;
 
 			for (int x = 0; x < taskCount; x++) {
-				List<AbstractModbusElement<?>> subElements = elements.subList( x * MAX_ELEMENTS_PER_TASK ,  Math.min( ((x + 1) * MAX_ELEMENTS_PER_TASK ), elements.size()  )  );
+				List<AbstractModbusElement<?>> subElements = elements.subList(x * MAX_ELEMENTS_PER_TASK,
+						Math.min(((x + 1) * MAX_ELEMENTS_PER_TASK), elements.size()));
 				AbstractModbusElement<?>[] taskElements = subElements.toArray(new AbstractModbusElement<?>[0]);
-				tasks.add(new FC3ReadRegistersTask(taskElements[0].getStartAddress(), Priority.LOW,	taskElements));				
+				tasks.add(new FC3ReadRegistersTask(taskElements[0].getStartAddress(), Priority.LOW, taskElements));
 			}
-			
-			
+
 		}
 
 		// Cell temperatures
@@ -464,19 +501,20 @@ public class SingleRack {
 			List<AbstractModbusElement<?>> elements = new ArrayList<>();
 			for (int j = i * TEMPERATURE_SENSORS_PER_MODULE; j < (i + 1) * TEMPERATURE_SENSORS_PER_MODULE; j++) {
 				String key = getSingleCellPrefix(j) + "_" + TEMPERATURE;
-				
+
 				SignedWordElement swe = getSWE(TEMPERATURE_ADDRESS_OFFSET + j);
 				AbstractModbusElement<?> ame = parent.map(channelIds.get(key), swe);
 				elements.add(ame);
 			}
-			
-			//not more than 100 elements per task, because it can cause problems..
+
+			// not more than 100 elements per task, because it can cause problems..
 			int taskCount = (elements.size() / MAX_ELEMENTS_PER_TASK) + 1;
 
 			for (int x = 0; x < taskCount; x++) {
-				List<AbstractModbusElement<?>> subElements = elements.subList( x * MAX_ELEMENTS_PER_TASK ,  Math.min( ((x + 1) * MAX_ELEMENTS_PER_TASK ), elements.size()  )  );
+				List<AbstractModbusElement<?>> subElements = elements.subList(x * MAX_ELEMENTS_PER_TASK,
+						Math.min(((x + 1) * MAX_ELEMENTS_PER_TASK), elements.size()));
 				AbstractModbusElement<?>[] taskElements = subElements.toArray(new AbstractModbusElement<?>[0]);
-				tasks.add(new FC3ReadRegistersTask(taskElements[0].getStartAddress(), Priority.LOW,	taskElements));				
+				tasks.add(new FC3ReadRegistersTask(taskElements[0].getStartAddress(), Priority.LOW, taskElements));
 			}
 		}
 
@@ -502,7 +540,7 @@ public class SingleRack {
 	private String getSingleCellPrefix(int num) {
 		return BATTERY + "_" + String.format(NUMBER_FORMAT, num);
 	}
-	
+
 	private String getRackPrefix() {
 		return RACK + "_" + this.rackNumber + "_";
 	}
@@ -510,11 +548,11 @@ public class SingleRack {
 	private BitsWordElement getBWE(int addressWithoutOffset, AbstractOpenemsModbusComponent component) {
 		return new BitsWordElement(this.addressOffset + addressWithoutOffset, component);
 	}
-	
+
 	private UnsignedWordElement getUWE(int addressWithoutOffset) {
 		return new UnsignedWordElement(this.addressOffset + addressWithoutOffset);
 	}
-	
+
 	private SignedWordElement getSWE(int addressWithoutOffset) {
 		return new SignedWordElement(this.addressOffset + addressWithoutOffset);
 	}

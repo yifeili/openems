@@ -17,6 +17,7 @@ import io.openems.edge.common.channel.IntegerWriteChannel;
 import io.openems.edge.common.sum.GridMode;
 import io.openems.edge.ess.api.SymmetricEss;
 import io.openems.edge.ess.fenecon.commercial40.EssFeneconCommercial40Impl;
+import io.openems.edge.ess.fenecon.commercial40.EssFeneconCommercial40Impl.ChannelId;
 import io.openems.edge.ess.fenecon.commercial40.SystemState;
 
 public class SupplyBus {
@@ -71,8 +72,8 @@ public class SupplyBus {
 				EssFeneconCommercial40Impl ess = this.parent.componentManager.getComponent(actualActiveEssId);
 				GridMode gridMode = ess.getGridMode().value().asEnum();
 				int soc = ess.getSoc().value().orElse(Integer.MAX_VALUE);
-				SystemState systemState = ess.getSystemState();
-
+//				SystemState systemState = ess.getSystemState();
+				SystemState systemState = ess.channel(ChannelId.SYSTEM_STATE).value().asEnum();
 				if ((gridMode.equals(GridMode.OFF_GRID) && soc < MIN_SOC) || systemState.equals(SystemState.FAULT)
 						|| systemState.equals(SystemState.STOP)) {
 					this.switchState(State.DISCONNECTING);
@@ -272,7 +273,8 @@ public class SupplyBus {
 		String result = null;
 		for (String essId : this.switchEssMapping.keySet()) {
 			EssFeneconCommercial40Impl ess = this.parent.componentManager.getComponent(essId);
-			SystemState systemState = ess.getSystemState();
+//			SystemState systemState = ess.getSystemState();
+			SystemState systemState = ess.channel(ChannelId.SYSTEM_STATE).value().asEnum();
 			Optional<Integer> socOpt = ess.getSoc().value().asOptional();
 			if (socOpt.isPresent()) {
 				int soc = socOpt.get();
@@ -297,12 +299,18 @@ public class SupplyBus {
 	 * @throws OpenemsNamedException
 	 */
 	private List<String> getOnGridEssIds() throws OpenemsNamedException {
+
 		List<String> result = new ArrayList<>();
 		for (String essId : this.switchEssMapping.keySet()) {
 			EssFeneconCommercial40Impl ess = this.parent.componentManager.getComponent(essId);
+			SystemState systemState = ess.channel(ChannelId.SYSTEM_STATE).value().asEnum();
 			GridMode gridMode = ess.getGridMode().value().asEnum();
 
-			if (gridMode.equals(GridMode.OFF_GRID) || ess.getSystemState().equals(SystemState.FAULT)
+//			if (gridMode.equals(GridMode.OFF_GRID) || ess.getSystemState().equals(SystemState.FAULT)
+//					|| this.activeEssId == essId) {
+//				continue;
+//			}
+			if (gridMode.equals(GridMode.OFF_GRID) || systemState.equals(SystemState.FAULT)
 					|| this.activeEssId == essId) {
 				continue;
 			}

@@ -1,11 +1,9 @@
 package io.openems.edge.timedata.influxdb;
 
 import java.time.ZonedDateTime;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.SortedMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
@@ -19,9 +17,6 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventConstants;
 import org.osgi.service.event.EventHandler;
@@ -29,7 +24,6 @@ import org.osgi.service.metatype.annotations.Designate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.TreeBasedTable;
 import com.google.gson.JsonElement;
 
 import io.openems.common.exceptions.OpenemsError.OpenemsNamedException;
@@ -38,6 +32,7 @@ import io.openems.common.types.ChannelAddress;
 import io.openems.common.utils.StringUtils;
 import io.openems.edge.common.channel.Doc;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
+import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.event.EdgeEventConstants;
 import io.openems.edge.timedata.api.Timedata;
@@ -79,11 +74,8 @@ public class InfluxTimedata extends AbstractOpenemsComponent implements Timedata
 		);
 	}
 
-	@Reference(policy = ReferencePolicy.DYNAMIC, //
-			policyOption = ReferencePolicyOption.GREEDY, //
-			cardinality = ReferenceCardinality.AT_LEAST_ONE, //
-			target = "(&(enabled=true)(!(service.factoryPid=Timedata.InfluxDB)))")
-	private volatile List<OpenemsComponent> components = new CopyOnWriteArrayList<>();
+	@Reference
+	protected ComponentManager componentManager;
 
 	@Activate
 	void activate(ComponentContext context, Config config) {
@@ -123,7 +115,7 @@ public class InfluxTimedata extends AbstractOpenemsComponent implements Timedata
 		final Builder point = Point.measurement(InfluxConnector.MEASUREMENT).time(timestamp, TimeUnit.SECONDS);
 		final AtomicBoolean addedAtLeastOneChannelValue = new AtomicBoolean(false);
 
-		this.components.stream().filter(c -> c.isEnabled()).forEach(component -> {
+		this.componentManager.getEnabledComponents().stream().filter(c -> c.isEnabled()).forEach(component -> {
 			component.channels().forEach(channel -> {
 				Optional<?> valueOpt = channel.value().asOptional();
 				if (!valueOpt.isPresent()) {
@@ -135,7 +127,7 @@ public class InfluxTimedata extends AbstractOpenemsComponent implements Timedata
 				try {
 					switch (channel.getType()) {
 					case BOOLEAN:
-						point.addField(address, (Boolean) value);
+						point.addField(address, ((Boolean) value ? 1: 0));
 						break;
 					case SHORT:
 						point.addField(address, (Short) value);
@@ -152,7 +144,7 @@ public class InfluxTimedata extends AbstractOpenemsComponent implements Timedata
 					case DOUBLE:
 						point.addField(address, (Double) value);
 						break;
-					case STRING:
+					case STRING:						
 						point.addField(address, (String) value);
 						break;
 					}
@@ -174,7 +166,7 @@ public class InfluxTimedata extends AbstractOpenemsComponent implements Timedata
 	}
 
 	@Override
-	public TreeBasedTable<ZonedDateTime, ChannelAddress, JsonElement> queryHistoricData(String edgeId,
+	public SortedMap<ZonedDateTime, SortedMap<ChannelAddress, JsonElement>> queryHistoricData(String edgeId,
 			ZonedDateTime fromDate, ZonedDateTime toDate, Set<ChannelAddress> channels, int resolution)
 			throws OpenemsNamedException {
 		// ignore edgeId as Points are also written without Edge-ID
@@ -183,7 +175,7 @@ public class InfluxTimedata extends AbstractOpenemsComponent implements Timedata
 	}
 
 	@Override
-	public Map<ChannelAddress, JsonElement> queryHistoricEnergy(String edgeId, ZonedDateTime fromDate,
+	public SortedMap<ChannelAddress, JsonElement> queryHistoricEnergy(String edgeId, ZonedDateTime fromDate,
 			ZonedDateTime toDate, Set<ChannelAddress> channels) throws OpenemsNamedException {
 		// ignore edgeId as Points are also written without Edge-ID
 		Optional<Integer> influxEdgeId = Optional.empty();
