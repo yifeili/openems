@@ -1,13 +1,12 @@
-<ion-grid *ngIf="edge">
+<ion-grid *ngIf="edge && edge.isOnline">
   <ion-row class="ion-justify-content-center">
-    <!-- Widgets -->
-
     <!-- Energymonitor -->
-    <ion-col size="12" size-md="8" size-lg="4">
+    <ion-col size="12" size-md="8" size-lg="3" class="ion-no-padding">
       <energymonitor></energymonitor>
     </ion-col>
 
-    <ion-col *ngIf="widgets" size="12" size-md="8" size-lg="6">
+    <!-- Widgets -->
+    <ion-col *ngIf="widgets" size="12" size-md="8" size-lg="6" class="ion-no-padding">
       <ion-grid class="ion-no-padding">
         <ion-row>
           <!-- Regular Widgets -->
@@ -36,6 +35,8 @@
             <ion-col *ngSwitchCase="'Consumption'" size="12" size-lg="6" class="ion-no-padding">
               <consumption></consumption>
             </ion-col>
+
+
 
           </ng-container>
 
@@ -70,7 +71,7 @@
               <fixdigitaloutput [componentId]="widget.componentId"></fixdigitaloutput>
             </ion-col>
 
-            <ion-col *ngSwitchCase="'Controller.CHP.SoC'" size="6" class="ion-no-padding">
+            <ion-col *ngSwitchCase="'Controller.CHP.SoC'" size="12" size-lg="6" class="ion-no-padding">
               <chpsoc [componentId]="widget.componentId"></chpsoc>
             </ion-col>
 
@@ -82,6 +83,14 @@
 
         </ion-row>
       </ion-grid>
+    </ion-col>
+  </ion-row>
+</ion-grid>
+
+<ion-grid *ngIf="edge && !edge.isOnline">
+  <ion-row class="ion-justify-content-center">
+    <ion-col size-xl="8" size-lg="10" size-md="11" size-sm="12">
+      <offline></offline>
     </ion-col>
   </ion-row>
 </ion-grid>
