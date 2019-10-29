@@ -35,7 +35,7 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 	int watchdoginterval() default 0;
 	
 	@AttributeDefinition(name = "Maximum Apparent Power", description = "Maximum apparent power")
-	int maxApparentPower() default 80000;
+	int maxApparentPower() default 88000;
 	
 
 	@AttributeDefinition(name = "Battery-ID", description = "ID of Battery.")
