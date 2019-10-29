@@ -544,8 +544,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 		this.checkIfPowerIsRequired(activePower, reactivePower);
 		
 		IntegerWriteChannel maxBatAChaChannel = this.channel(REFUStore88KChannelId.MAX_BAT_A_CHA);
-		maxBatAChaChannel.setNextWriteValue(20);
-//		maxBatAChaChannel.setNextWriteValue(battery.getChargeMaxCurrent().value().orElse(0));
+		maxBatAChaChannel.setNextWriteValue(battery.getChargeMaxCurrent().value().orElse(0));
 		
 		IntegerWriteChannel maxBatADischaChannel = this.channel(REFUStore88KChannelId.MAX_BAT_A_DISCHA);
 		maxBatADischaChannel.setNextWriteValue(battery.getChargeMaxCurrent().value().orElse(0));
