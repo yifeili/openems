@@ -87,7 +87,7 @@ public class GoingOffgridHandler {
 		}
 
 		// finished waiting
-		this.log.info("finished waiting, Sending the start command");
+		this.log.info("finished waiting, setting the grid to offgrid state and sending the start command");
 		this.parent.parent.hardSetGridOffMode();
 		this.parent.parent.inverterOn();
 		return State.FINISH_GOING_OFFGRID;
