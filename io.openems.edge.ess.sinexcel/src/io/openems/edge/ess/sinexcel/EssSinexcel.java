@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.openems.common.exceptions.OpenemsError.OpenemsNamedException;
+import io.openems.common.types.ChannelAddress;
 import io.openems.edge.battery.api.Battery;
 import io.openems.edge.bridge.modbus.api.AbstractOpenemsModbusComponent;
 import io.openems.edge.bridge.modbus.api.BridgeModbus;
@@ -32,19 +33,20 @@ import io.openems.edge.bridge.modbus.api.element.SignedWordElement;
 import io.openems.edge.bridge.modbus.api.element.StringWordElement;
 import io.openems.edge.bridge.modbus.api.element.UnsignedDoublewordElement;
 import io.openems.edge.bridge.modbus.api.element.UnsignedWordElement;
+import io.openems.edge.bridge.modbus.api.task.FC16WriteRegistersTask;
 import io.openems.edge.bridge.modbus.api.task.FC3ReadRegistersTask;
 import io.openems.edge.bridge.modbus.api.task.FC6WriteRegisterTask;
-import io.openems.edge.bridge.modbus.api.task.FC16WriteRegistersTask;
+import io.openems.edge.common.channel.BooleanReadChannel;
 import io.openems.edge.common.channel.EnumWriteChannel;
 import io.openems.edge.common.channel.IntegerWriteChannel;
 import io.openems.edge.common.channel.StateChannel;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.event.EdgeEventConstants;
+import io.openems.edge.common.sum.GridMode;
 import io.openems.edge.common.taskmanager.Priority;
 import io.openems.edge.ess.api.ManagedSymmetricEss;
 import io.openems.edge.ess.api.SymmetricEss;
-
 import io.openems.edge.ess.power.api.Constraint;
 import io.openems.edge.ess.power.api.Phase;
 import io.openems.edge.ess.power.api.Power;
@@ -56,8 +58,8 @@ import io.openems.edge.ess.power.api.Relationship;
 		name = "Ess.Sinexcel", //
 		immediate = true, //
 		configurationPolicy = ConfigurationPolicy.REQUIRE, //
-		property = {EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_AFTER_PROCESS_IMAGE , //
-		EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_BEFORE_PROCESS_IMAGE}) //
+		property = { EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_AFTER_PROCESS_IMAGE, //
+				EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_BEFORE_PROCESS_IMAGE }) //
 public class EssSinexcel extends AbstractOpenemsModbusComponent
 		implements SymmetricEss, ManagedSymmetricEss, EventHandler, OpenemsComponent {
 
@@ -72,11 +74,13 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 	public LocalDateTime timeForSystemInitialization = null;
 
 	protected int SLOW_CHARGE_VOLTAGE = 4370; // for new batteries - 3940
-	protected int FLOAT_CHARGE_VOLTAGE = 4370; // for new batteries - 3940 
+	protected int FLOAT_CHARGE_VOLTAGE = 4370; // for new batteries - 3940
 
 	private int a = 0;
 	private int counterOn = 0;
 	private int counterOff = 0;
+
+	//private ChannelAddress gridModeChannel;
 
 	// State-Machines
 	private final StateMachine stateMachine;
@@ -110,8 +114,8 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 		this.inverterState = config.InverterState();
 
 		// initialize the connection to the battery
-		this.initializeBattery(config.battery_id());		
-		
+		this.initializeBattery(config.battery_id());
+
 		this.SLOW_CHARGE_VOLTAGE = config.toppingCharge();
 		this.FLOAT_CHARGE_VOLTAGE = config.toppingCharge();
 
@@ -161,7 +165,7 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 		this.battery.getVoltage().onChange((oldValue, newValue) -> {
 			this.channel(SinexcelChannelId.BAT_VOLTAGE).setNextValue(newValue.get());
 		});
-		
+
 		this.battery.getMinCellVoltage().onChange((oldValue, newValue) -> {
 			this.channel(SymmetricEss.ChannelId.MIN_CELL_VOLTAGE).setNextValue(newValue.get());
 		});
@@ -238,19 +242,19 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 		EnumWriteChannel setdataModOffCmd = this.channel(SinexcelChannelId.MOD_OFF_CMD);
 		setdataModOffCmd.setNextWriteValue(FalseTrue.TRUE); // true = STOP
 	}
-	
+
 	/**
 	 * Set the grid mode to On-Grid.
 	 * 
 	 * @throws OpenemsNamedException on error
 	 */
 	public void hardSetGridOnMode() throws OpenemsNamedException {
-		System.out.println("inverter hard setting mode while switching");		
-		
+		System.out.println("inverter hard setting mode while switching");
+
 		EnumWriteChannel setdataGridOnCmd = this.channel(SinexcelChannelId.ON_GRID_CMD);
-		setdataGridOnCmd.setNextWriteValue(FalseTrue.TRUE); // 
+		setdataGridOnCmd.setNextWriteValue(FalseTrue.TRUE); //
 	}
-	
+
 	/**
 	 * Set the grid mode to Off-Grid.
 	 * 
@@ -258,9 +262,9 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 	 */
 	public void hardSetGridOffMode() throws OpenemsNamedException {
 		System.out.println("inverter hard setting mode while switching");
-		
+
 		EnumWriteChannel setdataGridOffCmd = this.channel(SinexcelChannelId.OFF_GRID_CMD);
-		setdataGridOffCmd.setNextWriteValue(FalseTrue.TRUE); // 
+		setdataGridOffCmd.setNextWriteValue(FalseTrue.TRUE); //
 	}
 
 	/**
@@ -325,8 +329,9 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 		setdataGridOnCmd.setNextWriteValue(1); // Start
 	}
 
-	public void doHandlingSlowFloatVoltage() throws OpenemsNamedException {		
-		//System.out.println("Upper voltage : " + this.channel(SinexcelChannelId.UPPER_VOLTAGE_LIMIT).value().asStringWithoutUnit());
+	public void doHandlingSlowFloatVoltage() throws OpenemsNamedException {
+		// System.out.println("Upper voltage : " +
+		// this.channel(SinexcelChannelId.UPPER_VOLTAGE_LIMIT).value().asStringWithoutUnit());
 		IntegerWriteChannel setSlowChargeVoltage = this.channel(SinexcelChannelId.SET_SLOW_CHARGE_VOLTAGE);
 		setSlowChargeVoltage.setNextWriteValue(this.SLOW_CHARGE_VOLTAGE);
 		IntegerWriteChannel setFloatChargeVoltage = this.channel(SinexcelChannelId.SET_FLOAT_CHARGE_VOLTAGE);
@@ -762,24 +767,60 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 		switch (event.getTopic()) {
 		case EdgeEventConstants.TOPIC_CYCLE_AFTER_PROCESS_IMAGE:
 			try {
+				this.updateGridMode();
 				this.setBatteryRanges();
 				this.doHandlingSlowFloatVoltage();
 				this.stateMachine.run();
 			} catch (OpenemsNamedException e) {
 				this.logError(this.log, "EventHandler failed: " + e.getMessage());
 			}
-
-
 //			if(island = true) {
 //				islandingOn();
 //			}
 //			else if(island = false) {
 //				islandingOff();
 //			}
-
 			break;
 		}
+	}
 
+//	private void updateGridMode() throws OpenemsNamedException {
+//		
+//		BooleanReadChannel gridModeChannel = this.componentManager
+//				.getChannel(ChannelAddress.fromString(this.config.gridMode()));
+//
+//		//this.gridModeChannel = ChannelAddress.fromString(this.config.gridMode());
+//
+//		BooleanReadChannel xxx = this.componentManager.getChannel(this.gridModeChannel);
+//		Boolean opt = xxx.value().orElse(false);
+//		StateChannel onGridChannel = this.channel(SinexcelChannelId.STATE_19);
+//		StateChannel offGridChannel = this.channel(SinexcelChannelId.STATE_20);
+//		Optional<Boolean> onGrid = onGridChannel.value().asOptional();
+//		Optional<Boolean> offGrid = offGridChannel.value().asOptional();
+//		if (onGrid.isPresent() && onGrid.get() == true) {
+//			this.getGridMode().setNextValue(GridMode.ON_GRID);
+//		} else if (offGrid.isPresent() && offGrid.get() == true) {
+//			this.getGridMode().setNextValue(GridMode.OFF_GRID);
+//		} else {
+//			this.getGridMode().setNextValue(GridMode.UNDEFINED);
+//		}
+//	}
+	
+	
+	private void updateGridMode() throws OpenemsNamedException {
+
+		BooleanReadChannel gridModeChannel = this.componentManager
+				.getChannel(ChannelAddress.fromString(this.config.gridMode()));
+
+		Optional<Boolean> isGridMode = gridModeChannel.value().asOptional();
+
+		if (isGridMode.isPresent() && isGridMode.get() == false) {
+			this.getGridMode().setNextValue(GridMode.ON_GRID);
+		} else if (isGridMode.isPresent() && isGridMode.get() == true) {
+			this.getGridMode().setNextValue(GridMode.OFF_GRID);
+		} else {
+			this.getGridMode().setNextValue(GridMode.UNDEFINED);
+		}
 	}
 
 	@Override

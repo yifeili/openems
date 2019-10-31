@@ -15,7 +15,7 @@ public class StateMachine {
 	private final OffgridHandler offgridHandler = new OffgridHandler(this);
 	private final GoingOngridHandler goingOngridHandler = new GoingOngridHandler(this);
 	private final GoingOffgridHandler goingOffgridHandler = new GoingOffgridHandler(this);
-	private State gridMode = State.UNDEFINED;
+	private State state = State.UNDEFINED;
 
 	public StateMachine(EssSinexcel parent) throws OpenemsNamedException {
 		this.parent = parent;
@@ -27,7 +27,7 @@ public class StateMachine {
 		// State gridMode = this.getCurrentGridMode();
 
 		State nextState = null;
-		switch (gridMode) {
+		switch (state) {
 		case UNDEFINED:
 			nextState = this.handleUndefined();
 			break;
@@ -47,8 +47,8 @@ public class StateMachine {
 			nextState = this.errorHandler();
 			break;
 		}
-		if (nextState != this.gridMode) {
-			this.gridMode = nextState;
+		if (nextState != this.state) {
+			this.state = nextState;
 		}
 	}
 

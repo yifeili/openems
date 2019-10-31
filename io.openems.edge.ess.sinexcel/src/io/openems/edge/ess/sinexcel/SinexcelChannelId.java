@@ -1,7 +1,5 @@
 package io.openems.edge.ess.sinexcel;
 
-import java.util.Optional;
-
 import io.openems.common.channel.AccessMode;
 import io.openems.common.channel.Level;
 import io.openems.common.channel.Unit;
@@ -10,8 +8,6 @@ import io.openems.edge.common.channel.ChannelId;
 import io.openems.edge.common.channel.Doc;
 import io.openems.edge.common.channel.IntegerDoc;
 import io.openems.edge.common.channel.IntegerWriteChannel;
-import io.openems.edge.common.channel.StateChannel;
-import io.openems.edge.common.sum.GridMode;
 
 public enum SinexcelChannelId implements ChannelId {
 
@@ -220,41 +216,9 @@ public enum SinexcelChannelId implements ChannelId {
 	STATE_18(Doc.of(Level.INFO) //
 			.text("On/Off Status")), //
 	STATE_19(Doc.of(Level.INFO) //
-			.text("On Grid") //
-			.onInit(c -> { //
-				StateChannel channel = (StateChannel) c;
-				EssSinexcel self = (EssSinexcel) channel.getComponent();
-				((StateChannel) channel).onChange((oldValue, newValue) -> {
-					Optional<Boolean> value = newValue.asOptional();
-					if (!value.isPresent()) {
-						self.getGridMode().setNextValue(GridMode.UNDEFINED);
-					} else {
-						if (value.get()) {
-							self.getGridMode().setNextValue(GridMode.ON_GRID);
-						} else {
-							self.getGridMode().setNextValue(GridMode.OFF_GRID);
-						}
-					}
-				});
-			})),
+			.text("On Grid")),
 	STATE_20(Doc.of(Level.INFO) //
-			.text("Off Grid")
-			.onInit(c -> { //
-				StateChannel channel = (StateChannel) c;
-				EssSinexcel self = (EssSinexcel) channel.getComponent();
-				((StateChannel) channel).onChange((oldValue, newValue) -> {
-					Optional<Boolean> value = newValue.asOptional();
-					if (!value.isPresent()) {
-						self.getGridMode().setNextValue(GridMode.UNDEFINED);
-					} else {
-						if (value.get()) {
-							self.getGridMode().setNextValue(GridMode.OFF_GRID);
-						} else {
-							self.getGridMode().setNextValue(GridMode.ON_GRID);
-						}
-					}
-				});
-			})), //
+			.text("Off Grid")), //
 	STATE_21(Doc.of(Level.WARNING) //
 			.text("AC OVP")), //
 	STATE_22(Doc.of(Level.WARNING) //

@@ -33,6 +33,9 @@ import org.osgi.service.metatype.annotations.AttributeDefinition;
 	@AttributeDefinition(name = "Topping charge", description = "The topping charge voltage is the voltage that the battery supposed to finally reach in the charging procedure")
     int toppingCharge() default 4370;
 	
+	@AttributeDefinition(name = "DigitalInput", description = "input output channel which specify the gridmode")
+    String gridMode() default "io0/DigitalInputM1C2";
+	
  	@AttributeDefinition(name = "Start and stop", description = "Turn ON and turn OFF the Inverter")
 	InverterState InverterState() default InverterState.ON;
 

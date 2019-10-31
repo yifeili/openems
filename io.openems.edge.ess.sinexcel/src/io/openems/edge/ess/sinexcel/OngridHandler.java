@@ -28,10 +28,10 @@ public class OngridHandler {
 		return StateMachine.State.ONGRID;
 	}
 
-	private State doOngrid() throws OpenemsNamedException {		
-		
-		
+	private State doOngrid() throws OpenemsNamedException {
+
 		CurrentState currentState = this.parent.getSinexcelState();
+		GridMode gridMode = this.parent.parent.getGridMode().getNextValue().asEnum();
 
 		switch (currentState) {
 		case UNDEFINED:
@@ -45,10 +45,17 @@ public class OngridHandler {
 		case FAULT:
 		case STANDBY:
 		case OFF:
-			this.parent.parent.softStart(false);
 		default:
-			break;
+			this.parent.parent.softStart(false);
 
+			switch (gridMode) {
+			case ON_GRID:
+				return State.ONGRID;
+			case UNDEFINED:
+				return State.UNDEFINED;
+			case OFF_GRID:
+				return State.OFFGRID;
+			}
 		}
 		return State.ONGRID;
 	}

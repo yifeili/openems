@@ -15,7 +15,6 @@ public class OffgridHandler {
 //	private final Logger log = LoggerFactory.getLogger(OngridHandler.class);
 	private final StateMachine parent;
 
-
 	public OffgridHandler(StateMachine parent) {
 		this.parent = parent;
 	}
@@ -35,11 +34,11 @@ public class OffgridHandler {
 	}
 
 	private State doOffgrid() throws OpenemsNamedException {
-		
-		CurrentState currentState = this.parent.getSinexcelState();
 
+		CurrentState currentState = this.parent.getSinexcelState();
+		GridMode gridMode = this.parent.parent.getGridMode().getNextValue().asEnum();
 		switch (currentState) {
-		
+
 		case SLEEPING:
 		case MPPT:
 		case THROTTLED:
@@ -49,15 +48,21 @@ public class OffgridHandler {
 			return State.OFFGRID;
 		case UNDEFINED:
 		case SHUTTINGDOWN:
-		case FAULT:		
+		case FAULT:
 		case OFF:
 		default:
 			this.parent.parent.softStart(false);
-			return State.ERROR;
-			
-
+			switch (gridMode) {
+			case ON_GRID:
+				return State.ONGRID;
+			case UNDEFINED:
+				return State.UNDEFINED;
+			case OFF_GRID:
+				return State.OFFGRID;
+			}
 		}
-		//return State.OFFGRID;
+		return State.OFFGRID;
+		
 	}
 
 }
