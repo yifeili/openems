@@ -1,14 +1,14 @@
 package io.openems.edge.ess.sinexcel;
 
 import io.openems.common.exceptions.OpenemsError.OpenemsNamedException;
+import io.openems.common.types.OptionsEnum;
 import io.openems.edge.common.sum.GridMode;
-import io.openems.edge.ess.sinexcel.StateMachine.State;
-//import org.slf4j.Logger;
-//import org.slf4j.LoggerFactory;
 
 public class OngridHandler {
 	// private final Logger log = LoggerFactory.getLogger(OngridHandler.class);
 	private final StateMachine parent;
+
+	private State state = State.UNDEFINED;
 
 	public OngridHandler(StateMachine parent) {
 		this.parent = parent;
@@ -19,19 +19,60 @@ public class OngridHandler {
 		GridMode gridMode = this.parent.parent.getGridMode().getNextValue().asEnum();
 		switch (gridMode) {
 		case ON_GRID:
-			return this.doOngrid();
+			break;
 		case UNDEFINED:
-			return this.doOngrid();
+			return StateMachine.State.UNDEFINED;
 		case OFF_GRID:
 			return StateMachine.State.GOING_OFFGRID;
 		}
+
+		// Set this Digital output when in on-grid mode
+		this.parent.parent.setDigitalOutputInOngrid();
+
+		switch (this.state) {
+		case UNDEFINED:
+			this.state = this.doUndefined();
+			break;
+
+		case RUN_ONGRID:
+			this.state = this.doOngrid();
+			break;
+
+		case GO_TO_OFFGRID:
+			return StateMachine.State.GOING_OFFGRID;
+
+		case ERROR_SWITCHOFF:
+
+			this.switchOff();
+			break;
+		}
+
 		return StateMachine.State.ONGRID;
+	}	
+
+	private State switchOff() throws OpenemsNamedException {
+		this.parent.parent.inverterOff();
+		this.parent.parent.digitalOutputAfterInverterOffInOngrid();
+		return null;
+	}
+
+	private State doUndefined() throws IllegalArgumentException, OpenemsNamedException {
+		if (!this.parent.parent.isContactorOk(false)) {
+			this.state = State.RUN_ONGRID;
+		} else {
+			if (this.parent.parent.isRequestContactorFault()) {
+				this.state = State.GO_TO_OFFGRID;
+			} else {
+				this.state = State.ERROR_SWITCHOFF;
+			}
+		}
+		return state;
 	}
 
 	private State doOngrid() throws OpenemsNamedException {
 
 		CurrentState currentState = this.parent.getSinexcelState();
-		GridMode gridMode = this.parent.parent.getGridMode().getNextValue().asEnum();
+		// GridMode gridMode = this.parent.parent.getGridMode().getNextValue().asEnum();
 
 		switch (currentState) {
 		case UNDEFINED:
@@ -47,20 +88,38 @@ public class OngridHandler {
 		case OFF:
 		default:
 			this.parent.parent.softStart(false);
-
-			switch (gridMode) {
-			case ON_GRID:
-				return State.ONGRID;
-			case UNDEFINED:
-				return State.UNDEFINED;
-			case OFF_GRID:
-				return State.OFFGRID;
-			}
 		}
-		return State.ONGRID;
+		return State.RUN_ONGRID;
 	}
 
-	// Assumptions : undefined and ongrid mode is same, as there is only one
-	// operations, which is to Softstart()
+	public enum State implements OptionsEnum {
+		UNDEFINED(-1, "Undefined"), //
+		RUN_ONGRID(1, "Run on on-grid mode"), //
+		GO_TO_OFFGRID(2, "Go to the off grid"),//
+		ERROR_SWITCHOFF(3, "Safety control, switch of the inverter");
+
+		private final int value;
+		private final String name;
+
+		private State(int value, String name) {
+			this.value = value;
+			this.name = name;
+		}
+
+		@Override
+		public int getValue() {
+			return value;
+		}
+
+		@Override
+		public String getName() {
+			return name;
+		}
+
+		@Override
+		public OptionsEnum getUndefined() {
+			return UNDEFINED;
+		}
+	}
 
 }

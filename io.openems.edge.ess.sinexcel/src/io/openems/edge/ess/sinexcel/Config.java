@@ -33,8 +33,32 @@ import org.osgi.service.metatype.annotations.AttributeDefinition;
 	@AttributeDefinition(name = "Topping charge", description = "The topping charge voltage is the voltage that the battery supposed to finally reach in the charging procedure")
     int toppingCharge() default 4370;
 	
+	
+	// input channel ------------------------
 	@AttributeDefinition(name = "DigitalInput", description = "input output channel which specify the gridmode")
-    String gridMode() default "io0/DigitalInputM1C2";
+    String digitalInput1() default "io0/DigitalInputM1C1";
+	
+	@AttributeDefinition(name = "DigitalInput", description = "This channels indicates Gridmode")
+    String digitalInput2() default "io0/DigitalInputM1C2";
+	
+	@AttributeDefinition(name = "DigitalInput", description = "input output channel which specify the gridmode")
+    String digitalInput3() default "io0/DigitalInputM2C1";
+	
+	@AttributeDefinition(name = "DigitalInput", description = "input output channel which specify the gridmode")
+    String digitalInput4() default "io0/DigitalInputM2C2";
+	
+	// output channel ------------------------
+	@AttributeDefinition(name = "DigitalInput", description = "input output channel which specify the gridmode")
+    String digitalOutput1() default "io0/DigitalInputM3C1";
+	
+	@AttributeDefinition(name = "DigitalInput", description = "input output channel which specify the gridmode")
+    String digitalOutput2() default "io0/DigitalInputM3C2";
+	
+	@AttributeDefinition(name = "DigitalInput", description = "input output channel which specify the gridmode")
+    String digitalOutput3() default "io0/DigitalInputM4C1";
+	
+	@AttributeDefinition(name = "DigitalInput", description = "input output channel which specify the gridmode")
+    String digitalOutput4() default "io0/DigitalInputM4C2";
 	
  	@AttributeDefinition(name = "Start and stop", description = "Turn ON and turn OFF the Inverter")
 	InverterState InverterState() default InverterState.ON;

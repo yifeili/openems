@@ -20,6 +20,7 @@ import org.osgi.service.metatype.annotations.Designate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.openems.common.exceptions.OpenemsException;
 import io.openems.common.exceptions.OpenemsError.OpenemsNamedException;
 import io.openems.common.types.ChannelAddress;
 import io.openems.edge.battery.api.Battery;
@@ -37,6 +38,7 @@ import io.openems.edge.bridge.modbus.api.task.FC16WriteRegistersTask;
 import io.openems.edge.bridge.modbus.api.task.FC3ReadRegistersTask;
 import io.openems.edge.bridge.modbus.api.task.FC6WriteRegisterTask;
 import io.openems.edge.common.channel.BooleanReadChannel;
+import io.openems.edge.common.channel.BooleanWriteChannel;
 import io.openems.edge.common.channel.EnumWriteChannel;
 import io.openems.edge.common.channel.IntegerWriteChannel;
 import io.openems.edge.common.channel.StateChannel;
@@ -554,8 +556,8 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 //						m(EssSinexcel.SinexcelChannelId.Analog_Reactive_Energy_2, new UnsignedDoublewordElement(0x0082))), // 1//Line61
 //				new FC3ReadRegistersTask(0x0089, Priority.HIGH,
 //						m(EssSinexcel.SinexcelChannelId.Target_OffGrid_Voltage, new UnsignedWordElement(0x0089))), // Range: -0,1 ... 0,1 (to rated Voltage)// 100
-//				new FC3ReadRegistersTask(0x008A, Priority.HIGH,
-//						m(EssSinexcel.SinexcelChannelId.Target_OffGrid_Frequency, new SignedWordElement(0x008A))), // Range: -2... 2Hz//100
+				new FC3ReadRegistersTask(0x008A, Priority.LOW,
+						m(SinexcelChannelId.SET_OFF_GRID_FREQUENCY, new SignedWordElement(0x008A))), // Range: -2... 2Hz//100
 
 //----------------------------------------------------------START and STOP--------------------------------------------------------------------				
 //				new FC3ReadRegistersTask(0x023A, Priority.LOW, //
@@ -810,7 +812,7 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 	private void updateGridMode() throws OpenemsNamedException {
 
 		BooleanReadChannel gridModeChannel = this.componentManager
-				.getChannel(ChannelAddress.fromString(this.config.gridMode()));
+				.getChannel(ChannelAddress.fromString(this.config.digitalInput2()));
 
 		Optional<Boolean> isGridMode = gridModeChannel.value().asOptional();
 
@@ -872,4 +874,136 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 	public IntegerWriteChannel getVoltage() {
 		return this.channel(SinexcelChannelId.BAT_VOLTAGE);
 	}
+
+	public void setDigitalOutputInOngrid() throws IllegalArgumentException, OpenemsNamedException {
+		BooleanWriteChannel digitaloutput1 = this.componentManager.getChannel(ChannelAddress.fromString(this.config.digitalOutput1()));
+		this.setOutput(digitaloutput1, true);
+		
+		BooleanWriteChannel digitaloutput2 = this.componentManager.getChannel(ChannelAddress.fromString(this.config.digitalOutput2()));
+		this.setOutput(digitaloutput2, false);
+		
+		BooleanWriteChannel digitaloutput3 = this.componentManager.getChannel(ChannelAddress.fromString(this.config.digitalOutput3()));
+		this.setOutput(digitaloutput3, true);
+	}
+	
+	public void setDigitalOutputInOffgrid() throws IllegalArgumentException, OpenemsNamedException {
+		BooleanWriteChannel digitaloutput1 = this.componentManager.getChannel(ChannelAddress.fromString(this.config.digitalOutput1()));
+		this.setOutput(digitaloutput1, false);
+		
+		BooleanWriteChannel digitaloutput2 = this.componentManager.getChannel(ChannelAddress.fromString(this.config.digitalOutput2()));
+		this.setOutput(digitaloutput2, true);
+		
+		BooleanWriteChannel digitaloutput3 = this.componentManager.getChannel(ChannelAddress.fromString(this.config.digitalOutput3()));
+		this.setOutput(digitaloutput3, false);
+	}
+	
+	/**
+	 * Helper function to switch an output if it was not switched before.
+	 *
+	 * @param value true to switch ON, false to switch ON
+	 */
+//	private void setOutput(BooleanWriteChannel channel, boolean value) {
+//		Optional<Boolean> currentValueOpt = channel.value().asOptional();
+//		if (!currentValueOpt.isPresent() || currentValueOpt.get() != value) {
+//			log.info("Set output [" + channel.address() + "] " + (value ? "ON" : "OFF") + ".");
+//			try {
+//				channel.setNextWriteValue(value);
+//			} catch (OpenemsNamedException e) {
+//				this.logError(this.log, "Unable to set output: [" + channel.address() + "] " + e.getMessage());
+//			}
+//		}
+//	}
+	
+	private void setOutput(BooleanWriteChannel channel, boolean value) throws IllegalArgumentException, OpenemsNamedException {
+		try {			
+			Optional<Boolean> currentValueOpt = channel.value().asOptional();
+			if (!currentValueOpt.isPresent() || currentValueOpt.get() != value) {
+				this.logInfo(this.log, "Set output [" + channel.address() + "] " + (value) + ".");
+				channel.setNextWriteValue(value);
+			}
+		} catch (OpenemsException e) {
+			this.logError(this.log, "Unable to set output: [" + channel.address() + "] " + e.getMessage());
+		}
+	}
+
+	/**
+	 * Helper function to check the status of the Contactor.
+	 *
+	 * @param value to check and compare the input channels
+	 * @return false if there is no fault, true if there is a fault
+	 * @throws OpenemsNamedException 
+	 * @throws IllegalArgumentException 
+	 */
+	public boolean isContactorOk(boolean value) throws IllegalArgumentException, OpenemsNamedException {
+		BooleanReadChannel digitalInput1 = this.componentManager
+				.getChannel(ChannelAddress.fromString(this.config.digitalInput1()));
+		
+		BooleanReadChannel digitalInput2 = this.componentManager
+				.getChannel(ChannelAddress.fromString(this.config.digitalInput2()));
+		
+		BooleanReadChannel digitalInput3 = this.componentManager
+				.getChannel(ChannelAddress.fromString(this.config.digitalInput3()));
+		
+		Optional<Boolean> isdigitalInput1 = digitalInput1.value().asOptional();
+		Optional<Boolean> isdigitalInput2 = digitalInput2.value().asOptional();
+		Optional<Boolean> isdigitalInput3 = digitalInput3.value().asOptional();
+		
+		if ((isdigitalInput1.isPresent() && isdigitalInput1.get() == value) &&
+				(isdigitalInput2.isPresent() && isdigitalInput2.get() == value) &&
+				(isdigitalInput3.isPresent() && isdigitalInput3.get() == value)) {
+			return false;
+		}else {
+			return true;
+		}
+		
+	}
+
+	public boolean isRequestContactorFault() throws IllegalArgumentException, OpenemsNamedException {
+		BooleanReadChannel digitalInput1 = this.componentManager
+				.getChannel(ChannelAddress.fromString(this.config.digitalInput1()));
+		
+		BooleanReadChannel digitalInput2 = this.componentManager
+				.getChannel(ChannelAddress.fromString(this.config.digitalInput2()));
+		
+		Optional<Boolean> isdigitalInput1 = digitalInput1.value().asOptional();
+		Optional<Boolean> isdigitalInput2 = digitalInput2.value().asOptional();
+		
+		
+		if ((isdigitalInput1.isPresent() && isdigitalInput1.get() == true) &&
+				(isdigitalInput2.isPresent() && isdigitalInput2.get() == true)) {
+			return true;
+		}else {
+			return false;
+		}
+	}
+
+	public void digitalOutputAfterInverterOffInOngrid() throws IllegalArgumentException, OpenemsNamedException {
+		BooleanWriteChannel digitaloutput1 = this.componentManager.getChannel(ChannelAddress.fromString(this.config.digitalOutput1()));
+		this.setOutput(digitaloutput1, true);
+		
+		BooleanWriteChannel digitaloutput2 = this.componentManager.getChannel(ChannelAddress.fromString(this.config.digitalOutput2()));
+		this.setOutput(digitaloutput2, false);
+		
+		BooleanWriteChannel digitaloutput3 = this.componentManager.getChannel(ChannelAddress.fromString(this.config.digitalOutput3()));
+		this.setOutput(digitaloutput3, false);		
+	}
+
+	public void digitalOutputAfterInverterOffInOffgrid() throws IllegalArgumentException, OpenemsNamedException {
+		BooleanWriteChannel digitaloutput1 = this.componentManager.getChannel(ChannelAddress.fromString(this.config.digitalOutput1()));
+		this.setOutput(digitaloutput1, true);
+		
+		BooleanWriteChannel digitaloutput2 = this.componentManager.getChannel(ChannelAddress.fromString(this.config.digitalOutput2()));
+		this.setOutput(digitaloutput2, false);
+		
+		BooleanWriteChannel digitaloutput3 = this.componentManager.getChannel(ChannelAddress.fromString(this.config.digitalOutput3()));
+		this.setOutput(digitaloutput3, true);		
+	}
+
+	public void setFreq() throws OpenemsNamedException {
+		
+		IntegerWriteChannel setFreq = this.channel(SinexcelChannelId.SET_OFF_GRID_FREQUENCY);
+		setFreq.setNextWriteValue(52); // 52 hz frequency
+		
+	}
+	
 }

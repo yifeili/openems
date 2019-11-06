@@ -111,6 +111,9 @@ public enum SinexcelChannelId implements ChannelId {
 
 	FREQUENCY(Doc.of(OpenemsType.INTEGER) //
 			.unit(Unit.HERTZ)), //
+	SET_OFF_GRID_FREQUENCY(Doc.of(OpenemsType.INTEGER) //
+			.accessMode(AccessMode.READ_WRITE) //
+			.unit(Unit.HERTZ)),
 	DC_CURRENT(Doc.of(OpenemsType.INTEGER) //
 			.unit(Unit.AMPERE)), //
 	DC_VOLTAGE(Doc.of(OpenemsType.INTEGER) //
