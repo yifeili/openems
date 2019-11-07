@@ -57,7 +57,9 @@ public class OngridHandler {
 	}
 
 	private State doUndefined() throws IllegalArgumentException, OpenemsNamedException {
-		if (!this.parent.parent.isContactorOk(false)) {
+		
+		Boolean contactorOk = this.parent.parent.isContactorOkInOngrid();
+		if (!contactorOk) {
 			this.state = State.RUN_ONGRID;
 		} else {
 			if (this.parent.parent.isRequestContactorFault()) {

@@ -17,7 +17,7 @@ public class GoingOngridHandler {
 
 	// WAIT
 	private LocalDateTime startedWaiting = null;
-	private final static int WAIT_SECONDS = 5;
+	private final static int WAIT_SECONDS = 60;
 
 	public GoingOngridHandler(StateMachine parent) {
 		this.parent = parent;

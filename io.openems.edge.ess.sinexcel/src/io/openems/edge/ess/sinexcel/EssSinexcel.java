@@ -816,9 +816,9 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 
 		Optional<Boolean> isGridMode = gridModeChannel.value().asOptional();
 
-		if (isGridMode.isPresent() && isGridMode.get() == false) {
+		if (isGridMode.isPresent() && isGridMode.get() == true) {
 			this.getGridMode().setNextValue(GridMode.ON_GRID);
-		} else if (isGridMode.isPresent() && isGridMode.get() == true) {
+		} else if (isGridMode.isPresent() && isGridMode.get() == false) {
 			this.getGridMode().setNextValue(GridMode.OFF_GRID);
 		} else {
 			this.getGridMode().setNextValue(GridMode.UNDEFINED);
@@ -934,7 +934,7 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 	 * @throws OpenemsNamedException 
 	 * @throws IllegalArgumentException 
 	 */
-	public boolean isContactorOk(boolean value) throws IllegalArgumentException, OpenemsNamedException {
+	public boolean isContactorOkInOngrid() throws IllegalArgumentException, OpenemsNamedException {
 		BooleanReadChannel digitalInput1 = this.componentManager
 				.getChannel(ChannelAddress.fromString(this.config.digitalInput1()));
 		
@@ -948,9 +948,41 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 		Optional<Boolean> isdigitalInput2 = digitalInput2.value().asOptional();
 		Optional<Boolean> isdigitalInput3 = digitalInput3.value().asOptional();
 		
-		if ((isdigitalInput1.isPresent() && isdigitalInput1.get() == value) &&
-				(isdigitalInput2.isPresent() && isdigitalInput2.get() == value) &&
-				(isdigitalInput3.isPresent() && isdigitalInput3.get() == value)) {
+		if ((isdigitalInput1.isPresent() && isdigitalInput1.get() == false) &&
+				(isdigitalInput2.isPresent() && isdigitalInput2.get() == true) &&
+				(isdigitalInput3.isPresent() && isdigitalInput3.get() == false)) {
+			return false;
+		}else {
+			return true;
+		}
+		
+	}
+	
+	/**
+	 * Helper function to check the status of the Contactor.
+	 *
+	 * @param value to check and compare the input channels
+	 * @return false if there is no fault, true if there is a fault
+	 * @throws OpenemsNamedException 
+	 * @throws IllegalArgumentException 
+	 */
+	public boolean isContactorOkInOffgrid() throws IllegalArgumentException, OpenemsNamedException {
+		BooleanReadChannel digitalInput1 = this.componentManager
+				.getChannel(ChannelAddress.fromString(this.config.digitalInput1()));
+		
+		BooleanReadChannel digitalInput2 = this.componentManager
+				.getChannel(ChannelAddress.fromString(this.config.digitalInput2()));
+		
+		BooleanReadChannel digitalInput3 = this.componentManager
+				.getChannel(ChannelAddress.fromString(this.config.digitalInput3()));
+		
+		Optional<Boolean> isdigitalInput1 = digitalInput1.value().asOptional();
+		Optional<Boolean> isdigitalInput2 = digitalInput2.value().asOptional();
+		Optional<Boolean> isdigitalInput3 = digitalInput3.value().asOptional();
+		
+		if ((isdigitalInput1.isPresent() && isdigitalInput1.get() == true) &&
+				(isdigitalInput2.isPresent() && isdigitalInput2.get() == false) &&
+				(isdigitalInput3.isPresent() && isdigitalInput3.get() == true)) {
 			return false;
 		}else {
 			return true;

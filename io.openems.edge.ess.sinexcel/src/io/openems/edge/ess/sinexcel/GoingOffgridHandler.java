@@ -17,7 +17,7 @@ public class GoingOffgridHandler {
 
 	// WAIT
 	private LocalDateTime startedWaiting = null;
-	private final static int WAIT_SECONDS = 5;
+	private final static int WAIT_SECONDS = 60;
 
 	public GoingOffgridHandler(StateMachine parent) {
 		this.parent = parent;

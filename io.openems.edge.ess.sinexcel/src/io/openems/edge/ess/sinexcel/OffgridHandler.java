@@ -75,7 +75,8 @@ public class OffgridHandler {
 	private State doOffgrid() throws OpenemsNamedException {
 		// set this relais when in off grid mode
 		this.parent.parent.setDigitalOutputInOffgrid();
-		if(!this.parent.parent.isContactorOk(true)) {
+		boolean contactorOk = this.parent.parent.isContactorOkInOffgrid();
+		if(!contactorOk) {
 			//Set the freq
 			parent.parent.setFreq();
 
