@@ -305,11 +305,6 @@ public class SupplyBus {
 			EssFeneconCommercial40Impl ess = this.parent.componentManager.getComponent(essId);
 			SystemState systemState = ess.channel(ChannelId.SYSTEM_STATE).value().asEnum();
 			GridMode gridMode = ess.getGridMode().value().asEnum();
-
-//			if (gridMode.equals(GridMode.OFF_GRID) || ess.getSystemState().equals(SystemState.FAULT)
-//					|| this.activeEssId == essId) {
-//				continue;
-//			}
 			if (gridMode.equals(GridMode.OFF_GRID) || systemState.equals(SystemState.FAULT)
 					|| this.activeEssId == essId) {
 				continue;

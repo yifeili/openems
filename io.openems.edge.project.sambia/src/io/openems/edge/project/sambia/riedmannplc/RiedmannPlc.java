@@ -22,8 +22,8 @@ import io.openems.edge.bridge.modbus.api.element.SignedWordElement;
 import io.openems.edge.bridge.modbus.api.task.FC16WriteRegistersTask;
 import io.openems.edge.bridge.modbus.api.task.FC3ReadRegistersTask;
 import io.openems.edge.common.channel.Doc;
-import io.openems.edge.common.channel.IntegerWriteChannel;
 import io.openems.edge.common.channel.IntegerDoc;
+import io.openems.edge.common.channel.IntegerWriteChannel;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.taskmanager.Priority;
 
@@ -136,8 +136,8 @@ public class RiedmannPlc extends AbstractOpenemsModbusComponent implements Opene
 		WATERLEVEL_BOREHOLE3_OFF(new IntegerDoc() //
 				.accessMode(AccessMode.READ_WRITE) //
 				.onInit(new IntegerWriteChannel.MirrorToDebugChannel(ChannelId.DEBUG_WATERLEVEL_BOREHOLE3_OFF))),
-
 		WATERLEVEL(Doc.of(OpenemsType.INTEGER)), //
+
 		AUTOMATIC_MODE(Doc.of(OpenemsType.INTEGER)), //
 		MANUAL_MODE(Doc.of(OpenemsType.INTEGER)), //
 		EMERGENCY_STOP(Doc.of(OpenemsType.INTEGER)), //
@@ -182,7 +182,7 @@ public class RiedmannPlc extends AbstractOpenemsModbusComponent implements Opene
 						m(ChannelId.WATERLEVEL_BOREHOLE3_ON, new SignedWordElement(24)), //
 						m(ChannelId.WATERLEVEL_BOREHOLE3_OFF, new SignedWordElement(25)) //
 				), //
-				new FC3ReadRegistersTask(50, Priority.LOW, //
+				new FC3ReadRegistersTask(50, Priority.HIGH, //
 						m(ChannelId.WATERLEVEL, new SignedWordElement(50)), //
 						m(ChannelId.PIVOT_ON, new SignedWordElement(51)), //
 						m(ChannelId.BOREHOLE1_ON, new SignedWordElement(52)), //

@@ -19,9 +19,15 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 	@AttributeDefinition(name = "Ess-ID", description = "ID of Ess device. The Ess to stop on system stop. Also used for Off-Grid indication for the SPS.")
 	String ess_id();
-	
+
 	@AttributeDefinition(name = "Riedmann-SPS-ID", description = "ID of Riedmann PLC device.")
 	String plc_id();
+
+	@AttributeDefinition(name = "Office On ?", description = "ID of Riedmann PLC device.")
+	boolean officeOn();
+
+	@AttributeDefinition(name = "Trainee On", description = "ID of Riedmann PLC device.")
+	boolean traineeOn();
 
 	@AttributeDefinition(name = "Waterlevel Borehole 1 On", description = "The waterlevel to start Borehole Pump 1.")
 	int setWaterLevelBorehole1On() default 50;
@@ -43,19 +49,19 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 	@AttributeDefinition(name = "Soc Hysteresis", description = "Hysteresis for the switching of the loads.")
 	int socHysteresis();
-	
+
 	@AttributeDefinition(name = "Soc Load 1 Off", description = "Below this Soc the Load 1 (Clima1 & Clima2) will be disconnected.")
 	int socLoad1Off();
-	
+
 	@AttributeDefinition(name = "Soc Load 2 Off", description = "Below this Soc the Load 2 (Pivot) will be disconnected.")
 	int socLoad2Off();
-	
+
 	@AttributeDefinition(name = "Soc Load 3 Off", description = "Below this Soc the Load 3 (Borehole 1, 2 & 3) will be disconnected.")
 	int socLoad3Off();
 
 	@AttributeDefinition(name = "Soc Load 4 Off", description = "Below this Soc the Load 4 (Office & TraineeCenter) will be disconnected.")
 	int socLoad4Off();
-	
+
 	String webconsole_configurationFactory_nameHint() default "Project Sambia Controller Riedmann PLC [{id}]";
-	
+
 }

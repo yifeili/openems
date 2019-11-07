@@ -6,6 +6,7 @@ Private-Package: \
 	io.openems.edge.project.sambia.controller.timelinecharge, \
 	io.openems.edge.project.sambia.controller.riedmannplc, \
 	io.openems.edge.project.sambia.controller.supplybusswitch, \
+	io.openems.edge.project.sambia.controller.supplybusswitch.newVersion, \
 	io.openems.edge.project.sambia.riedmannplc
 
 -includeresource: {readme.adoc}
@@ -15,7 +16,6 @@ Private-Package: \
 	io.openems.common;version=latest,\
 	io.openems.edge.common;version=latest,\
 	io.openems.edge.controller.api;version=latest,\
-	io.openems.edge.ess.api;version=latest,\
 	io.openems.edge.meter.api;version=latest,\
 	io.openems.edge.bridge.modbus;version=latest,\
 	com.google.guava,\

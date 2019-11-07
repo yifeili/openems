@@ -85,6 +85,13 @@ public class RiedmannPlcController extends AbstractOpenemsComponent implements C
 			watchdog.setNextWriteValue(1);
 			watchdogState = true;
 		}
+		int essSoc = ess.getSoc().value().getOrError();
+		GridMode gridMode = ess.getGridMode().value().asEnum();
+		if (gridMode.equals(GridMode.OFF_GRID)) {
+			this.setOutput(plc, RiedmannPlc.ChannelId.SIGNAL_GRID_ON, 0);
+		} else {
+			this.setOutput(plc, RiedmannPlc.ChannelId.SIGNAL_GRID_ON, 1);
+		}
 
 		// Water level
 		this.setOutput(plc, RiedmannPlc.ChannelId.WATERLEVEL_BOREHOLE1_OFF, this.config.setWaterLevelBorehole1Off());
@@ -99,8 +106,6 @@ public class RiedmannPlcController extends AbstractOpenemsComponent implements C
 		/*
 		 * Load switching
 		 */
-		int essSoc = ess.getSoc().value().getOrError();
-		GridMode gridMode = ess.getGridMode().value().asEnum();
 
 		// Load1
 		if (essSoc >= this.config.socLoad1Off() + this.config.socHysteresis()
