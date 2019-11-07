@@ -202,7 +202,6 @@ public class SingleRack extends AbstractOpenemsModbusComponent
 				this.setStateMachineState(State.UNDEFINED);
 			} else {
 				this.setStateMachineState(State.RUNNING);
-				this.checkAllowedCurrent();
 				readyForWorking = true;
 			}
 			break;
@@ -256,25 +255,81 @@ public class SingleRack extends AbstractOpenemsModbusComponent
 		this.getReadyForWorking().setNextValue(readyForWorking);
 	}
 
-	private void checkAllowedCurrent() {
-		if (isPoleTemperatureTooHot() ) {
-			this.limitMaxCurrent();
-		}
-		
-	}
-
 	private void limitMaxCurrent() {
-		// TODO limit current		
+		IntegerReadChannel chargeCurrentOptChannel = this.channel(Battery.ChannelId.CHARGE_MAX_CURRENT);
+		int chargeCurrentOpt = chargeCurrentOptChannel.getNextValue().get();
+
+		IntegerReadChannel dischargeCurrentOptChannel = this.channel(Battery.ChannelId.DISCHARGE_MAX_CURRENT);
+		int dischargeCurrentOpt = dischargeCurrentOptChannel.getNextValue().get();
+
+		if ((chargeCurrentOpt >= 70) && (dischargeCurrentOpt >= 70)) {
+			this.reduceChargeMaxCurrent();
+			this.reduceDischargeMaxCurrent();
+		} else if ((chargeCurrentOpt <= 70) && (dischargeCurrentOpt >= 70)) {
+			this.setChargeMaxCurrent();
+			this.reduceDischargeMaxCurrent();
+		} else if ((chargeCurrentOpt >= 70) && (dischargeCurrentOpt <= 70)) {
+			this.reduceChargeMaxCurrent();
+			this.setChargeMaxCurrent();
+		} else if ((chargeCurrentOpt <= 70) && (dischargeCurrentOpt <= 70)) {
+			this.setChargeMaxCurrent();
+			this.setDischargeMaxCurrent();
+		}
 	}
 
-	private boolean isPoleTemperatureTooHot() {		
+	private void setChargeMaxCurrent() {
+		// CHARGE_MAX_CURRENT 0x2160
 		@SuppressWarnings("unchecked")
-		Optional<Boolean> poleTempTooHighOpt = (Optional<Boolean>) this.channel(SingleRackChannelId.ALARM_LEVEL_1_POLE_TEMPERATURE_TOO_HIGH).value().asOptional();
-		
+		Optional<Integer> maxChargeCurrentOpt = (Optional<Integer>) this
+				.channel(SingleRackChannelId.SYSTEM_MAX_CHARGE_CURRENT).value().asOptional();
+		if (maxChargeCurrentOpt.isPresent()) {
+			int max_current = (int) (maxChargeCurrentOpt.get() * 0.001);
+			this.channel(Battery.ChannelId.CHARGE_MAX_CURRENT).setNextValue(max_current);
+		}
+	}
+
+	private void setDischargeMaxCurrent() {
+		// DISCHARGE_MAX_CURRENT 0x2161
+		@SuppressWarnings("unchecked")
+		Optional<Integer> maxDischargeCurrentOpt = (Optional<Integer>) this
+				.channel(SingleRackChannelId.SYSTEM_MAX_DISCHARGE_CURRENT).value().asOptional();
+		if (maxDischargeCurrentOpt.isPresent()) {
+			int max_current = (int) (maxDischargeCurrentOpt.get() * 0.001);
+			this.channel(Battery.ChannelId.DISCHARGE_MAX_CURRENT).setNextValue(max_current);
+		}
+
+	}
+
+	private void reduceChargeMaxCurrent() {
+		// CHARGE_MAX_CURRENT 0x2160
+		@SuppressWarnings("unchecked")
+		Optional<Integer> maxChargeCurrentOpt = (Optional<Integer>) this
+				.channel(SingleRackChannelId.SYSTEM_MAX_CHARGE_CURRENT).value().asOptional();
+		if (maxChargeCurrentOpt.isPresent()) {
+			this.channel(Battery.ChannelId.CHARGE_MAX_CURRENT).setNextValue(70);
+		}
+	}
+
+	private void reduceDischargeMaxCurrent() {
+		// DISCHARGE_MAX_CURRENT 0x2161
+		@SuppressWarnings("unchecked")
+		Optional<Integer> maxDischargeCurrentOpt = (Optional<Integer>) this
+				.channel(SingleRackChannelId.SYSTEM_MAX_DISCHARGE_CURRENT).value().asOptional();
+		if (maxDischargeCurrentOpt.isPresent()) {
+			this.channel(Battery.ChannelId.DISCHARGE_MAX_CURRENT).setNextValue(70);
+		}
+
+	}
+
+	private boolean isPoleTemperatureTooHot() {
+		@SuppressWarnings("unchecked")
+		Optional<Boolean> poleTempTooHighOpt = (Optional<Boolean>) this
+				.channel(SingleRackChannelId.ALARM_LEVEL_1_POLE_TEMPERATURE_TOO_HIGH).value().asOptional();
+
 		if (!poleTempTooHighOpt.isPresent()) {
 			return false;
-		} else {				
-			boolean poleTempTooHot = poleTempTooHighOpt.get(); 
+		} else {
+			boolean poleTempTooHot = poleTempTooHighOpt.get();
 			return poleTempTooHot;
 		}
 	}
@@ -431,7 +486,35 @@ public class SingleRack extends AbstractOpenemsModbusComponent
 			int max_current = (int) (maxDischargeCurrentOpt.get() * 0.001);
 			this.channel(Battery.ChannelId.DISCHARGE_MAX_CURRENT).setNextValue(max_current);
 		}
-
+		
+		if (isPoleTemperatureTooHot()) {
+			limitMaxCurrent();
+		}
+				
+		
+		
+		
+//		if (isPoleTemperatureTooHot()) {
+//			// CHARGE_MAX_CURRENT 0x2160
+//			@SuppressWarnings("unchecked")
+//			Optional<Integer> maxChargeCurrentOpt = (Optional<Integer>) this
+//					.channel(SingleRackChannelId.SYSTEM_MAX_CHARGE_CURRENT).value().asOptional();
+//			if (maxChargeCurrentOpt.isPresent()) {
+//				int max_current = (int) (maxChargeCurrentOpt.get() * 0.001);
+//				this.channel(Battery.ChannelId.CHARGE_MAX_CURRENT).setNextValue(max_current);
+//			}
+//
+//			// DISCHARGE_MAX_CURRENT 0x2161
+//			@SuppressWarnings("unchecked")
+//			Optional<Integer> maxDischargeCurrentOpt = (Optional<Integer>) this
+//					.channel(SingleRackChannelId.SYSTEM_MAX_DISCHARGE_CURRENT).value().asOptional();
+//			if (maxDischargeCurrentOpt.isPresent()) {
+//				int max_current = (int) (maxDischargeCurrentOpt.get() * 0.001);
+//				this.channel(Battery.ChannelId.DISCHARGE_MAX_CURRENT).setNextValue(max_current);
+//			}
+//		} else {
+//			limitMaxCurrent();
+//		}
 	}
 
 	@Override
