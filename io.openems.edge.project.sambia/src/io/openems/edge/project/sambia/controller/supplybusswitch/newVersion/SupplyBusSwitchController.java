@@ -20,6 +20,7 @@ import org.osgi.service.metatype.annotations.Designate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Iterables;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 
@@ -116,10 +117,13 @@ public class SupplyBusSwitchController extends AbstractOpenemsComponent implemen
 	}
 
 	private void handleOnGrid(Channels channels) throws IllegalArgumentException, OpenemsNamedException {
-		switch (this.switchStates(channels)) {
+		switch (this.getTheLargestSocEssId(channels)) {
 		case ESS1_BUS1_ESS2_BUS2:
-			this.setOutput(channels.ess1ToBus1Contactor, Operation.CLOSE);
-			this.setOutput(channels.ess2ToBus2Contactor, Operation.CLOSE);
+			if (this.switchStates(channels) != EssAndBusState.ESS1_BUS1_ESS2_BUS2) {
+				this.disconnectAllSwitches(channels);
+				this.setOutput(channels.ess1ToBus1Contactor, Operation.CLOSE);
+				this.setOutput(channels.ess2ToBus2Contactor, Operation.CLOSE);
+			}
 			break;
 		case ESS1_BUS1_ESS3_BUS2:
 			this.setOutput(channels.ess1ToBus1Contactor, Operation.CLOSE);
@@ -166,7 +170,6 @@ public class SupplyBusSwitchController extends AbstractOpenemsComponent implemen
 			this.setOutput(channels.ess3ToBus2Contactor, Operation.CLOSE);
 			break;
 		case UNDEFINED:
-			this.getEssIdsSocMap(channels);
 			// Get highest soc state inverters
 			// Get System State
 			// only connect if soc is larger than minSoc + 5 or in On-grid regardless
@@ -181,7 +184,7 @@ public class SupplyBusSwitchController extends AbstractOpenemsComponent implemen
 	 * @return
 	 * @throws OpenemsNamedException
 	 */
-	public String[] getEssIdsSocMap(Channels channel) throws OpenemsNamedException {
+	public EssAndBusState getTheLargestSocEssId(Channels channel) throws OpenemsNamedException {
 		ManagedSymmetricEss ess;
 		Optional<Integer> soc;
 		Map<String, Integer> essSoc = new HashMap<String, Integer>();
@@ -191,41 +194,61 @@ public class SupplyBusSwitchController extends AbstractOpenemsComponent implemen
 			essSoc.put(essId, soc.get());
 		}
 		Map<String, Integer> result = essSoc.entrySet().stream()
-				.sorted(Map.Entry.comparingByValue(Comparator.reverseOrder())).collect(Collectors.toMap(
+				.sorted(Map.Entry.comparingByValue(Comparator.naturalOrder())).collect(Collectors.toMap(
 						Map.Entry::getKey, Map.Entry::getValue, (oldValue, newValue) -> oldValue, LinkedHashMap::new));
 		channel.essIds.clear();
 		essSoc.clear();
-		System.out.println(result);
-		return null;
+		int size = result.size() - 1;
+		String largestSocEss = Iterables.get(result.entrySet(), size).getKey();
+		String secondLargestSocEss = Iterables.get(result.entrySet(), size - 1).getKey();
+		if (largestSocEss.equals("ess1") && secondLargestSocEss.equals("ess2")) {
+			return EssAndBusState.ESS1_BUS1_ESS2_BUS2;
+		}
+		if (largestSocEss.equals("ess1") && secondLargestSocEss.equals("ess3")) {
+			return EssAndBusState.ESS1_BUS1_ESS3_BUS2;
+		}
+		if (largestSocEss.equals("ess1") && secondLargestSocEss.equals("ess4")) {
+			return EssAndBusState.ESS1_BUS1_ESS4_BUS2;
+		}
+		if (largestSocEss.equals("ess2") && secondLargestSocEss.equals("ess1")) {
+			return EssAndBusState.ESS4_BUS1_ESS1_BUS2;
+		}
+		if (largestSocEss.equals("ess2") && secondLargestSocEss.equals("ess3")) {
+			return EssAndBusState.ESS2_BUS1_ESS3_BUS2;
+		}
+		if (largestSocEss.equals("ess2") && secondLargestSocEss.equals("ess4")) {
+			return EssAndBusState.ESS2_BUS1_ESS4_BUS2;
+		}
+		if (largestSocEss.equals("ess3") && secondLargestSocEss.equals("ess1")) {
+			return EssAndBusState.ESS3_BUS1_ESS1_BUS2;
+		}
+		if (largestSocEss.equals("ess3") && secondLargestSocEss.equals("ess2")) {
+			return EssAndBusState.ESS3_BUS1_ESS2_BUS2;
+		}
+		if (largestSocEss.equals("ess3") && secondLargestSocEss.equals("ess4")) {
+			return EssAndBusState.ESS3_BUS1_ESS4_BUS2;
+		}
+		if (largestSocEss.equals("ess4") && secondLargestSocEss.equals("ess1")) {
+			return EssAndBusState.ESS4_BUS1_ESS1_BUS2;
+		}
+		if (largestSocEss.equals("ess4") && secondLargestSocEss.equals("ess2")) {
+			return EssAndBusState.ESS4_BUS1_ESS2_BUS2;
+		}
+		if (largestSocEss.equals("ess4") && secondLargestSocEss.equals("ess3")) {
+			return EssAndBusState.ESS4_BUS1_ESS3_BUS2;
+		}
+		return EssAndBusState.UNDEFINED;
 	}
 
-	/**
-	 * Gets the Ess with the largest State of charge.
-	 * 
-	 * @return
-	 * @throws OpenemsNamedException
-	 */
-	public String getEssIdWithLargestSoc() throws OpenemsNamedException {
-		Integer largestSoc = null;
-		String result = null;
-//		for (String essId : this.switchEssMapping.keySet()) {
-//			EssFeneconCommercial40Impl ess = this.parent.componentManager.getComponent(essId);
-////			SystemState systemState = ess.getSystemState();
-//			SystemState systemState = ess.channel(ChannelId.SYSTEM_STATE).value().asEnum();
-//			Optional<Integer> socOpt = ess.getSoc().value().asOptional();
-//			if (socOpt.isPresent()) {
-//				int soc = socOpt.get();
-//				if (soc > MIN_SOC && systemState != SystemState.FAULT) {
-//					// this ess could be used
-//					if (largestSoc == null || largestSoc < soc) {
-//						// this ess has the largest Soc
-//						result = essId;
-//						largestSoc = soc;
-//					}
-//				}
-//			}
-//		}
-		return result;
+	private void disconnectAllSwitches(Channels channels) throws IllegalArgumentException, OpenemsNamedException {
+		this.setOutput(channels.ess1ToBus1Contactor, Operation.OPEN);
+		this.setOutput(channels.ess1ToBus2Contactor, Operation.OPEN);
+		this.setOutput(channels.ess2ToBus1Contactor, Operation.OPEN);
+		this.setOutput(channels.ess2ToBus2Contactor, Operation.OPEN);
+		this.setOutput(channels.ess3ToBus1Contactor, Operation.OPEN);
+		this.setOutput(channels.ess3ToBus2Contactor, Operation.OPEN);
+		this.setOutput(channels.ess4ToBus1Contactor, Operation.OPEN);
+		this.setOutput(channels.ess4ToBus2Contactor, Operation.OPEN);
 	}
 
 	/**

@@ -273,7 +273,6 @@ public class SupplyBus {
 		String result = null;
 		for (String essId : this.switchEssMapping.keySet()) {
 			EssFeneconCommercial40Impl ess = this.parent.componentManager.getComponent(essId);
-//			SystemState systemState = ess.getSystemState();
 			SystemState systemState = ess.channel(ChannelId.SYSTEM_STATE).value().asEnum();
 			Optional<Integer> socOpt = ess.getSoc().value().asOptional();
 			if (socOpt.isPresent()) {

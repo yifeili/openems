@@ -33,12 +33,10 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 	String[] LoadsBus2() default { "io1/InputOutput4", "io1/InputOutput5", "io1/InputOutput6" };
 
 	@AttributeDefinition(name = "Supply-Bus", description = "Collection of the switches for the supplyBus. Each array represents the switches for one supply bus.")
-	String supplyBus1Config() default "[{\"Switches\":[{\"ess\": \"ess1\",\"switchAddress\": \"io2/InputOutput0\"},"
-			+ "{\"ess\": \"ess1\",\"switchAddress\": \"io2/InputOutput1\"},{\"ess\": \"ess2\",\"switchAddress\": \"io2/InputOutput2\"}]}";
+	String supplyBus1Config() default "[{\"ess\": \"ess1\",\"switchAddress\": \"io2/InputOutput0\"},{\"ess\": \"ess2\",\"switchAddress\": \"io2/InputOutput1\"},{\"ess\": \"ess3\",\"switchAddress\": \"io2/InputOutput2\"}]";
 
 	@AttributeDefinition(name = "Supply-Bus", description = "Collection of the switches for the supplyBus. Each array represents the switches for one supply bus.")
-	String supplyBus2Config() default "{\"switches\":[{\"ess\": \"ess1\",\"switchAddress\": \"io2/InputOutput3\"},"
-			+ "{\"ess\": \"ess1\",\"switchAddress\": \"io2/InputOutput4\"},{\"ess\": \"ess2\",\"switchAddress\": \"io2/InputOutput5\"}]}]";
+	String supplyBus2Config() default "[{\"ess\": \"ess1\",\"switchAddress\": \"io2/InputOutput3\"},{\"ess\": \"ess2\",\"switchAddress\": \"io2/InputOutput4\"},{\"ess\": \"ess3\",\"switchAddress\": \"io2/InputOutput5\"}]";
 
 	String webconsole_configurationFactory_nameHint() default "Project Sambia Controller Supply-Bus-Switch New Version [{id}]";
 
