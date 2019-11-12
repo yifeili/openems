@@ -48,21 +48,22 @@ public class OngridHandler {
 		}
 
 		return StateMachine.State.ONGRID;
-	}	
+	}
 
 	private State switchOff() throws OpenemsNamedException {
+		System.out.println("in ongridhandler, in siwtch off method");
 		this.parent.parent.inverterOff();
 		this.parent.parent.digitalOutputAfterInverterOffInOngrid();
-		return null;
+		return State.ERROR_SWITCHOFF;
 	}
 
 	private State doUndefined() throws IllegalArgumentException, OpenemsNamedException {
-		
-		Boolean contactorOk = this.parent.parent.isContactorOkInOngrid();
-		if (!contactorOk) {
+		System.out.println("In ongrid handler do undefined method");
+		Boolean contactorOk = this.parent.parent.isFirstCheckContactorOkInOngrid();
+		if (contactorOk) {
 			this.state = State.RUN_ONGRID;
 		} else {
-			if (this.parent.parent.isRequestContactorFault()) {
+			if (this.parent.parent.isSecondCheckRequestContactorFault()) {
 				this.state = State.GO_TO_OFFGRID;
 			} else {
 				this.state = State.ERROR_SWITCHOFF;
@@ -72,7 +73,7 @@ public class OngridHandler {
 	}
 
 	private State doOngrid() throws OpenemsNamedException {
-
+		System.out.println("In ongrid handler , doongrid method");
 		CurrentState currentState = this.parent.getSinexcelState();
 		// GridMode gridMode = this.parent.parent.getGridMode().getNextValue().asEnum();
 
@@ -97,7 +98,7 @@ public class OngridHandler {
 	public enum State implements OptionsEnum {
 		UNDEFINED(-1, "Undefined"), //
 		RUN_ONGRID(1, "Run on on-grid mode"), //
-		GO_TO_OFFGRID(2, "Go to the off grid"),//
+		GO_TO_OFFGRID(2, "Go to the off grid"), //
 		ERROR_SWITCHOFF(3, "Safety control, switch of the inverter");
 
 		private final int value;

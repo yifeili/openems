@@ -39,7 +39,7 @@ public class OffgridHandler {
 			this.state = this.doUndefined();
 			break;
 
-		case RUN_OFFGRID:
+		case RUN_OFFGRID:			
 			this.state = this.doOffgrid();
 			break;
 
@@ -56,33 +56,68 @@ public class OffgridHandler {
 		return StateMachine.State.OFFGRID;
 	}
 	
-	private State doUndefined() throws IllegalArgumentException, OpenemsNamedException {
-		boolean fault = this.parent.parent.isRequestContactorFault();
-		if (fault) {
-			return State.ERROR_SWITCHOFF;
-		}else {
-			return State.RUN_OFFGRID;
-		}
-	}
 	
 	private State switchOff() throws OpenemsNamedException {
-		this.parent.parent.inverterOff();
-		this.parent.parent.digitalOutputAfterInverterOffInOffgrid();
-		return null;
+		System.out.println("inside off grid handler, in switch off method");
+		boolean contactorOk = this.parent.parent.isContactorOkInOffgrid();
+		if (contactorOk) {
+			System.out.println(" ppppppppppppppppppppppppppp");
+			this.parent.parent.inverterOn();
+			this.state =  State.RUN_OFFGRID;
+			
+		} else {
+			System.out.println(" rrrrrrrrrrrrrrrrrrrrrrrrrrr");
+			this.parent.parent.inverterOff();
+			this.parent.parent.digitalOutputAfterInverterOffInOffgrid();
+			this.state =  State.ERROR_SWITCHOFF;
+		}
+		return state;
 	}
 	
+	private State doUndefined() throws IllegalArgumentException, OpenemsNamedException {
+		System.out.println("inside off grid handler, in doundefined method");		
+		boolean contactorChk = this.parent.parent.isFirstCheckContactorFault();
+		if (contactorChk) {
+			System.out.println("first if");
+			return State.RUN_OFFGRID;
+		}else {
+			System.out.println("second else");
+			return State.ERROR_SWITCHOFF;			
+		}
+	}	
 	
 	private State doOffgrid() throws OpenemsNamedException {
+		System.out.println("inside off grid handler, in dooffgrid method");
 		// set this relais when in off grid mode
 		this.parent.parent.setDigitalOutputInOffgrid();
 		boolean contactorOk = this.parent.parent.isContactorOkInOffgrid();
-		if(!contactorOk) {
+		System.out.println("in doff gridmode the contactor ok is : " + contactorOk);
+		if(contactorOk) {
+			System.out.println("ooooooooooooooooooooooooooooooooooooooooo");
 			//Set the freq
 			parent.parent.setFreq();
-
 			
+			CurrentState currentState = this.parent.getSinexcelState();
+			// GridMode gridMode = this.parent.parent.getGridMode().getNextValue().asEnum();
+
+			switch (currentState) {
+			case UNDEFINED:
+			case SLEEPING:
+			case MPPT:
+			case THROTTLED:
+			case STARTED:
+				this.parent.parent.softStart(true);
+				break;
+			case SHUTTINGDOWN:
+			case FAULT:
+			case STANDBY:
+			case OFF:
+			default:
+				this.parent.parent.softStart(false);
+			}
 			this.state = State.RUN_OFFGRID;
 		}else {
+			System.out.println("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
 			this.state = State.ERROR_SWITCHOFF;
 		}
 		return state;

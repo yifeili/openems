@@ -117,7 +117,8 @@ public class StateMachine {
 		case OFF_GRID:
 			return State.OFFGRID;
 		case UNDEFINED:
-			this.log.info("In handleUndefined(), Grid-Mode is [" + gridMode + "]");
+			System.out.println("In handleUndefined(), Grid-Mode is [" + gridMode + "]");
+			//this.log.info("In handleUndefined(), Grid-Mode is [" + gridMode + "]");
 			return State.UNDEFINED;
 		}
 		return State.UNDEFINED;
