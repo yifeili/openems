@@ -262,63 +262,21 @@ public class SingleRack extends AbstractOpenemsModbusComponent
 		IntegerReadChannel dischargeCurrentOptChannel = this.channel(Battery.ChannelId.DISCHARGE_MAX_CURRENT);
 		int dischargeCurrentOpt = dischargeCurrentOptChannel.getNextValue().get();
 
-		if ((chargeCurrentOpt >= 70) && (dischargeCurrentOpt >= 70)) {
+		if (chargeCurrentOpt >= 70) {
 			this.reduceChargeMaxCurrent();
+		}
+
+		if (dischargeCurrentOpt >= 70) {
 			this.reduceDischargeMaxCurrent();
-		} else if ((chargeCurrentOpt <= 70) && (dischargeCurrentOpt >= 70)) {
-			this.setChargeMaxCurrent();
-			this.reduceDischargeMaxCurrent();
-		} else if ((chargeCurrentOpt >= 70) && (dischargeCurrentOpt <= 70)) {
-			this.reduceChargeMaxCurrent();
-			this.setChargeMaxCurrent();
-		} else if ((chargeCurrentOpt <= 70) && (dischargeCurrentOpt <= 70)) {
-			this.setChargeMaxCurrent();
-			this.setDischargeMaxCurrent();
 		}
-	}
-
-	private void setChargeMaxCurrent() {
-		// CHARGE_MAX_CURRENT 0x2160
-		@SuppressWarnings("unchecked")
-		Optional<Integer> maxChargeCurrentOpt = (Optional<Integer>) this
-				.channel(SingleRackChannelId.SYSTEM_MAX_CHARGE_CURRENT).value().asOptional();
-		if (maxChargeCurrentOpt.isPresent()) {
-			int max_current = (int) (maxChargeCurrentOpt.get() * 0.001);
-			this.channel(Battery.ChannelId.CHARGE_MAX_CURRENT).setNextValue(max_current);
-		}
-	}
-
-	private void setDischargeMaxCurrent() {
-		// DISCHARGE_MAX_CURRENT 0x2161
-		@SuppressWarnings("unchecked")
-		Optional<Integer> maxDischargeCurrentOpt = (Optional<Integer>) this
-				.channel(SingleRackChannelId.SYSTEM_MAX_DISCHARGE_CURRENT).value().asOptional();
-		if (maxDischargeCurrentOpt.isPresent()) {
-			int max_current = (int) (maxDischargeCurrentOpt.get() * 0.001);
-			this.channel(Battery.ChannelId.DISCHARGE_MAX_CURRENT).setNextValue(max_current);
-		}
-
 	}
 
 	private void reduceChargeMaxCurrent() {
-		// CHARGE_MAX_CURRENT 0x2160
-		@SuppressWarnings("unchecked")
-		Optional<Integer> maxChargeCurrentOpt = (Optional<Integer>) this
-				.channel(SingleRackChannelId.SYSTEM_MAX_CHARGE_CURRENT).value().asOptional();
-		if (maxChargeCurrentOpt.isPresent()) {
-			this.channel(Battery.ChannelId.CHARGE_MAX_CURRENT).setNextValue(70);
-		}
+		this.channel(Battery.ChannelId.CHARGE_MAX_CURRENT).setNextValue(70);
 	}
 
 	private void reduceDischargeMaxCurrent() {
-		// DISCHARGE_MAX_CURRENT 0x2161
-		@SuppressWarnings("unchecked")
-		Optional<Integer> maxDischargeCurrentOpt = (Optional<Integer>) this
-				.channel(SingleRackChannelId.SYSTEM_MAX_DISCHARGE_CURRENT).value().asOptional();
-		if (maxDischargeCurrentOpt.isPresent()) {
-			this.channel(Battery.ChannelId.DISCHARGE_MAX_CURRENT).setNextValue(70);
-		}
-
+		this.channel(Battery.ChannelId.DISCHARGE_MAX_CURRENT).setNextValue(70);
 	}
 
 	private boolean isPoleTemperatureTooHot() {
@@ -476,6 +434,8 @@ public class SingleRack extends AbstractOpenemsModbusComponent
 		if (maxChargeCurrentOpt.isPresent()) {
 			int max_current = (int) (maxChargeCurrentOpt.get() * 0.001);
 			this.channel(Battery.ChannelId.CHARGE_MAX_CURRENT).setNextValue(max_current);
+		} else {
+			this.channel(Battery.ChannelId.CHARGE_MAX_CURRENT).setNextValue(0);
 		}
 
 		// DISCHARGE_MAX_CURRENT 0x2161
@@ -485,36 +445,13 @@ public class SingleRack extends AbstractOpenemsModbusComponent
 		if (maxDischargeCurrentOpt.isPresent()) {
 			int max_current = (int) (maxDischargeCurrentOpt.get() * 0.001);
 			this.channel(Battery.ChannelId.DISCHARGE_MAX_CURRENT).setNextValue(max_current);
+		} else {
+			this.channel(Battery.ChannelId.DISCHARGE_MAX_CURRENT).setNextValue(0);
 		}
-		
+
 		if (isPoleTemperatureTooHot()) {
 			limitMaxCurrent();
 		}
-				
-		
-		
-		
-//		if (isPoleTemperatureTooHot()) {
-//			// CHARGE_MAX_CURRENT 0x2160
-//			@SuppressWarnings("unchecked")
-//			Optional<Integer> maxChargeCurrentOpt = (Optional<Integer>) this
-//					.channel(SingleRackChannelId.SYSTEM_MAX_CHARGE_CURRENT).value().asOptional();
-//			if (maxChargeCurrentOpt.isPresent()) {
-//				int max_current = (int) (maxChargeCurrentOpt.get() * 0.001);
-//				this.channel(Battery.ChannelId.CHARGE_MAX_CURRENT).setNextValue(max_current);
-//			}
-//
-//			// DISCHARGE_MAX_CURRENT 0x2161
-//			@SuppressWarnings("unchecked")
-//			Optional<Integer> maxDischargeCurrentOpt = (Optional<Integer>) this
-//					.channel(SingleRackChannelId.SYSTEM_MAX_DISCHARGE_CURRENT).value().asOptional();
-//			if (maxDischargeCurrentOpt.isPresent()) {
-//				int max_current = (int) (maxDischargeCurrentOpt.get() * 0.001);
-//				this.channel(Battery.ChannelId.DISCHARGE_MAX_CURRENT).setNextValue(max_current);
-//			}
-//		} else {
-//			limitMaxCurrent();
-//		}
 	}
 
 	@Override

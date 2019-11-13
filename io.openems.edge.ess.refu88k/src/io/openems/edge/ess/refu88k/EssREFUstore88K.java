@@ -541,12 +541,19 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 
 	@Override
 	public void applyPower(int activePower, int reactivePower) throws OpenemsNamedException {
-
+		
+		IntegerWriteChannel maxBatAChaChannel = this.channel(REFUStore88KChannelId.MAX_BAT_A_CHA);
+		maxBatAChaChannel.setNextWriteValue(battery.getChargeMaxCurrent().value().orElse(0));
+		
+		IntegerWriteChannel maxBatADischaChannel = this.channel(REFUStore88KChannelId.MAX_BAT_A_DISCHA);
+		maxBatADischaChannel.setNextWriteValue(battery.getDischargeMaxCurrent().value().orElse(0));
+		
 		if (!this.isPowerAllowed) {
 			this.log.debug("Power is not allowed!");
-			return;
+			activePower = 0;
+			reactivePower = 0;
 		}
-
+		
 		/*
 		 * Reads the maximum allowed Power from Inverter!
 		 * 88000 VA or 50000 VA
@@ -562,14 +569,8 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 
 		IntegerWriteChannel varMaxLimPctChannel = this.channel(REFUStore88KChannelId.VAR_W_MAX_PCT);
 		EnumWriteChannel varMaxLim_EnaChannel = this.channel(REFUStore88KChannelId.VAR_PCT_ENA);
-
-		this.checkIfPowerIsRequired(activePower, reactivePower);
 		
-		IntegerWriteChannel maxBatAChaChannel = this.channel(REFUStore88KChannelId.MAX_BAT_A_CHA);
-		maxBatAChaChannel.setNextWriteValue(battery.getChargeMaxCurrent().value().orElse(0));
-		
-		IntegerWriteChannel maxBatADischaChannel = this.channel(REFUStore88KChannelId.MAX_BAT_A_DISCHA);
-		maxBatADischaChannel.setNextWriteValue(battery.getDischargeMaxCurrent().value().orElse(0));
+		this.checkIfPowerIsRequired(activePower, reactivePower);	
 		
 		/*
 		 * Set Active Power as a percentage of WMAX
