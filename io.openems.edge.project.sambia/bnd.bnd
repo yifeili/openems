@@ -18,6 +18,7 @@ Private-Package: \
 	io.openems.edge.controller.api;version=latest,\
 	io.openems.edge.meter.api;version=latest,\
 	io.openems.edge.bridge.modbus;version=latest,\
+	io.openems.edge.io.api;version=latest,\
 	com.google.guava,\
 	com.google.gson,\
 	io.openems.edge.ess.fenecon.commercial40;version=latest

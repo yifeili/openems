@@ -1,5 +1,7 @@
 package io.openems.edge.project.sambia.riedmannplc;
 
+import java.util.Optional;
+
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
@@ -24,12 +26,16 @@ import io.openems.edge.bridge.modbus.api.task.FC3ReadRegistersTask;
 import io.openems.edge.common.channel.Doc;
 import io.openems.edge.common.channel.IntegerDoc;
 import io.openems.edge.common.channel.IntegerWriteChannel;
+import io.openems.edge.common.channel.WriteChannel;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.taskmanager.Priority;
+import io.openems.edge.io.api.DigitalIntegerOutput;
 
 @Designate(ocd = Config.class, factory = true)
 @Component(name = "Project.Sambia.RiedmannPLC", immediate = true, configurationPolicy = ConfigurationPolicy.REQUIRE)
-public class RiedmannPlc extends AbstractOpenemsModbusComponent implements OpenemsComponent {
+public class RiedmannPlc extends AbstractOpenemsModbusComponent implements DigitalIntegerOutput, OpenemsComponent {
+
+	private final IntegerWriteChannel[] digitalOutputChannels;
 
 	@Reference
 	protected ConfigurationAdmin cm;
@@ -39,6 +45,19 @@ public class RiedmannPlc extends AbstractOpenemsModbusComponent implements Opene
 				OpenemsComponent.ChannelId.values(), //
 				ChannelId.values() //
 		);
+		this.digitalOutputChannels = new IntegerWriteChannel[] { //
+				this.channel(ChannelId.PIVOT_ON), //
+				this.channel(ChannelId.OFFICE_ON), //
+				this.channel(ChannelId.TRAINEE_CENTER_ON), //
+				this.channel(ChannelId.BOREHOLE1_ON), //
+				this.channel(ChannelId.BOREHOLE2_ON), //
+				this.channel(ChannelId.BOREHOLE3_ON), //
+				this.channel(ChannelId.CLIMA1_ON), //
+				this.channel(ChannelId.CLIMA2_ON), //
+				this.channel(ChannelId.WATERLEVEL_BOREHOLE1_ON), //
+				this.channel(ChannelId.WATERLEVEL_BOREHOLE2_ON), //
+				this.channel(ChannelId.WATERLEVEL_BOREHOLE3_ON), //
+		};
 	}
 
 	@Reference(policy = ReferencePolicy.STATIC, policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
@@ -55,6 +74,11 @@ public class RiedmannPlc extends AbstractOpenemsModbusComponent implements Opene
 	@Deactivate
 	protected void deactivate() {
 		super.deactivate();
+	}
+
+	@Override
+	public IntegerWriteChannel[] digitalOutputChannels() {
+		return this.digitalOutputChannels;
 	}
 
 	public enum ChannelId implements io.openems.edge.common.channel.ChannelId {
@@ -206,5 +230,31 @@ public class RiedmannPlc extends AbstractOpenemsModbusComponent implements Opene
 						m(ChannelId.WATERLEVEL_BOREHOLE3_ON, new SignedWordElement(74)), //
 						m(ChannelId.WATERLEVEL_BOREHOLE3_OFF, new SignedWordElement(75)) //
 				));
+	}
+
+	@Override
+	public String debugLog() {
+		StringBuilder b = new StringBuilder();
+		int i = 1;
+		for (WriteChannel<Integer> channel : this.digitalOutputChannels) {
+			String valueText = "";
+			Optional<Integer> valueOpt = channel.value().asOptional();
+			if (valueOpt.isPresent()) {
+				if (valueOpt.get() == 1) {
+					valueText = "x";
+				} else if (valueOpt.get() == 0) {
+					valueText = "-";
+				}
+			} else {
+				valueText = "?";
+			}
+			b.append(i + valueText);
+
+			// add space for all but the last
+			if (++i <= this.digitalOutputChannels.length) {
+				b.append(" ");
+			}
+		}
+		return b.toString();
 	}
 }

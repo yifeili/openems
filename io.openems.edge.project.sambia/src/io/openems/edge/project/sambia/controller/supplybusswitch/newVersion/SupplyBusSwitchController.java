@@ -1,5 +1,7 @@
 package io.openems.edge.project.sambia.controller.supplybusswitch.newVersion;
 
+import java.time.Clock;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -29,6 +31,7 @@ import io.openems.common.exceptions.OpenemsException;
 import io.openems.common.types.ChannelAddress;
 import io.openems.common.utils.JsonUtils;
 import io.openems.edge.common.channel.BooleanReadChannel;
+import io.openems.edge.common.channel.BooleanWriteChannel;
 import io.openems.edge.common.channel.Doc;
 import io.openems.edge.common.channel.IntegerWriteChannel;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
@@ -40,6 +43,7 @@ import io.openems.edge.ess.api.ManagedSymmetricEss;
 import io.openems.edge.ess.api.SymmetricEss;
 import io.openems.edge.ess.fenecon.commercial40.EssFeneconCommercial40Impl;
 import io.openems.edge.ess.fenecon.commercial40.SystemState;
+import io.openems.edge.project.sambia.riedmannplc.RiedmannPlc;
 
 @Designate(ocd = Config.class, factory = true)
 @Component(name = "Project.Sambia.Controller.SupplyBusSwitch.NewVersion", immediate = true, configurationPolicy = ConfigurationPolicy.REQUIRE)
@@ -48,18 +52,12 @@ public class SupplyBusSwitchController extends AbstractOpenemsComponent implemen
 	private final Logger log = LoggerFactory.getLogger(this.getClass());
 	private Config config;
 
-//	private Map<String, ChannelAddress> bus1SwitchEssMapping; // maps Ess-ID to IO-ChannelAddress for Bus1
-//	private Map<String, ChannelAddress> bus2SwitchEssMapping; // maps Ess-ID to IO-ChannelAddress for Bus2
-//	private String primaryEssId; // Component-ID of first ESS
-//	private long switchDelay;
-//	private ChannelAddress supplybus1OnIndication;
-//	private ChannelAddress supplybus2OnIndication;
-//	private List<ChannelAddress> loads;
-//	private long timeLoadSwitched = 0L;
-//	private long lastTimeDisconnected;
+	private final Clock clock;
+	private LocalDateTime lastSwitchSet = LocalDateTime.MIN;
+	private EssAndBusState state = EssAndBusState.UNDEFINED;
+	private OneBatteryState batteryState = OneBatteryState.UNDEFINED;
 
-//	private EssAndBusState state = EssAndBusState.UNDEFINED;
-//	private final static int MIN_SOC = 5;
+	private static final int WAIT_FOR_RELAY_SWITCH_SECONDS = 10;
 
 	public enum ChannelId implements io.openems.edge.common.channel.ChannelId {
 		;
@@ -76,11 +74,16 @@ public class SupplyBusSwitchController extends AbstractOpenemsComponent implemen
 	}
 
 	public SupplyBusSwitchController() {
+		this(Clock.systemDefaultZone());
+	}
+
+	protected SupplyBusSwitchController(Clock clock) {
 		super(//
 				OpenemsComponent.ChannelId.values(), //
 				Controller.ChannelId.values(), //
 				ChannelId.values() //
 		);
+		this.clock = clock;
 	}
 
 	@Reference
@@ -106,6 +109,8 @@ public class SupplyBusSwitchController extends AbstractOpenemsComponent implemen
 			/*
 			 * Grid-Mode is undefined -> wait till we have some clear information
 			 */
+			// only connect if soc is larger than minSoc + 5 or in On-grid regardless
+			this.handleOffGrid(channels);
 			break;
 		case ON_GRID:
 			/*
@@ -116,64 +121,181 @@ public class SupplyBusSwitchController extends AbstractOpenemsComponent implemen
 		}
 	}
 
-	private void handleOnGrid(Channels channels) throws IllegalArgumentException, OpenemsNamedException {
-		switch (this.getTheLargestSocEssId(channels)) {
+	private void handleOffGrid(Channels channels) throws IllegalArgumentException, OpenemsNamedException {
+		switch (this.state) {
 		case ESS1_BUS1_ESS2_BUS2:
-			if (this.switchStates(channels) != EssAndBusState.ESS1_BUS1_ESS2_BUS2) {
+			OneBatteryState ess1State = this.getOneBatteryState("ess1");
+			OneBatteryState ess2State = this.getOneBatteryState("ess2");
+			if (this.switchStates(channels) != EssAndBusState.ESS1_BUS1_ESS2_BUS2
+					&& (ess1State != OneBatteryState.EMPTY || ess1State != OneBatteryState.LOW)
+					&& (ess2State != OneBatteryState.EMPTY || ess2State != OneBatteryState.LOW)) {
 				this.disconnectAllSwitches(channels);
 				this.setOutput(channels.ess1ToBus1Contactor, Operation.CLOSE);
 				this.setOutput(channels.ess2ToBus2Contactor, Operation.CLOSE);
 			}
+			this.setSupplybusOnIndication(Operation.CLOSE);
+			this.connectLoads(channels);
+			this.state = EssAndBusState.UNDEFINED;
 			break;
 		case ESS1_BUS1_ESS3_BUS2:
-			this.setOutput(channels.ess1ToBus1Contactor, Operation.CLOSE);
-			this.setOutput(channels.ess3ToBus2Contactor, Operation.CLOSE);
 			break;
 		case ESS1_BUS1_ESS4_BUS2:
-			this.setOutput(channels.ess1ToBus1Contactor, Operation.CLOSE);
-			this.setOutput(channels.ess4ToBus2Contactor, Operation.CLOSE);
 			break;
 		case ESS2_BUS1_ESS1_BUS2:
-			this.setOutput(channels.ess2ToBus1Contactor, Operation.CLOSE);
-			this.setOutput(channels.ess1ToBus2Contactor, Operation.CLOSE);
 			break;
 		case ESS2_BUS1_ESS3_BUS2:
-			this.setOutput(channels.ess2ToBus1Contactor, Operation.CLOSE);
-			this.setOutput(channels.ess3ToBus2Contactor, Operation.CLOSE);
 			break;
 		case ESS2_BUS1_ESS4_BUS2:
-			this.setOutput(channels.ess2ToBus1Contactor, Operation.CLOSE);
-			this.setOutput(channels.ess4ToBus2Contactor, Operation.CLOSE);
 			break;
 		case ESS3_BUS1_ESS1_BUS2:
-			this.setOutput(channels.ess3ToBus1Contactor, Operation.CLOSE);
-			this.setOutput(channels.ess2ToBus2Contactor, Operation.CLOSE);
 			break;
 		case ESS3_BUS1_ESS2_BUS2:
-			this.setOutput(channels.ess3ToBus1Contactor, Operation.CLOSE);
-			this.setOutput(channels.ess2ToBus2Contactor, Operation.CLOSE);
 			break;
 		case ESS3_BUS1_ESS4_BUS2:
-			this.setOutput(channels.ess3ToBus1Contactor, Operation.CLOSE);
-			this.setOutput(channels.ess4ToBus2Contactor, Operation.CLOSE);
 			break;
 		case ESS4_BUS1_ESS1_BUS2:
-			this.setOutput(channels.ess4ToBus1Contactor, Operation.CLOSE);
-			this.setOutput(channels.ess1ToBus2Contactor, Operation.CLOSE);
 			break;
 		case ESS4_BUS1_ESS2_BUS2:
-			this.setOutput(channels.ess4ToBus1Contactor, Operation.CLOSE);
-			this.setOutput(channels.ess2ToBus2Contactor, Operation.CLOSE);
 			break;
 		case ESS4_BUS1_ESS3_BUS2:
-			this.setOutput(channels.ess3ToBus1Contactor, Operation.CLOSE);
-			this.setOutput(channels.ess3ToBus2Contactor, Operation.CLOSE);
 			break;
 		case UNDEFINED:
-			// Get highest soc state inverters
-			// Get System State
-			// only connect if soc is larger than minSoc + 5 or in On-grid regardless
-			// connect all loads after ess connected and started
+			this.state = this.getSocBasedEssAndBusState(channels);
+			break;
+		}
+	}
+
+	private void handleOnGrid(Channels channels) throws IllegalArgumentException, OpenemsNamedException {
+		System.out.println(this.switchStates(channels).equals(EssAndBusState.ESS1_BUS1_ESS2_BUS2));
+		switch (this.state) {
+		case ESS1_BUS1_ESS2_BUS2:
+			if (!this.switchStates(channels).equals(EssAndBusState.ESS1_BUS1_ESS2_BUS2)) {
+				this.disconnectAllSwitches(channels);
+//				this.setOutput(channels.ess1ToBus1Contactor, Operation.OPEN);
+//				this.setOutput(channels.ess1ToBus2Contactor, Operation.OPEN);
+//				this.setOutput(channels.ess2ToBus1Contactor, Operation.OPEN);
+//				this.setOutput(channels.ess2ToBus2Contactor, Operation.OPEN);
+
+				this.setOutput(channels.ess1ToBus1Contactor, Operation.CLOSE);
+				this.setOutput(channels.ess2ToBus2Contactor, Operation.CLOSE);
+			} else {
+				this.setSupplybusOnIndication(Operation.CLOSE);
+				this.connectLoads(channels);
+			}
+			this.state = EssAndBusState.UNDEFINED;
+			break;
+		case ESS1_BUS1_ESS3_BUS2:
+			if (this.switchStates(channels) != EssAndBusState.ESS1_BUS1_ESS3_BUS2) {
+				this.disconnectAllSwitches(channels);
+				this.setOutput(channels.ess1ToBus1Contactor, Operation.CLOSE);
+				this.setOutput(channels.ess3ToBus2Contactor, Operation.CLOSE);
+			}
+			this.setSupplybusOnIndication(Operation.CLOSE);
+			this.connectLoads(channels);
+			this.state = EssAndBusState.UNDEFINED;
+			break;
+		case ESS1_BUS1_ESS4_BUS2:
+			if (this.switchStates(channels) != EssAndBusState.ESS1_BUS1_ESS4_BUS2) {
+				this.disconnectAllSwitches(channels);
+				this.setOutput(channels.ess1ToBus1Contactor, Operation.CLOSE);
+				this.setOutput(channels.ess4ToBus2Contactor, Operation.CLOSE);
+			}
+			this.setSupplybusOnIndication(Operation.CLOSE);
+			this.connectLoads(channels);
+			this.state = EssAndBusState.UNDEFINED;
+			break;
+		case ESS2_BUS1_ESS1_BUS2:
+			if (this.switchStates(channels) != EssAndBusState.ESS2_BUS1_ESS1_BUS2) {
+				this.disconnectAllSwitches(channels);
+				this.setOutput(channels.ess2ToBus1Contactor, Operation.CLOSE);
+				this.setOutput(channels.ess1ToBus2Contactor, Operation.CLOSE);
+			}
+			this.setSupplybusOnIndication(Operation.CLOSE);
+			this.connectLoads(channels);
+			this.state = EssAndBusState.UNDEFINED;
+			break;
+		case ESS2_BUS1_ESS3_BUS2:
+			if (this.switchStates(channels) != EssAndBusState.ESS2_BUS1_ESS3_BUS2) {
+				this.disconnectAllSwitches(channels);
+				this.setOutput(channels.ess2ToBus1Contactor, Operation.CLOSE);
+				this.setOutput(channels.ess3ToBus2Contactor, Operation.CLOSE);
+			}
+			this.setSupplybusOnIndication(Operation.CLOSE);
+			this.connectLoads(channels);
+			this.state = EssAndBusState.UNDEFINED;
+			break;
+		case ESS2_BUS1_ESS4_BUS2:
+			if (this.switchStates(channels) != EssAndBusState.ESS2_BUS1_ESS4_BUS2) {
+				this.disconnectAllSwitches(channels);
+				this.setOutput(channels.ess2ToBus1Contactor, Operation.CLOSE);
+				this.setOutput(channels.ess4ToBus2Contactor, Operation.CLOSE);
+			}
+			this.setSupplybusOnIndication(Operation.CLOSE);
+			this.connectLoads(channels);
+			this.state = EssAndBusState.UNDEFINED;
+			break;
+		case ESS3_BUS1_ESS1_BUS2:
+			if (this.switchStates(channels) != EssAndBusState.ESS3_BUS1_ESS1_BUS2) {
+				this.disconnectAllSwitches(channels);
+				this.setOutput(channels.ess3ToBus1Contactor, Operation.CLOSE);
+				this.setOutput(channels.ess2ToBus2Contactor, Operation.CLOSE);
+			}
+			this.setSupplybusOnIndication(Operation.CLOSE);
+			this.connectLoads(channels);
+			this.state = EssAndBusState.UNDEFINED;
+			break;
+		case ESS3_BUS1_ESS2_BUS2:
+			if (this.switchStates(channels) != EssAndBusState.ESS3_BUS1_ESS2_BUS2) {
+				this.disconnectAllSwitches(channels);
+				this.setOutput(channels.ess3ToBus1Contactor, Operation.CLOSE);
+				this.setOutput(channels.ess2ToBus2Contactor, Operation.CLOSE);
+			}
+			this.setSupplybusOnIndication(Operation.CLOSE);
+			this.connectLoads(channels);
+			this.state = EssAndBusState.UNDEFINED;
+			break;
+		case ESS3_BUS1_ESS4_BUS2:
+			if (this.switchStates(channels) != EssAndBusState.ESS3_BUS1_ESS4_BUS2) {
+				this.disconnectAllSwitches(channels);
+				this.setOutput(channels.ess3ToBus1Contactor, Operation.CLOSE);
+				this.setOutput(channels.ess4ToBus2Contactor, Operation.CLOSE);
+			}
+			this.setSupplybusOnIndication(Operation.CLOSE);
+			this.connectLoads(channels);
+			this.state = EssAndBusState.UNDEFINED;
+			break;
+		case ESS4_BUS1_ESS1_BUS2:
+			if (this.switchStates(channels) != EssAndBusState.ESS4_BUS1_ESS1_BUS2) {
+				this.disconnectAllSwitches(channels);
+				this.setOutput(channels.ess4ToBus1Contactor, Operation.CLOSE);
+				this.setOutput(channels.ess1ToBus2Contactor, Operation.CLOSE);
+			}
+			this.setSupplybusOnIndication(Operation.CLOSE);
+			this.connectLoads(channels);
+			this.state = EssAndBusState.UNDEFINED;
+			break;
+		case ESS4_BUS1_ESS2_BUS2:
+			if (this.switchStates(channels) != EssAndBusState.ESS4_BUS1_ESS2_BUS2) {
+				this.disconnectAllSwitches(channels);
+				this.setOutput(channels.ess4ToBus1Contactor, Operation.CLOSE);
+				this.setOutput(channels.ess2ToBus2Contactor, Operation.CLOSE);
+			}
+			this.setSupplybusOnIndication(Operation.CLOSE);
+			this.connectLoads(channels);
+			this.state = EssAndBusState.UNDEFINED;
+			break;
+		case ESS4_BUS1_ESS3_BUS2:
+			if (this.switchStates(channels) != EssAndBusState.ESS4_BUS1_ESS3_BUS2) {
+				this.disconnectAllSwitches(channels);
+				this.setOutput(channels.ess3ToBus1Contactor, Operation.CLOSE);
+				this.setOutput(channels.ess3ToBus2Contactor, Operation.CLOSE);
+			}
+			this.setSupplybusOnIndication(Operation.CLOSE);
+			this.connectLoads(channels);
+			this.state = EssAndBusState.UNDEFINED;
+			break;
+		case UNDEFINED:
+			this.state = this.getSocBasedEssAndBusState(channels);
 			break;
 		}
 	}
@@ -184,10 +306,10 @@ public class SupplyBusSwitchController extends AbstractOpenemsComponent implemen
 	 * @return
 	 * @throws OpenemsNamedException
 	 */
-	public EssAndBusState getTheLargestSocEssId(Channels channel) throws OpenemsNamedException {
+	public EssAndBusState getSocBasedEssAndBusState(Channels channel) throws OpenemsNamedException {
 		ManagedSymmetricEss ess;
-		Optional<Integer> soc;
 		Map<String, Integer> essSoc = new HashMap<String, Integer>();
+		Optional<Integer> soc;
 		for (String essId : channel.essIds) {
 			ess = this.componentManager.getComponent(essId);
 			soc = ess.getSoc().value().asOptional();
@@ -240,54 +362,100 @@ public class SupplyBusSwitchController extends AbstractOpenemsComponent implemen
 		return EssAndBusState.UNDEFINED;
 	}
 
-	private void disconnectAllSwitches(Channels channels) throws IllegalArgumentException, OpenemsNamedException {
-		this.setOutput(channels.ess1ToBus1Contactor, Operation.OPEN);
-		this.setOutput(channels.ess1ToBus2Contactor, Operation.OPEN);
-		this.setOutput(channels.ess2ToBus1Contactor, Operation.OPEN);
-		this.setOutput(channels.ess2ToBus2Contactor, Operation.OPEN);
-		this.setOutput(channels.ess3ToBus1Contactor, Operation.OPEN);
-		this.setOutput(channels.ess3ToBus2Contactor, Operation.OPEN);
-		this.setOutput(channels.ess4ToBus1Contactor, Operation.OPEN);
-		this.setOutput(channels.ess4ToBus2Contactor, Operation.OPEN);
+	private void disconnectAllSwitches(Channels channel) throws IllegalArgumentException, OpenemsNamedException {
+//		if (channel.ess1ToBus1Contactor != null && this.isEssToBusContactorClosed(channel.ess1ToBus1Contactor)) {
+		this.setOutput(channel.ess1ToBus1Contactor, Operation.OPEN);
+//		}
+//		if (channel.ess1ToBus2Contactor != null && this.isEssToBusContactorClosed(channel.ess1ToBus2Contactor)) {
+		this.setOutput(channel.ess1ToBus2Contactor, Operation.OPEN);
+//		}
+//		if (channel.ess2ToBus1Contactor != null && this.isEssToBusContactorClosed(channel.ess2ToBus1Contactor)) {
+		this.setOutput(channel.ess2ToBus1Contactor, Operation.OPEN);
+//		}
+//		if (channel.ess2ToBus2Contactor != null && this.isEssToBusContactorClosed(channel.ess2ToBus2Contactor)) {
+		this.setOutput(channel.ess2ToBus2Contactor, Operation.OPEN);
+//		}
+//		if (channel.ess3ToBus1Contactor != null && this.isEssToBusContactorClosed(channel.ess3ToBus1Contactor)) {
+//			this.setOutput(channel.ess3ToBus1Contactor, Operation.OPEN);
+//		}
+//		if (channel.ess3ToBus2Contactor != null && this.isEssToBusContactorClosed(channel.ess3ToBus2Contactor)) {
+//			this.setOutput(channel.ess3ToBus2Contactor, Operation.OPEN);
+//		}
+//		if (channel.ess4ToBus1Contactor != null && this.isEssToBusContactorClosed(channel.ess4ToBus1Contactor)) {
+//			this.setOutput(channel.ess4ToBus1Contactor, Operation.OPEN);
+//		}
+//		if (channel.ess4ToBus2Contactor != null && this.isEssToBusContactorClosed(channel.ess4ToBus2Contactor)) {
+//			this.setOutput(channel.ess4ToBus2Contactor, Operation.OPEN);
+//		}
 	}
 
 	/**
 	 * Disconnect all loads.
 	 * 
-	 * @return true if all loads are disconnected
 	 * @throws OpenemsNamedException
 	 */
-	private boolean disconnectLoads() throws OpenemsNamedException {
-//		if (this.timeLoadSwitched + this.switchDelay <= System.currentTimeMillis()) {
-//			for (ChannelAddress load : this.loads) {
-//				if (this.setOutput(load, 0)) {
-//					this.timeLoadSwitched = System.currentTimeMillis();
-//					// FIXME return false;
-//				}
-//			}
-//			return true;
-//		}
-		return false;
+	private void disconnectLoads() throws OpenemsNamedException {
+		RiedmannPlc plc = this.componentManager.getComponent(this.config.plc_id());
+		this.setPlcOutput(plc, RiedmannPlc.ChannelId.PIVOT_ON, 0);
+		this.setPlcOutput(plc, RiedmannPlc.ChannelId.OFFICE_ON, 0);
+		this.setPlcOutput(plc, RiedmannPlc.ChannelId.TRAINEE_CENTER_ON, 0);
+		this.setPlcOutput(plc, RiedmannPlc.ChannelId.BOREHOLE1_ON, 0);
+		this.setPlcOutput(plc, RiedmannPlc.ChannelId.BOREHOLE2_ON, 0);
+		this.setPlcOutput(plc, RiedmannPlc.ChannelId.BOREHOLE3_ON, 0);
+		this.setPlcOutput(plc, RiedmannPlc.ChannelId.CLIMA1_ON, 0);
+		this.setPlcOutput(plc, RiedmannPlc.ChannelId.CLIMA2_ON, 0);
 	}
 
 	/**
 	 * Connect all loads.
 	 * 
-	 * @return true if all loads are connected
 	 * @throws OpenemsNamedException
 	 * @throws IllegalArgumentException
 	 */
-	private boolean connectLoads() throws IllegalArgumentException, OpenemsNamedException {
-//		if (this.timeLoadSwitched + this.switchDelay <= System.currentTimeMillis()) {
-//			for (ChannelAddress load : this.loads) {
-//				if (this.setOutput(load, Operation.CLOSE)) {
-//					this.timeLoadSwitched = System.currentTimeMillis();
-//					// FIXME return false;
-//				}
-//			}
-//			return true;
-//		}
-		return false;
+	private void connectLoads(Channels channel) throws IllegalArgumentException, OpenemsNamedException {
+		RiedmannPlc plc = this.componentManager.getComponent(this.config.plc_id());
+		this.setPlcOutput(plc, RiedmannPlc.ChannelId.PIVOT_ON, 1);
+		this.setPlcOutput(plc, RiedmannPlc.ChannelId.OFFICE_ON, 1);
+		this.setPlcOutput(plc, RiedmannPlc.ChannelId.TRAINEE_CENTER_ON, 1);
+		this.setPlcOutput(plc, RiedmannPlc.ChannelId.BOREHOLE1_ON, 1);
+		this.setPlcOutput(plc, RiedmannPlc.ChannelId.BOREHOLE2_ON, 1);
+		this.setPlcOutput(plc, RiedmannPlc.ChannelId.BOREHOLE3_ON, 1);
+		this.setPlcOutput(plc, RiedmannPlc.ChannelId.CLIMA1_ON, 1);
+		this.setPlcOutput(plc, RiedmannPlc.ChannelId.CLIMA2_ON, 1);
+		this.setPlcOutput(plc, RiedmannPlc.ChannelId.WATERLEVEL_BOREHOLE1_ON, 1);
+		this.setPlcOutput(plc, RiedmannPlc.ChannelId.WATERLEVEL_BOREHOLE2_ON, 1);
+		this.setPlcOutput(plc, RiedmannPlc.ChannelId.WATERLEVEL_BOREHOLE3_ON, 1);
+
+//		// DEBUG CHANNELS
+//		plc.channel(RiedmannPlc.ChannelId.DEBUG_PIVOT_ON).setNextValue(1);
+//		plc.channel(RiedmannPlc.ChannelId.DEBUG_OFFICE_ON).setNextValue(1);
+//		plc.channel(RiedmannPlc.ChannelId.DEBUG_TRAINEE_CENTER_ON).setNextValue(1);
+//		plc.channel(RiedmannPlc.ChannelId.DEBUG_BOREHOLE1_ON).setNextValue(1);
+//		plc.channel(RiedmannPlc.ChannelId.DEBUG_BOREHOLE2_ON).setNextValue(1);
+//		plc.channel(RiedmannPlc.ChannelId.DEBUG_BOREHOLE3_ON).setNextValue(1);
+//		plc.channel(RiedmannPlc.ChannelId.DEBUG_CLIMA1_ON).setNextValue(1);
+//		plc.channel(RiedmannPlc.ChannelId.DEBUG_CLIMA2_ON).setNextValue(1);
+//		plc.channel(RiedmannPlc.ChannelId.DEBUG_WATERLEVEL_BOREHOLE1_ON).setNextValue(1);
+//		plc.channel(RiedmannPlc.ChannelId.DEBUG_WATERLEVEL_BOREHOLE2_ON).setNextValue(1);
+//		plc.channel(RiedmannPlc.ChannelId.DEBUG_WATERLEVEL_BOREHOLE3_ON).setNextValue(1);
+
+	}
+
+	/**
+	 * Helper function to switch an output if it was not switched before.
+	 */
+	private void setPlcOutput(RiedmannPlc plc, RiedmannPlc.ChannelId channelId, int value)
+			throws IllegalArgumentException, OpenemsNamedException {
+		try {
+			IntegerWriteChannel outputChannel = plc.channel(channelId);
+			Optional<Integer> currentValueOpt = outputChannel.value().asOptional();
+			if (!currentValueOpt.isPresent() || currentValueOpt.get() != value) {
+				this.logInfo(this.log, "Set output [" + outputChannel.address() + "] value [" + value + "].");
+				outputChannel.setNextWriteValue(value);
+			}
+		} catch (OpenemsException e) {
+			this.logError(this.log, "Unable to set output: [" + channelId.id() + "] " + e.getMessage());
+		}
 	}
 
 	/**
@@ -297,9 +465,26 @@ public class SupplyBusSwitchController extends AbstractOpenemsComponent implemen
 	 * @throws IllegalArgumentException
 	 * @throws OpenemsNamedException
 	 */
-	public void setSupplybusOnIndication(int value) throws IllegalArgumentException, OpenemsNamedException {
-//		IntegerWriteChannel supplybusOnIndication = this.parent.componentManager.getChannel(this.supplybusOnIndication);
-//		supplybusOnIndication.setNextWriteValue(value);
+	public void setSupplybusOnIndication(Operation operation) throws IllegalArgumentException, OpenemsNamedException {
+		if (this.lastSwitchSet.isAfter(LocalDateTime.now(this.clock).minusSeconds(WAIT_FOR_RELAY_SWITCH_SECONDS))) {
+			return;
+		}
+		lastSwitchSet = LocalDateTime.now(this.clock);
+		// Supply Bus 1 On Indication
+		ChannelAddress supplybus1OnIndicationChannel = ChannelAddress.fromString(this.config.supplyBus1OnIndication());
+		IntegerWriteChannel supplybus1OnIndication = this.componentManager.getChannel(supplybus1OnIndicationChannel);
+		// Supply Bus 2 On Indication
+		ChannelAddress supplybus2OnIndicationChannel = ChannelAddress.fromString(this.config.supplyBus2OnIndication());
+		IntegerWriteChannel supplybus2OnIndication = this.componentManager.getChannel(supplybus2OnIndicationChannel);
+		if (operation == Operation.CLOSE) {
+			supplybus1OnIndication.setNextWriteValue(1);
+			supplybus2OnIndication.setNextWriteValue(1);
+
+		}
+		if (operation == Operation.OPEN) {
+			supplybus1OnIndication.setNextWriteValue(0);
+			supplybus2OnIndication.setNextWriteValue(0);
+		}
 	}
 
 	private SystemState essSystemState(String essId) throws OpenemsNamedException {
@@ -321,53 +506,77 @@ public class SupplyBusSwitchController extends AbstractOpenemsComponent implemen
 	}
 
 	public EssAndBusState switchStates(Channels channel) throws IllegalArgumentException, OpenemsNamedException {
-
 		if (this.isEssToBusContactorClosed(channel.ess1ToBus1Contactor)
-				&& this.isEssToBusContactorClosed(channel.ess2ToBus2Contactor)) {
+				&& this.isEssToBusContactorClosed(channel.ess2ToBus2Contactor)
+				&& !this.isEssToBusContactorClosed(channel.ess1ToBus2Contactor)
+				&& !this.isEssToBusContactorClosed(channel.ess2ToBus1Contactor)) {
+			System.out.println(EssAndBusState.ESS1_BUS1_ESS2_BUS2);
 			return EssAndBusState.ESS1_BUS1_ESS2_BUS2;
 		}
 		if (this.isEssToBusContactorClosed(channel.ess1ToBus1Contactor)
-				&& this.isEssToBusContactorClosed(channel.ess3ToBus2Contactor)) {
+				&& this.isEssToBusContactorClosed(channel.ess3ToBus2Contactor)
+				&& !this.isEssToBusContactorClosed(channel.ess1ToBus2Contactor)
+				&& !this.isEssToBusContactorClosed(channel.ess3ToBus1Contactor)) {
 			return EssAndBusState.ESS1_BUS1_ESS3_BUS2;
 		}
 		if (this.isEssToBusContactorClosed(channel.ess1ToBus1Contactor)
-				&& this.isEssToBusContactorClosed(channel.ess4ToBus2Contactor)) {
+				&& this.isEssToBusContactorClosed(channel.ess4ToBus2Contactor)
+				&& !this.isEssToBusContactorClosed(channel.ess1ToBus2Contactor)
+				&& !this.isEssToBusContactorClosed(channel.ess4ToBus1Contactor)) {
 			return EssAndBusState.ESS1_BUS1_ESS4_BUS2;
 		}
 		if (this.isEssToBusContactorClosed(channel.ess2ToBus1Contactor)
-				&& this.isEssToBusContactorClosed(channel.ess1ToBus2Contactor)) {
+				&& this.isEssToBusContactorClosed(channel.ess1ToBus2Contactor)
+				&& !this.isEssToBusContactorClosed(channel.ess1ToBus1Contactor)
+				&& !this.isEssToBusContactorClosed(channel.ess2ToBus2Contactor)) {
 			return EssAndBusState.ESS2_BUS1_ESS1_BUS2;
 		}
 		if (this.isEssToBusContactorClosed(channel.ess2ToBus1Contactor)
-				&& this.isEssToBusContactorClosed(channel.ess3ToBus2Contactor)) {
+				&& this.isEssToBusContactorClosed(channel.ess3ToBus2Contactor)
+				&& !this.isEssToBusContactorClosed(channel.ess2ToBus2Contactor)
+				&& !this.isEssToBusContactorClosed(channel.ess3ToBus1Contactor)) {
 			return EssAndBusState.ESS2_BUS1_ESS3_BUS2;
 		}
 		if (this.isEssToBusContactorClosed(channel.ess2ToBus1Contactor)
-				&& this.isEssToBusContactorClosed(channel.ess4ToBus2Contactor)) {
+				&& this.isEssToBusContactorClosed(channel.ess4ToBus2Contactor)
+				&& !this.isEssToBusContactorClosed(channel.ess2ToBus2Contactor)
+				&& !this.isEssToBusContactorClosed(channel.ess4ToBus1Contactor)) {
 			return EssAndBusState.ESS2_BUS1_ESS4_BUS2;
 		}
 		if (this.isEssToBusContactorClosed(channel.ess3ToBus1Contactor)
-				&& this.isEssToBusContactorClosed(channel.ess1ToBus2Contactor)) {
+				&& this.isEssToBusContactorClosed(channel.ess1ToBus2Contactor)
+				&& !this.isEssToBusContactorClosed(channel.ess3ToBus2Contactor)
+				&& !this.isEssToBusContactorClosed(channel.ess1ToBus1Contactor)) {
 			return EssAndBusState.ESS3_BUS1_ESS1_BUS2;
 		}
 		if (this.isEssToBusContactorClosed(channel.ess3ToBus1Contactor)
-				&& this.isEssToBusContactorClosed(channel.ess2ToBus2Contactor)) {
+				&& this.isEssToBusContactorClosed(channel.ess2ToBus2Contactor)
+				&& !this.isEssToBusContactorClosed(channel.ess3ToBus2Contactor)
+				&& !this.isEssToBusContactorClosed(channel.ess2ToBus1Contactor)) {
 			return EssAndBusState.ESS3_BUS1_ESS2_BUS2;
 		}
 		if (this.isEssToBusContactorClosed(channel.ess3ToBus1Contactor)
-				&& this.isEssToBusContactorClosed(channel.ess4ToBus2Contactor)) {
+				&& this.isEssToBusContactorClosed(channel.ess4ToBus2Contactor)
+				&& !this.isEssToBusContactorClosed(channel.ess3ToBus2Contactor)
+				&& !this.isEssToBusContactorClosed(channel.ess4ToBus1Contactor)) {
 			return EssAndBusState.ESS3_BUS1_ESS4_BUS2;
 		}
 		if (this.isEssToBusContactorClosed(channel.ess4ToBus1Contactor)
-				&& this.isEssToBusContactorClosed(channel.ess1ToBus2Contactor)) {
+				&& this.isEssToBusContactorClosed(channel.ess1ToBus2Contactor)
+				&& !this.isEssToBusContactorClosed(channel.ess4ToBus2Contactor)
+				&& !this.isEssToBusContactorClosed(channel.ess1ToBus1Contactor)) {
 			return EssAndBusState.ESS4_BUS1_ESS1_BUS2;
 		}
 		if (this.isEssToBusContactorClosed(channel.ess4ToBus1Contactor)
-				&& this.isEssToBusContactorClosed(channel.ess2ToBus2Contactor)) {
+				&& this.isEssToBusContactorClosed(channel.ess2ToBus2Contactor)
+				&& !this.isEssToBusContactorClosed(channel.ess4ToBus2Contactor)
+				&& !this.isEssToBusContactorClosed(channel.ess2ToBus1Contactor)) {
 			return EssAndBusState.ESS4_BUS1_ESS2_BUS2;
 		}
 		if (this.isEssToBusContactorClosed(channel.ess4ToBus1Contactor)
-				&& this.isEssToBusContactorClosed(channel.ess4ToBus2Contactor)) {
+				&& this.isEssToBusContactorClosed(channel.ess3ToBus2Contactor)
+				&& !this.isEssToBusContactorClosed(channel.ess4ToBus2Contactor)
+				&& !this.isEssToBusContactorClosed(channel.ess3ToBus1Contactor)) {
 			return EssAndBusState.ESS4_BUS1_ESS3_BUS2;
 		}
 		return EssAndBusState.UNDEFINED;
@@ -546,8 +755,8 @@ public class SupplyBusSwitchController extends AbstractOpenemsComponent implemen
 		} catch (OpenemsNamedException e) {
 			return OneBatteryState.UNDEFINED;
 		}
-
 		Optional<Integer> allowedChargePower = ess.getAllowedCharge().value().asOptional();
+
 		Optional<Integer> allowedDischargePower = ess.getAllowedDischarge().value().asOptional();
 		Optional<Integer> soc = ess.getSoc().value().asOptional();
 		if (allowedChargePower.isPresent() && allowedChargePower.get() == 0) {
@@ -583,33 +792,24 @@ public class SupplyBusSwitchController extends AbstractOpenemsComponent implemen
 	private void setOutput(ChannelAddress channelAddress, Operation operation)
 			throws IllegalArgumentException, OpenemsNamedException {
 		try {
-			IntegerWriteChannel outputChannel = this.componentManager.getChannel(channelAddress);
-			Optional<Integer> currentValueOpt = outputChannel.value().asOptional();
+			BooleanWriteChannel outputChannel = this.componentManager.getChannel(channelAddress);
+			Optional<Boolean> currentValueOpt = outputChannel.value().asOptional();
 			if (!currentValueOpt.isPresent()) {
 				switch (operation) {
 				case CLOSE:
-					outputChannel.setNextWriteValue(0);
+					outputChannel.setNextWriteValue(true);
 					this.logInfo(this.log, "Set output [" + outputChannel.address() + "] CLOSE");
 					break;
 				case OPEN:
-					outputChannel.setNextWriteValue(1);
+					outputChannel.setNextWriteValue(false);
 					this.logInfo(this.log, "Set output [" + outputChannel.address() + "] OPEN");
 					break;
 				case UNDEFINED:
 					break;
-
 				}
 			}
 		} catch (OpenemsNamedException e) {
 			this.logError(this.log, "Unable to set output: [" + channelAddress + "] " + e.getMessage());
 		}
 	}
-
-//	private void switchState(State nextState) {
-//		this.parent.logInfo(this.log,
-//				"Bus [" + this.name + "] switching from [" + this.state + "] to [" + nextState + "]");
-//		this.state = nextState;
-//		return;
-//	}
-
 }
