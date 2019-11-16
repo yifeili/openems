@@ -54,9 +54,9 @@ public class RiedmannPlc extends AbstractOpenemsModbusComponent implements Digit
 				this.channel(ChannelId.BOREHOLE3_ON), //
 				this.channel(ChannelId.CLIMA1_ON), //
 				this.channel(ChannelId.CLIMA2_ON), //
-				this.channel(ChannelId.WATERLEVEL_BOREHOLE1_ON), //
-				this.channel(ChannelId.WATERLEVEL_BOREHOLE2_ON), //
-				this.channel(ChannelId.WATERLEVEL_BOREHOLE3_ON), //
+				this.channel(ChannelId.SIGNAL_BUS1_ON), //
+				this.channel(ChannelId.SIGNAL_BUS1_ON), //
+				this.channel(ChannelId.SIGNAL_GRID_ON), //
 		};
 	}
 

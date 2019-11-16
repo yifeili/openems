@@ -1065,13 +1065,15 @@ public class EssFeneconCommercial40Impl extends AbstractOpenemsModbusComponent i
 	@Override
 	protected ModbusProtocol defineModbusProtocol() {
 		return new ModbusProtocol(this, //
-				new FC3ReadRegistersTask(0x0101, Priority.LOW, //
-						m(EssFeneconCommercial40Impl.ChannelId.SYSTEM_STATE, new UnsignedWordElement(0x0101)),
+				new FC3ReadRegistersTask(0x0101, Priority.HIGH, //
+						m(EssFeneconCommercial40Impl.ChannelId.SYSTEM_STATE, new UnsignedWordElement(0x0101))),
+				new FC3ReadRegistersTask(0x0102, Priority.LOW, //
 						m(EssFeneconCommercial40Impl.ChannelId.CONTROL_MODE, new UnsignedWordElement(0x0102)),
 						new DummyRegisterElement(0x0103), // WorkMode: RemoteDispatch
 						m(EssFeneconCommercial40Impl.ChannelId.BATTERY_MAINTENANCE_STATE,
 								new UnsignedWordElement(0x0104)),
-						m(EssFeneconCommercial40Impl.ChannelId.INVERTER_STATE, new UnsignedWordElement(0x0105)),
+						m(EssFeneconCommercial40Impl.ChannelId.INVERTER_STATE, new UnsignedWordElement(0x0105))),
+				new FC3ReadRegistersTask(0x0106, Priority.HIGH, //
 						m(SymmetricEss.ChannelId.GRID_MODE, new UnsignedWordElement(0x0106), //
 								new ElementToChannelConverter((value) -> {
 									Integer intValue = TypeUtils.<Integer>getAsType(OpenemsType.INTEGER, value);

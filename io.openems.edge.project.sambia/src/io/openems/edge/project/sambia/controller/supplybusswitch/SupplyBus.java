@@ -298,7 +298,6 @@ public class SupplyBus {
 	 * @throws OpenemsNamedException
 	 */
 	private List<String> getOnGridEssIds() throws OpenemsNamedException {
-
 		List<String> result = new ArrayList<>();
 		for (String essId : this.switchEssMapping.keySet()) {
 			EssFeneconCommercial40Impl ess = this.parent.componentManager.getComponent(essId);
@@ -308,7 +307,6 @@ public class SupplyBus {
 					|| this.activeEssId == essId) {
 				continue;
 			}
-
 			result.add(essId);
 		}
 		return result;

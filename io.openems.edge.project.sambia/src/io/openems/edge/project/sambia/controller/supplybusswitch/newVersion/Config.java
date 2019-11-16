@@ -29,29 +29,23 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 	@AttributeDefinition(name = "Supply Bus2 On Indication", description = "Supply Bus2 On Indication Channel.")
 	String supplyBus2OnIndication() default "sps0/SignalBus2On";
 
-//	@AttributeDefinition(name = "Pivot On", description = "Pivot On.")
-//	String setPivotOn() default "sps0/setPivotOn";
-//
-//	@AttributeDefinition(name = "Office On", description = "Office On.")
-//	String setOfficeOn() default "sps0/setOfficeOn";
-//
-//	@AttributeDefinition(name = "Trainee Center", description = "Trainee Center.")
-//	String setTraineeCenterOn() default "sps0/setTraineeCenterOn";
-//
-//	@AttributeDefinition(name = "Borehole 1 On", description = "Borehole 1 On.")
-//	String setBorehole1On() default "sps0/setBorehole1On";
-//
-//	@AttributeDefinition(name = "Borehole 2 On", description = "Borehole 2 On.")
-//	String setBorehole2On() default "sps0/setBorehole2On";
-//
-//	@AttributeDefinition(name = "Borehole 3 On", description = "Borehole 3 On.")
-//	String setBorehole3On() default "sps0/setBorehole3On";
-//
-//	@AttributeDefinition(name = "Clima 1 On", description = "Clima 1 On.")
-//	String setClima1On() default "sps0/setClima1On";
-//
-//	@AttributeDefinition(name = "Clima 2 On", description = "Clima 2 On.")
-//	String setClima2On() default "sps0/setClima2On";
+	@AttributeDefinition(name = "Waterlevel Borehole 1 On", description = "The waterlevel to start Borehole Pump 1.")
+	int setWaterLevelBorehole1On() default 50;
+
+	@AttributeDefinition(name = "Waterlevel Borehole 1 Off", description = "The waterlevel to stop Borehole Pump 1.")
+	int setWaterLevelBorehole1Off() default 100;
+
+	@AttributeDefinition(name = "Waterlevel Borehole 2 On", description = "The waterlevel to start Borehole Pump 2.")
+	int setWaterLevelBorehole2On() default 200;
+
+	@AttributeDefinition(name = "Waterlevel Borehole 2 Off", description = "The waterlevel to stop Borehole Pump 2.")
+	int setWaterLevelBorehole2Off() default 300;
+
+	@AttributeDefinition(name = "Waterlevel Borehole 3 On", description = "The waterlevel to start Borehole Pump 3.")
+	int setWaterLevelBorehole3On() default 400;
+
+	@AttributeDefinition(name = "Waterlevel Borehole 3 Off", description = "The waterlevel to stop Borehole Pump 3.")
+	int setWaterLevelBorehole3Off() default 500;
 
 	@AttributeDefinition(name = "Supply-Bus", description = "Collection of the switches for the supplyBus. Each array represents the switches for one supply bus.")
 	String supplyBus1Config() default "[{\"ess\": \"ess1\",\"switchAddress\": \"io2/InputOutput0\"},{\"ess\": \"ess2\",\"switchAddress\": \"io2/InputOutput1\"},{\"ess\": \"ess3\",\"switchAddress\": \"io2/InputOutput2\"}]";
