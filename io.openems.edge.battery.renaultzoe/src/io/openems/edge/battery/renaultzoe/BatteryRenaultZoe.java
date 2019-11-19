@@ -1,5 +1,7 @@
 package io.openems.edge.battery.renaultzoe;
 
+import java.time.LocalDateTime;
+
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
@@ -7,14 +9,19 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicy;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventConstants;
 import org.osgi.service.event.EventHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import io.openems.edge.battery.api.Battery;
+import io.openems.edge.battery.renaultzoe.RenaultZoeChannelId;
 import io.openems.edge.battery.renaultzoe.Config;
 import io.openems.edge.bridge.modbus.api.AbstractOpenemsModbusComponent;
+import io.openems.edge.bridge.modbus.api.BridgeModbus;
 import io.openems.edge.bridge.modbus.api.ElementToChannelConverter;
 import io.openems.edge.bridge.modbus.api.ModbusProtocol;
 import io.openems.edge.bridge.modbus.api.element.DummyRegisterElement;
@@ -22,6 +29,8 @@ import io.openems.edge.bridge.modbus.api.element.UnsignedWordElement;
 import io.openems.edge.bridge.modbus.api.task.FC3ReadRegistersTask;
 import io.openems.edge.bridge.modbus.api.task.FC6WriteRegisterTask;
 import io.openems.common.channel.AccessMode;
+import io.openems.edge.common.channel.EnumReadChannel;
+import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.event.EdgeEventConstants;
 import io.openems.edge.common.modbusslave.ModbusSlave;
@@ -51,13 +60,12 @@ public class BatteryRenaultZoe extends AbstractOpenemsModbusComponent
 	
 	private final Logger log = LoggerFactory.getLogger(BatteryRenaultZoe.class);
 	private String modbusBridgeId;
-	private StringStatus state = StringStatus.UNDEFINED;
-
+	private State state = State.UNDEFINED;
 	// if configuring is needed this is used to go through the necessary steps
 	private Config config;
 	
-	
-	
+	private LocalDateTime errorDelayIsOver = null;
+		
 	public BatteryRenaultZoe() {
 		super(//
 				OpenemsComponent.ChannelId.values(), //
@@ -65,15 +73,20 @@ public class BatteryRenaultZoe extends AbstractOpenemsModbusComponent
 				RenaultZoeChannelId.values() //
 		);
 	}
-
-	private String name;
-
+	
+	
+	@Reference(policy = ReferencePolicy.STATIC, policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
+	protected void setModbus(BridgeModbus modbus) {
+		super.setModbus(modbus);
+	}
+		
 	@Activate
 	void activate(ComponentContext context, Config config) {
 		this.config = config;
 
 		// adds dynamically created channels and save them into a map to access them
 		// when modbus tasks are created
+
 		super.activate(context, config.id(), config.alias(), config.enabled(), config.modbusUnitId(), this.cm, "Modbus",
 				config.modbus_id());
 		this.modbusBridgeId = config.modbus_id();
@@ -84,6 +97,124 @@ public class BatteryRenaultZoe extends AbstractOpenemsModbusComponent
 		super.deactivate();
 	}
 	
+	private void handleStateMachine() {
+		log.info("BatteryRenaultZoe.handleStateMachine(): State: " + this.getStateMachineState());
+		boolean readyForWorking = false;
+		switch (this.getStateMachineState()) {
+		case ERROR:
+			this.stopSystem();
+			errorDelayIsOver = LocalDateTime.now().plusSeconds(config.errorDelay());
+			this.setStateMachineState(State.ERRORDELAY);
+			break;
+		case ERRORDELAY:
+			if (LocalDateTime.now().isAfter(errorDelayIsOver)) {
+				errorDelayIsOver = null;
+				if (this.isError()) {
+					this.setStateMachineState(State.ERROR);
+				} else {
+					this.setStateMachineState(State.OFF);
+				}
+			}
+			break;
+		case INIT:
+			if (this.isSystemRunning()) {
+				this.setStateMachineState(State.RUNNING);
+				unsuccessfulStarts = 0;
+				startAttemptTime = null;
+			} else {
+				if (startAttemptTime.plusSeconds(config.maxStartTime()).isBefore(LocalDateTime.now())) {
+					startAttemptTime = null;
+					unsuccessfulStarts++;
+					this.stopSystem();
+					this.setStateMachineState(State.STOPPING);
+					if (unsuccessfulStarts >= config.maxStartAttempts()) {
+						errorDelayIsOver = LocalDateTime.now().plusSeconds(config.startUnsuccessfulDelay());
+						this.setStateMachineState(State.ERRORDELAY);
+						unsuccessfulStarts = 0;
+					}
+				}
+			}
+			break;
+		case OFF:
+			log.debug("in case 'OFF'; try to start the system");
+			this.startSystem();
+			log.debug("set state to 'INIT'");
+			this.setStateMachineState(State.INIT);
+			startAttemptTime = LocalDateTime.now();
+			break;
+		case RUNNING:
+			if (this.isError()) {
+				this.setStateMachineState(State.ERROR);
+			} else if (!this.isSystemRunning()) {
+				this.setStateMachineState(State.UNDEFINED);
+			} else {
+				this.setStateMachineState(State.RUNNING);
+				readyForWorking = true;
+			}
+			break;
+		case STOPPING:
+			if (this.isError()) {
+				this.setStateMachineState(State.ERROR);
+			} else {
+				if (this.isSystemStopped()) {
+					this.setStateMachineState(State.OFF);
+				}
+			}
+			break;
+		case UNDEFINED:
+			if (this.isError()) {
+				this.setStateMachineState(State.ERROR);
+			} else if (this.isSystemStopped()) {
+				this.setStateMachineState(State.OFF);
+			} else if (this.isSystemRunning()) {
+				this.setStateMachineState(State.RUNNING);
+			} else if (this.isSystemStatePending()) {
+				this.setStateMachineState(State.PENDING);
+			}
+			break;
+		case PENDING:
+			if (this.pendingTimestamp == null) {
+				this.pendingTimestamp = LocalDateTime.now();
+			}
+			if (this.pendingTimestamp.plusSeconds(this.config.pendingTolerance()).isBefore(LocalDateTime.now())) {
+				// System state could not be determined, stop and start it
+				this.pendingTimestamp = null;
+				this.stopSystem();
+				this.setStateMachineState(State.OFF);
+			} else {
+				if (this.isError()) {
+					this.setStateMachineState(State.ERROR);
+					this.pendingTimestamp = null;
+				} else if (this.isSystemStopped()) {
+					this.setStateMachineState(State.OFF);
+					this.pendingTimestamp = null;
+				} else if (this.isSystemRunning()) {
+					this.setStateMachineState(State.RUNNING);
+					this.pendingTimestamp = null;
+				}
+			}
+			break;
+		case STANDBY:
+			break;
+		}
+
+		this.getReadyForWorking().setNextValue(readyForWorking);
+	}
+	
+	public State getStateMachineState() {
+		return state;
+	}
+	
+	public void setStateMachineState(State state) {
+		this.state = state;
+		this.channel(RenaultZoeChannelId.HV_BAT_STATE).setNextValue(this.state);
+	}
+	
+	private boolean isError() {
+		EnumReadChannel bmsStateChannel = this.channel(BMWChannelId.BMS_STATE);
+		BmsState bmsState = bmsStateChannel.value().asEnum();
+		return bmsState == BmsState.ERROR;
+	}
 
 	@Override
 	public void handleEvent(Event event) {

@@ -22,6 +22,12 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 	@AttributeDefinition(name = "Modbus-ID", description = "ID of Modbus brige.")
 	String modbus_id() default "modbus0";
+	
+	@AttributeDefinition(name = "Error Delay", description = "When an error occurs, system will remain the given time in error delay state")
+	long errorDelay() default 600;
+	
+	@AttributeDefinition(name = "Watchdog", description = "Watchdog timeout in seconds")
+	int watchdog() default 60;
 
 	@AttributeDefinition(name = "Capacity [Wh]", description = "The capacity of the Battery Rack.")
 	int capacity() default 0;

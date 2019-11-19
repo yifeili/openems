@@ -4,6 +4,7 @@ import io.openems.common.channel.AccessMode;
 import io.openems.common.channel.Level;
 import io.openems.common.channel.Unit;
 import io.openems.common.types.OpenemsType;
+import io.openems.edge.battery.bmw.State;
 import io.openems.edge.common.channel.Doc;
 
 public enum RenaultZoeChannelId implements io.openems.edge.common.channel.ChannelId {
@@ -124,8 +125,19 @@ public enum RenaultZoeChannelId implements io.openems.edge.common.channel.Channe
 
 	// StateChannels
 	ALARM_STACK(Doc.of(Level.WARNING).text("Alarm Stack")), //
-	FAULT_STACK(Doc.of(Level.FAULT).text("Fault Stack")); //
+	FAULT_STACK(Doc.of(Level.FAULT).text("Fault Stack")), //
 
+	
+	
+	
+	
+	
+	
+	STATE_MACHINE(Doc.of(State.values()) //
+			.accessMode(AccessMode.READ_ONLY)), //
+	;
+	
+	
 	
 	
 	private final Doc doc;
