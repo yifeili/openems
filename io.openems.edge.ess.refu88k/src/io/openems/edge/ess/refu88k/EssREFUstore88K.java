@@ -208,7 +208,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 			 * The inverter feeds with max possible power. The IGBT's are working and AC
 			 * relays are closed.
 			 */
-			this.setWatchdogTimer();
+//			this.setWatchdogTimer();
 			this.checkIfPowerIsAllowed();
 			this.timeNoPowerRequired();
 			break;
@@ -309,13 +309,11 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 	 * 
 	 */
 	private void checkIfPowerIsRequired(int activePower, int reactivePower) {
-
 		if (activePower != 0 || reactivePower != 0) {
 			this.isPowerRequired = true;
 		} else {
 			this.isPowerRequired = false;
 		}
-
 	}
 
 	
@@ -360,6 +358,10 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 		
 		IntegerReadChannel pcsHbChannel = this.channel(REFUStore88KChannelId.PCS_HB);
 		IntegerWriteChannel controllerHbChannel = this.channel(REFUStore88KChannelId.CONTROLLER_HB);
+		
+//		if (pcsHbChannel.getNextValue().get() > pcsHbChannel.getPastValues()) {
+//			
+//		}
 		
 		try {
 			controllerHbChannel.setNextWriteValue(pcsHbChannel.getNextValue().get() + 10);
