@@ -4,7 +4,6 @@ import io.openems.common.channel.AccessMode;
 import io.openems.common.channel.Level;
 import io.openems.common.channel.Unit;
 import io.openems.common.types.OpenemsType;
-import io.openems.edge.battery.bmw.State;
 import io.openems.edge.common.channel.Doc;
 
 public enum RenaultZoeChannelId implements io.openems.edge.common.channel.ChannelId {
@@ -118,7 +117,7 @@ public enum RenaultZoeChannelId implements io.openems.edge.common.channel.Channe
 	BAT_MODEL(Doc.of(BatteryModel.values())), //
 	REQ_INV_STATE(Doc.of(InverterStateRequest.values())), //
 	CTL_MODE(Doc.of(ControlMode.values())), //
-
+	
 	// EnumWriteChannels
 	REQ_MODE(Doc.of(BatteryChargeDischargeRequest.values())),
 	ON_OFF(Doc.of(StartStopBatteryStack.values())),

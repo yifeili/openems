@@ -29,8 +29,9 @@ import io.openems.edge.bridge.modbus.api.element.UnsignedWordElement;
 import io.openems.edge.bridge.modbus.api.task.FC3ReadRegistersTask;
 import io.openems.edge.bridge.modbus.api.task.FC6WriteRegisterTask;
 import io.openems.common.channel.AccessMode;
+import io.openems.common.exceptions.OpenemsError.OpenemsNamedException;
 import io.openems.edge.common.channel.EnumReadChannel;
-import io.openems.edge.common.component.ComponentManager;
+import io.openems.edge.common.channel.EnumWriteChannel;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.event.EdgeEventConstants;
 import io.openems.edge.common.modbusslave.ModbusSlave;
@@ -48,12 +49,6 @@ import org.osgi.service.metatype.annotations.Designate;
 )
 public class BatteryRenaultZoe extends AbstractOpenemsModbusComponent
 		implements Battery, OpenemsComponent, EventHandler, ModbusSlave {
-
-	// Default values for the battery ranges
-	public static final int DISCHARGE_MIN_V = 288;
-	public static final int CHARGE_MAX_V = 400;
-	public static final int DISCHARGE_MAX_A = 300;
-	public static final int CHARGE_MAX_A = 300;
 	
 	@Reference
 	protected ConfigurationAdmin cm;
@@ -61,11 +56,14 @@ public class BatteryRenaultZoe extends AbstractOpenemsModbusComponent
 	private final Logger log = LoggerFactory.getLogger(BatteryRenaultZoe.class);
 	private String modbusBridgeId;
 	private State state = State.UNDEFINED;
+	
 	// if configuring is needed this is used to go through the necessary steps
 	private Config config;
-	
+	private int unsuccessfulStarts = 0;
 	private LocalDateTime errorDelayIsOver = null;
-		
+	private LocalDateTime startAttemptTime = null;
+	private LocalDateTime pendingTimestamp;
+	
 	public BatteryRenaultZoe() {
 		super(//
 				OpenemsComponent.ChannelId.values(), //
@@ -90,6 +88,7 @@ public class BatteryRenaultZoe extends AbstractOpenemsModbusComponent
 		super.activate(context, config.id(), config.alias(), config.enabled(), config.modbusUnitId(), this.cm, "Modbus",
 				config.modbus_id());
 		this.modbusBridgeId = config.modbus_id();
+		
 	}
 	
 	@Deactivate
@@ -210,10 +209,44 @@ public class BatteryRenaultZoe extends AbstractOpenemsModbusComponent
 		this.channel(RenaultZoeChannelId.HV_BAT_STATE).setNextValue(this.state);
 	}
 	
+	public String getModbusBridgeId() {
+		return modbusBridgeId;
+	}
+	
 	private boolean isError() {
-		EnumReadChannel bmsStateChannel = this.channel(BMWChannelId.BMS_STATE);
-		BmsState bmsState = bmsStateChannel.value().asEnum();
-		return bmsState == BmsState.ERROR;
+		EnumReadChannel hvBatLevel2FailureChannel = this.channel(RenaultZoeChannelId.HV_BAT_LEVEL2_FAILURE);
+		HvBatLevel2Failure hvBatLevel2Failure = hvBatLevel2FailureChannel.value().asEnum();
+		return hvBatLevel2Failure == HvBatLevel2Failure.FAILURE_LEVEL_2_DEFAULT;
+	}
+	
+	private boolean isSystemRunning() {
+		EnumReadChannel strStChannel = this.channel(RenaultZoeChannelId.STR_ST);
+		StringStatus stringState = strStChannel.value().asEnum();
+		return stringState == StringStatus.ENABLE;
+	}
+	
+	private boolean isSystemStopped() {
+		EnumReadChannel strStChannel = this.channel(RenaultZoeChannelId.STR_ST);
+		StringStatus stringState = strStChannel.value().asEnum();
+		return stringState == StringStatus.DISABLE;
+	}
+	
+	private void startSystem() {
+		this.log.debug("Start system");
+		EnumWriteChannel conStringChannel = this.channel(RenaultZoeChannelId.CON_STRING);
+		try {
+			conStringChannel.setNextWriteValue(StartStopString.START);
+		} catch (OpenemsNamedException e) {
+			log.error("Problem occurred during send start command");
+		}
+	}
+	
+	
+	/**
+	 * Checks whether system has an undefined state
+	 */
+	private boolean isSystemStatePending() {
+		return !isSystemRunning() && !isSystemStopped();
 	}
 
 	@Override
@@ -223,27 +256,25 @@ public class BatteryRenaultZoe extends AbstractOpenemsModbusComponent
 		}
 		switch (event.getTopic()) {
 		case EdgeEventConstants.TOPIC_CYCLE_AFTER_PROCESS_IMAGE:
-			//handleBatteryState();
+			handleBatteryState();
 			break;
 		}
 	}
 
 	
-//	private void handleBatteryState() {
-//		private void handleBatteryState() {
-//			switch (config.batteryState()) {
-//			case DEFAULT:
-//				handleStateMachine();
-//				break;
-//			case OFF:
-//				stopSystem();
-//				break;
-//			case ON:
-//				startSystem();
-//				break;
-//			}
-//		}
-//	}
+	private void handleBatteryState() {
+		switch (config.batteryState()) {
+		case DEFAULT:
+			handleStateMachine();
+			break;
+		case OFF:
+			stopSystem();
+			break;
+		case ON:
+			startSystem();
+			break;
+			}
+	}
 
 	private void stopSystem() {
 		// TODO Currently not necessary, Battery starts itself?!
