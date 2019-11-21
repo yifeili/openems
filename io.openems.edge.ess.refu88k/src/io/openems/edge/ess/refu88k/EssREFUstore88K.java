@@ -113,7 +113,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 				config.modbus_id()); //
 		this.initializeBattery(config.battery_id());
 		this.config = config;
-//		this.WATCHDOG = config.watchdoginterval();
+		this.WATCHDOG = config.watchdoginterval();
 //		this.MAX_APPARENT_POWER = config.maxApparentPower();
 	}
 
@@ -354,6 +354,9 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 	 * Sets the configured Watchdog time! 
 	 * 
 	 */	
+	
+	
+	
 	private void setWatchdogTimer() {
 		
 		IntegerReadChannel pcsHbChannel = this.channel(REFUStore88KChannelId.PCS_HB);

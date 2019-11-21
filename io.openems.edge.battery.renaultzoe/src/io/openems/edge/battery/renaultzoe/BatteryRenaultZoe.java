@@ -87,8 +87,7 @@ public class BatteryRenaultZoe extends AbstractOpenemsModbusComponent
 
 		super.activate(context, config.id(), config.alias(), config.enabled(), config.modbusUnitId(), this.cm, "Modbus",
 				config.modbus_id());
-		this.modbusBridgeId = config.modbus_id();
-		
+		this.modbusBridgeId = config.modbus_id();	
 	}
 	
 	@Deactivate
