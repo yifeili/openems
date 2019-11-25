@@ -11,8 +11,7 @@ Bundle-Description: \
 Export-Package:  \
 	io.openems.edge.renault.tmh.api;-provide=true
 
-Private-Package:  \
-	io.openems.edge.renault.tmh
+Private-Package: io.openems.edge.controller.renault.tmh
 
 -includeresource: {readme.md}
 

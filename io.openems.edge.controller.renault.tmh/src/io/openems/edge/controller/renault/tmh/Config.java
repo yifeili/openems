@@ -1,4 +1,4 @@
-package io.openems.edge.renault.tmh;
+package io.openems.edge.controller.renault.tmh;
 
 import org.osgi.service.metatype.annotations.AttributeDefinition;
 import org.osgi.service.metatype.annotations.ObjectClassDefinition;

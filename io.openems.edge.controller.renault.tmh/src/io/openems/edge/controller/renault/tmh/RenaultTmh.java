@@ -1,4 +1,4 @@
-package io.openems.edge.renault.tmh;
+package io.openems.edge.controller.renault.tmh;
 
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentContext;
@@ -16,12 +16,20 @@ import org.osgi.service.event.EventHandler;
 import io.openems.edge.bridge.modbus.api.AbstractOpenemsModbusComponent;
 import io.openems.edge.bridge.modbus.api.BridgeModbus;
 import io.openems.edge.bridge.modbus.api.ModbusProtocol;
+import io.openems.edge.bridge.modbus.api.element.StringWordElement;
+import io.openems.edge.bridge.modbus.api.element.UnsignedWordElement;
+import io.openems.edge.bridge.modbus.api.task.FC16WriteRegistersTask;
+import io.openems.edge.bridge.modbus.api.task.FC3ReadRegistersTask;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.event.EdgeEventConstants;
 import io.openems.edge.common.modbusslave.ModbusSlave;
 import io.openems.edge.common.modbusslave.ModbusSlaveTable;
+import io.openems.edge.common.taskmanager.Priority;
 
 import org.osgi.service.metatype.annotations.Designate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.openems.common.channel.AccessMode;
 
 
@@ -41,6 +49,9 @@ import io.openems.common.channel.AccessMode;
 public class RenaultTmh extends AbstractOpenemsModbusComponent
 		implements OpenemsComponent, EventHandler, ModbusSlave {
 
+	private final Logger log = LoggerFactory.getLogger(RenaultTmh.class);
+	private Config config;
+	
 	public static final int DEFAULT_UNIT_ID = 1;
 	
 	@Reference
@@ -92,7 +103,20 @@ public class RenaultTmh extends AbstractOpenemsModbusComponent
 	@Override
 	protected ModbusProtocol defineModbusProtocol() {
 		// TODO Auto-generated method stub
-		return null;
+		return new ModbusProtocol(this, //
+				new FC3ReadRegistersTask(0, Priority.ONCE, //
+						m(RenaultTmhChannelId.SYSTEM_STATUS_TMH, new UnsignedWordElement(0)),
+						m(RenaultTmhChannelId.POWER_REQUEST_ACTIVE_POWER, new UnsignedWordElement(1)),
+						m(RenaultTmhChannelId.POWER_REQUEST_REACTIVE_POWER, new UnsignedWordElement(2))
+						
+						
+						
+						),
+				
+				
+				new FC16WriteRegistersTask(SUNSPEC_123 + 22, //
+						m(REFUStore88KChannelId.VAR_PCT_ENA, new UnsignedWordElement(SUNSPEC_123 + 22)))
+				);
 	}
 	
 }

@@ -1,4 +1,4 @@
-package io.openems.edge.renault.tmh;
+package io.openems.edge.controller.renault.tmh;
 
 import static org.junit.Assert.assertNotNull;
 
