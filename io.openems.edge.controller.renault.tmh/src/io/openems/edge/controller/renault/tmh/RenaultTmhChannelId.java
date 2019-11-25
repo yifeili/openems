@@ -5,19 +5,20 @@ import io.openems.common.channel.Unit;
 import io.openems.common.types.OpenemsType;
 import io.openems.edge.common.channel.Doc;
 
+
 public enum RenaultTmhChannelId implements io.openems.edge.common.channel.ChannelId {
 
 	/**
 	 * TMH to ESS
 	 */
-	
+
 	/*
 	 * Technical Unit Level Points
 	 */
-	SYSTEM_STATUS_TMH(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
-	POWER_REQUEST_ACTIVE_POWER(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
-	POWER_REQUEST_REACTIVE_POWER(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
-	ERROR_RESET(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
+	SYSTEM_STATUS_TMH(Doc.of(SystemStatus.values())), //
+	POWER_REQUEST_ACTIVE_POWER(Doc.of(OpenemsType.INTEGER).unit(Unit.WATT).accessMode(AccessMode.READ_ONLY)), //
+	POWER_REQUEST_REACTIVE_POWER(Doc.of(OpenemsType.INTEGER).unit(Unit.VOLT_AMPERE_REACTIVE).accessMode(AccessMode.READ_ONLY)), //
+	ERROR_RESET(Doc.of(ErrorReset.values())), //
 	BATTERY_ERROR_DATA_REQUEST(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
 	ALIVE_COUNTER_TMH(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
 
@@ -25,15 +26,15 @@ public enum RenaultTmhChannelId implements io.openems.edge.common.channel.Channe
 	 * Energy Storage Unit Level Points (i)
 	 */
 	ESU_STATUS_i_TMH(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
-	POWER_REQUEST_ACTIVE_POWER_i(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
-	POWER_REQUEST_REACTIVE_POWER_i(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
+	POWER_REQUEST_ACTIVE_POWER_i(Doc.of(OpenemsType.INTEGER).unit(Unit.WATT).accessMode(AccessMode.READ_ONLY)), //
+	POWER_REQUEST_REACTIVE_POWER_i(Doc.of(OpenemsType.INTEGER).unit(Unit.VOLT_AMPERE_REACTIVE).accessMode(AccessMode.READ_ONLY)), //
 
 	/*
 	 * Inverter Level Points (n)
 	 */
-	INVERTER_STATUS_n(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
-	POWER_REQUEST_ACTIVE_POWER_n(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
-	POWER_REQUEST_REACTIVE_POWER_n(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
+	INVERTER_STATUS_n(Doc.of(OperatingState.values())), //
+	POWER_REQUEST_ACTIVE_POWER_n(Doc.of(OpenemsType.INTEGER).unit(Unit.WATT).accessMode(AccessMode.READ_ONLY)), //
+	POWER_REQUEST_REACTIVE_POWER_n(Doc.of(OpenemsType.INTEGER).unit(Unit.VOLT_AMPERE_REACTIVE).accessMode(AccessMode.READ_ONLY)), //
 	
 	
 	/**
@@ -44,19 +45,19 @@ public enum RenaultTmhChannelId implements io.openems.edge.common.channel.Channe
 	 * Technical Unit Level Points
 	 */
 	TECHNICAL_UNIT_ID(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.WRITE_ONLY)), //
-	SYSTEM_STATUS_ESS(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.WRITE_ONLY)), //
-	CURRENT_MEASURED_ACTIVE_POWER(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.WRITE_ONLY)), //
-	CURRENT_MEASURED_REACTIVE_POWER(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.WRITE_ONLY)), //
+	SYSTEM_STATUS_ESS(Doc.of(SystemStatus.values())), //
+	CURRENT_MEASURED_ACTIVE_POWER(Doc.of(OpenemsType.INTEGER).unit(Unit.WATT).accessMode(AccessMode.WRITE_ONLY)), //
+	CURRENT_MEASURED_REACTIVE_POWER(Doc.of(OpenemsType.INTEGER).unit(Unit.VOLT_AMPERE_REACTIVE).accessMode(AccessMode.WRITE_ONLY)), //
 	ALIVE_COUNTER_ESS(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.WRITE_ONLY)), //
-	MAXIMUM_AVAILABLE_POWER_DISCHARGE(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.WRITE_ONLY)), //
-	MAXIMUM_AVAILABLE_POWER_CHARGE(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.WRITE_ONLY)), //
-	AVAILABLE_ENERGY_DISCHARGE(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.WRITE_ONLY)), //
-	AVAILABLE_ENERGY_CHARGE(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.WRITE_ONLY)), //
+	MAXIMUM_AVAILABLE_POWER_DISCHARGE(Doc.of(OpenemsType.INTEGER).unit(Unit.WATT).accessMode(AccessMode.WRITE_ONLY)), //
+	MAXIMUM_AVAILABLE_POWER_CHARGE(Doc.of(OpenemsType.INTEGER).unit(Unit.WATT).accessMode(AccessMode.WRITE_ONLY)), //
+	AVAILABLE_ENERGY_DISCHARGE(Doc.of(OpenemsType.INTEGER).unit(Unit.WATT_HOURS).accessMode(AccessMode.WRITE_ONLY)), //
+	AVAILABLE_ENERGY_CHARGE(Doc.of(OpenemsType.INTEGER).unit(Unit.WATT_HOURS).accessMode(AccessMode.WRITE_ONLY)), //
 	STORAGE_SYSTEM_ERROR(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.WRITE_ONLY)), //
 	PAD_REGISTER_0(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.WRITE_ONLY)), //
 	PAD_REGISTER_1(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.WRITE_ONLY)), //
-	TECHNICAL_UNIT_ENERGY_THROUGHPUT_YTD(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.WRITE_ONLY)), //
-	INDOOR_AMBIENT_TEMPERATURE(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.WRITE_ONLY)), //
+	TECHNICAL_UNIT_ENERGY_THROUGHPUT_YTD(Doc.of(OpenemsType.INTEGER).unit(Unit.WATT_HOURS).accessMode(AccessMode.WRITE_ONLY)), //
+	INDOOR_AMBIENT_TEMPERATURE(Doc.of(OpenemsType.INTEGER).unit(Unit.DEGREE_CELSIUS).accessMode(AccessMode.WRITE_ONLY)), //
 
 	/*
 	 * Energy Storage Unit Level Points (i)
