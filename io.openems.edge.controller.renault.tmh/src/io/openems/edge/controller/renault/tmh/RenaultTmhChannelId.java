@@ -8,6 +8,35 @@ import io.openems.edge.common.channel.Doc;
 public enum RenaultTmhChannelId implements io.openems.edge.common.channel.ChannelId {
 
 	/**
+	 * TMH to ESS
+	 */
+	
+	/*
+	 * Technical Unit Level Points
+	 */
+	SYSTEM_STATUS_TMH(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
+	POWER_REQUEST_ACTIVE_POWER(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
+	POWER_REQUEST_REACTIVE_POWER(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
+	ERROR_RESET(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
+	BATTERY_ERROR_DATA_REQUEST(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
+	ALIVE_COUNTER_TMH(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
+
+	/*
+	 * Energy Storage Unit Level Points (i)
+	 */
+	ESU_STATUS_i_TMH(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
+	POWER_REQUEST_ACTIVE_POWER_i(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
+	POWER_REQUEST_REACTIVE_POWER_i(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
+
+	/*
+	 * Inverter Level Points (n)
+	 */
+	INVERTER_STATUS_n(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
+	POWER_REQUEST_ACTIVE_POWER_n(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
+	POWER_REQUEST_REACTIVE_POWER_n(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
+	
+	
+	/**
 	 * ESS to TMH
 	 */
 	
@@ -18,7 +47,7 @@ public enum RenaultTmhChannelId implements io.openems.edge.common.channel.Channe
 	SYSTEM_STATUS_ESS(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.WRITE_ONLY)), //
 	CURRENT_MEASURED_ACTIVE_POWER(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.WRITE_ONLY)), //
 	CURRENT_MEASURED_REACTIVE_POWER(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.WRITE_ONLY)), //
-	ALIVE_COUNTER(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.WRITE_ONLY)), //
+	ALIVE_COUNTER_ESS(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.WRITE_ONLY)), //
 	MAXIMUM_AVAILABLE_POWER_DISCHARGE(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.WRITE_ONLY)), //
 	MAXIMUM_AVAILABLE_POWER_CHARGE(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.WRITE_ONLY)), //
 	AVAILABLE_ENERGY_DISCHARGE(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.WRITE_ONLY)), //
@@ -71,33 +100,7 @@ public enum RenaultTmhChannelId implements io.openems.edge.common.channel.Channe
 	
 	
 	
-	/**
-	 * TMH to ESS
-	 */
-	
-	/*
-	 * Technical Unit Level Points
-	 */
-	SYSTEM_STATUS_TMH(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
-	POWER_REQUEST_ACTIVE_POWER(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
-	POWER_REQUEST_REACTIVE_POWER(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
-	ERROR_RESET(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
-	BATTERY_ERROR_DATA_REQUEST(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
-	ALIVE_COUNTER_TMH(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
 
-	/*
-	 * Energy Storage Unit Level Points (i)
-	 */
-	ESU_STATUS_i_TMH(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
-	POWER_REQUEST_ACTIVE_POWER_i(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
-	POWER_REQUEST_REACTIVE_POWER_i(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
-
-	/*
-	 * Inverter Level Points (n)
-	 */
-	INVERTER_STATUS_n(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
-	POWER_REQUEST_ACTIVE_POWER_n(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
-	POWER_REQUEST_REACTIVE_POWER_n(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)), //
 	
 	;
 	private final Doc doc;
