@@ -17,7 +17,7 @@ public class GoingOngridHandler {
 
 	// WAIT
 	private LocalDateTime startedWaiting = null;
-	private final static int WAIT_SECONDS = 5;
+	private final static int WAIT_SECONDS = 50;
 
 	public GoingOngridHandler(StateMachine parent) {
 		this.parent = parent;
@@ -29,7 +29,6 @@ public class GoingOngridHandler {
 	}
 
 	protected StateMachine.State run() throws OpenemsNamedException {
-		System.out.println("GoingOffgridHandler.run");
 		switch (this.state) {
 		case UNDEFINED:
 			this.state = this.doUndefined();
@@ -73,7 +72,7 @@ public class GoingOngridHandler {
 		 * To switch the PCS to on-grid mode, it requires a "stop command", and a physical connection to the utility. 
 		 * Then can the EMS switch the PCS to on-grid mode and then a "start command".
 		 * 
-		 * */
+		 */
 		if (this.startedWaiting.plusSeconds(WAIT_SECONDS).isAfter(LocalDateTime.now())) {
 			this.log.info("doWaitFirstSeconds() waiting the first seconds, sending the stop command");			
 			this.parent.parent.inverterOff();

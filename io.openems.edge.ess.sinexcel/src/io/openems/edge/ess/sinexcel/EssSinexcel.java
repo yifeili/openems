@@ -82,7 +82,7 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 	private int counterOn = 0;
 	private int counterOff = 0;
 
-	//private ChannelAddress gridModeChannel;
+	// private ChannelAddress gridModeChannel;
 
 	// State-Machines
 	private final StateMachine stateMachine;
@@ -557,7 +557,8 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 //				new FC3ReadRegistersTask(0x0089, Priority.HIGH,
 //						m(EssSinexcel.SinexcelChannelId.Target_OffGrid_Voltage, new UnsignedWordElement(0x0089))), // Range: -0,1 ... 0,1 (to rated Voltage)// 100
 				new FC3ReadRegistersTask(0x008A, Priority.LOW,
-						m(SinexcelChannelId.SET_OFF_GRID_FREQUENCY, new SignedWordElement(0x008A))), // Range: -2... 2Hz//100
+						m(SinexcelChannelId.SET_OFF_GRID_FREQUENCY, new SignedWordElement(0x008A))), // Range: -2...
+																										// 2Hz//100
 
 //----------------------------------------------------------START and STOP--------------------------------------------------------------------				
 //				new FC3ReadRegistersTask(0x023A, Priority.LOW, //
@@ -786,42 +787,19 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 		}
 	}
 
-//	private void updateGridMode() throws OpenemsNamedException {
-//		
-//		BooleanReadChannel gridModeChannel = this.componentManager
-//				.getChannel(ChannelAddress.fromString(this.config.gridMode()));
-//
-//		//this.gridModeChannel = ChannelAddress.fromString(this.config.gridMode());
-//
-//		BooleanReadChannel xxx = this.componentManager.getChannel(this.gridModeChannel);
-//		Boolean opt = xxx.value().orElse(false);
-//		StateChannel onGridChannel = this.channel(SinexcelChannelId.STATE_19);
-//		StateChannel offGridChannel = this.channel(SinexcelChannelId.STATE_20);
-//		Optional<Boolean> onGrid = onGridChannel.value().asOptional();
-//		Optional<Boolean> offGrid = offGridChannel.value().asOptional();
-//		if (onGrid.isPresent() && onGrid.get() == true) {
-//			this.getGridMode().setNextValue(GridMode.ON_GRID);
-//		} else if (offGrid.isPresent() && offGrid.get() == true) {
-//			this.getGridMode().setNextValue(GridMode.OFF_GRID);
-//		} else {
-//			this.getGridMode().setNextValue(GridMode.UNDEFINED);
-//		}
-//	}
-	
-	
 	private void updateGridMode() throws OpenemsNamedException {
 
 		// Digital input channel one , false is on-grid and true is off-grid
 		BooleanReadChannel gridModeChannel = this.componentManager
 				.getChannel(ChannelAddress.fromString(this.config.digitalInput1()));
-		
-		// Digital input channel two , true when the bender is waiting 
+
+		// Digital input channel two , true when the bender is waiting
 		BooleanReadChannel benderWaitingChannel = this.componentManager
 				.getChannel(ChannelAddress.fromString(this.config.digitalInput2()));
 
 		Optional<Boolean> isGridMode = gridModeChannel.value().asOptional();
 		Optional<Boolean> isBenderWaiting = benderWaitingChannel.value().asOptional();
-		
+
 		System.out.println("isGridMode : " + isGridMode.get());
 		System.out.println("isBenderWaiting : " + isBenderWaiting.get());
 
@@ -888,49 +866,41 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 	}
 
 	public void setDigitalOutputInOngrid() throws IllegalArgumentException, OpenemsNamedException {
-		
-		System.out.println( " In setting the digital output in ongrid mode");
-		
-		BooleanWriteChannel digitaloutput1 = this.componentManager.getChannel(ChannelAddress.fromString(this.config.digitalOutput1()));
+		BooleanWriteChannel digitaloutput1 = this.componentManager
+				.getChannel(ChannelAddress.fromString(this.config.digitalOutput1()));
 		this.setOutput(digitaloutput1, true);
-		
-		BooleanWriteChannel digitaloutput2 = this.componentManager.getChannel(ChannelAddress.fromString(this.config.digitalOutput2()));
+
+		BooleanWriteChannel digitaloutput2 = this.componentManager
+				.getChannel(ChannelAddress.fromString(this.config.digitalOutput2()));
 		this.setOutput(digitaloutput2, false);
-		
-		BooleanWriteChannel digitaloutput3 = this.componentManager.getChannel(ChannelAddress.fromString(this.config.digitalOutput3()));
+
+		BooleanWriteChannel digitaloutput3 = this.componentManager
+				.getChannel(ChannelAddress.fromString(this.config.digitalOutput3()));
 		this.setOutput(digitaloutput3, true);
 	}
-	
+
 	public void setDigitalOutputInOffgrid() throws IllegalArgumentException, OpenemsNamedException {
-		BooleanWriteChannel digitaloutput1 = this.componentManager.getChannel(ChannelAddress.fromString(this.config.digitalOutput1()));
+		BooleanWriteChannel digitaloutput1 = this.componentManager
+				.getChannel(ChannelAddress.fromString(this.config.digitalOutput1()));
 		this.setOutput(digitaloutput1, false);
-		
-		BooleanWriteChannel digitaloutput2 = this.componentManager.getChannel(ChannelAddress.fromString(this.config.digitalOutput2()));
+
+		BooleanWriteChannel digitaloutput2 = this.componentManager
+				.getChannel(ChannelAddress.fromString(this.config.digitalOutput2()));
 		this.setOutput(digitaloutput2, true);
-		
-		BooleanWriteChannel digitaloutput3 = this.componentManager.getChannel(ChannelAddress.fromString(this.config.digitalOutput3()));
+
+		BooleanWriteChannel digitaloutput3 = this.componentManager
+				.getChannel(ChannelAddress.fromString(this.config.digitalOutput3()));
 		this.setOutput(digitaloutput3, false);
 	}
-	
+
 	/**
 	 * Helper function to switch an output if it was not switched before.
 	 *
 	 * @param value true to switch ON, false to switch ON
 	 */
-//	private void setOutput(BooleanWriteChannel channel, boolean value) {
-//		Optional<Boolean> currentValueOpt = channel.value().asOptional();
-//		if (!currentValueOpt.isPresent() || currentValueOpt.get() != value) {
-//			log.info("Set output [" + channel.address() + "] " + (value ? "ON" : "OFF") + ".");
-//			try {
-//				channel.setNextWriteValue(value);
-//			} catch (OpenemsNamedException e) {
-//				this.logError(this.log, "Unable to set output: [" + channel.address() + "] " + e.getMessage());
-//			}
-//		}
-//	}
-	
-	private void setOutput(BooleanWriteChannel channel, boolean value) throws IllegalArgumentException, OpenemsNamedException {
-		try {			
+	private void setOutput(BooleanWriteChannel channel, boolean value)
+			throws IllegalArgumentException, OpenemsNamedException {
+		try {
 			Optional<Boolean> currentValueOpt = channel.value().asOptional();
 			if (!currentValueOpt.isPresent() || currentValueOpt.get() != value) {
 				this.logInfo(this.log, "Set output [" + channel.address() + "] " + (value) + ".");
@@ -946,175 +916,162 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 	 *
 	 * @param value to check and compare the input channels
 	 * @return false if there is no fault, true if there is a fault
-	 * @throws OpenemsNamedException 
-	 * @throws IllegalArgumentException 
+	 * @throws OpenemsNamedException
+	 * @throws IllegalArgumentException
 	 */
 	public boolean isContactorOkInOngrid() throws IllegalArgumentException, OpenemsNamedException {
 		BooleanReadChannel digitalInput1 = this.componentManager
 				.getChannel(ChannelAddress.fromString(this.config.digitalInput1()));
-		
+
 		BooleanReadChannel digitalInput2 = this.componentManager
 				.getChannel(ChannelAddress.fromString(this.config.digitalInput2()));
-		
+
 		BooleanReadChannel digitalInput3 = this.componentManager
 				.getChannel(ChannelAddress.fromString(this.config.digitalInput3()));
-		
+
 		Optional<Boolean> isdigitalInput1 = digitalInput1.value().asOptional();
 		Optional<Boolean> isdigitalInput2 = digitalInput2.value().asOptional();
 		Optional<Boolean> isdigitalInput3 = digitalInput3.value().asOptional();
-		
-		if ((isdigitalInput1.isPresent() && isdigitalInput1.get() == false) &&
-				(isdigitalInput2.isPresent() && isdigitalInput2.get() == false) &&
-				(isdigitalInput3.isPresent() && isdigitalInput3.get() == false)) {
+
+		if ((isdigitalInput1.isPresent() && isdigitalInput1.get() == false)
+				&& (isdigitalInput2.isPresent() && isdigitalInput2.get() == false)
+				&& (isdigitalInput3.isPresent() && isdigitalInput3.get() == false)) {
 			return false;
-		}else {
+		} else {
 			return true;
 		}
-		
 	}
-	
+
 	/**
 	 * Helper function to check the status of the Contactor.
 	 *
 	 * @param value to check and compare the input channels
 	 * @return false if there is no fault, true if there is a fault
-	 * @throws OpenemsNamedException 
-	 * @throws IllegalArgumentException 
+	 * @throws OpenemsNamedException
+	 * @throws IllegalArgumentException
 	 */
 	public boolean isFirstCheckContactorOkInOngrid() throws IllegalArgumentException, OpenemsNamedException {
 		BooleanReadChannel digitalInput1 = this.componentManager
 				.getChannel(ChannelAddress.fromString(this.config.digitalInput1()));
-		
+
 		BooleanReadChannel digitalInput2 = this.componentManager
 				.getChannel(ChannelAddress.fromString(this.config.digitalInput2()));
-		
+
 		BooleanReadChannel digitalInput3 = this.componentManager
 				.getChannel(ChannelAddress.fromString(this.config.digitalInput3()));
-		
+
 		Optional<Boolean> isdigitalInput1 = digitalInput1.value().asOptional();
 		Optional<Boolean> isdigitalInput2 = digitalInput2.value().asOptional();
 		Optional<Boolean> isdigitalInput3 = digitalInput3.value().asOptional();
-		
-		if ((isdigitalInput1.isPresent() && isdigitalInput1.get() == false) &&
-				(isdigitalInput2.isPresent() && isdigitalInput2.get() == false) &&
-				(isdigitalInput3.isPresent() && isdigitalInput3.get() == false)) {
+
+		if ((isdigitalInput1.isPresent() && isdigitalInput1.get() == false)
+				&& (isdigitalInput2.isPresent() && isdigitalInput2.get() == false)
+				&& (isdigitalInput3.isPresent() && isdigitalInput3.get() == false)) {
 			return true;
-		}else {
+		} else {
 			return false;
 		}
-		
 	}
-	
+
 	public boolean isContactorOkInOffgrid() throws IllegalArgumentException, OpenemsNamedException {
 		BooleanReadChannel digitalInput1 = this.componentManager
 				.getChannel(ChannelAddress.fromString(this.config.digitalInput1()));
-		
+
 		BooleanReadChannel digitalInput2 = this.componentManager
 				.getChannel(ChannelAddress.fromString(this.config.digitalInput2()));
-		
+
 		BooleanReadChannel digitalInput3 = this.componentManager
 				.getChannel(ChannelAddress.fromString(this.config.digitalInput3()));
-		
+
 		Optional<Boolean> isdigitalInput1 = digitalInput1.value().asOptional();
 		Optional<Boolean> isdigitalInput2 = digitalInput2.value().asOptional();
 		Optional<Boolean> isdigitalInput3 = digitalInput3.value().asOptional();
-		
-		System.out.println("digital input 1 : " + isdigitalInput1 + " digital input 2 : " + isdigitalInput2 +  "digital input 3 : " +  isdigitalInput3    );
-		
-		if ((isdigitalInput1.isPresent() && isdigitalInput1.get() == true) &&
-				(isdigitalInput2.isPresent() && isdigitalInput2.get() == false) &&
-				(isdigitalInput3.isPresent() && isdigitalInput3.get() == false)) {
+
+		System.out.println("digital input 1 : " + isdigitalInput1 + " digital input 2 : " + isdigitalInput2
+				+ "digital input 3 : " + isdigitalInput3);
+
+		if ((isdigitalInput1.isPresent() && isdigitalInput1.get() == true)
+				&& (isdigitalInput2.isPresent() && isdigitalInput2.get() == false)
+				&& (isdigitalInput3.isPresent() && isdigitalInput3.get() == false)) {
 			return true;
-		}else {
+		} else {
 			return false;
 		}
-		
 	}
-	
-	
-	
+
 	public boolean isSecondCheckRequestContactorFault() throws IllegalArgumentException, OpenemsNamedException {
 		BooleanReadChannel digitalInput1 = this.componentManager
 				.getChannel(ChannelAddress.fromString(this.config.digitalInput1()));
-		
+
 		BooleanReadChannel digitalInput2 = this.componentManager
 				.getChannel(ChannelAddress.fromString(this.config.digitalInput2()));
-		
+
 		Optional<Boolean> isdigitalInput1 = digitalInput1.value().asOptional();
 		Optional<Boolean> isdigitalInput2 = digitalInput2.value().asOptional();
 
-		
-		if ((isdigitalInput1.isPresent() && isdigitalInput1.get() == true) &&
-				(isdigitalInput2.isPresent() && isdigitalInput2.get() == true)) {
+		if ((isdigitalInput1.isPresent() && isdigitalInput1.get() == true)
+				&& (isdigitalInput2.isPresent() && isdigitalInput2.get() == true)) {
 			return true;
-		}else {
+		} else {
 			return false;
 		}
-		
 	}
-	
-
 
 	public boolean isFirstCheckContactorFault() throws IllegalArgumentException, OpenemsNamedException {
 		BooleanReadChannel digitalInput1 = this.componentManager
 				.getChannel(ChannelAddress.fromString(this.config.digitalInput1()));
-		
+
 		BooleanReadChannel digitalInput2 = this.componentManager
 				.getChannel(ChannelAddress.fromString(this.config.digitalInput2()));
-		
+
 		Optional<Boolean> isdigitalInput1 = digitalInput1.value().asOptional();
 		Optional<Boolean> isdigitalInput2 = digitalInput2.value().asOptional();
-		
-		
-		if ((isdigitalInput1.isPresent() && isdigitalInput1.get() == true) &&
-				(isdigitalInput2.isPresent() && isdigitalInput2.get() == false)) {
+
+		if ((isdigitalInput1.isPresent() && isdigitalInput1.get() == true)
+				&& (isdigitalInput2.isPresent() && isdigitalInput2.get() == false)) {
 			return true;
-		}else {
+		} else {
 			return false;
 		}
 	}
-	
-	
 
 	public void digitalOutputAfterInverterOffInOngrid() throws IllegalArgumentException, OpenemsNamedException {
-		BooleanWriteChannel digitaloutput1 = this.componentManager.getChannel(ChannelAddress.fromString(this.config.digitalOutput1()));
+		BooleanWriteChannel digitaloutput1 = this.componentManager
+				.getChannel(ChannelAddress.fromString(this.config.digitalOutput1()));
 		this.setOutput(digitaloutput1, true);
-		
-		BooleanWriteChannel digitaloutput2 = this.componentManager.getChannel(ChannelAddress.fromString(this.config.digitalOutput2()));
+
+		BooleanWriteChannel digitaloutput2 = this.componentManager
+				.getChannel(ChannelAddress.fromString(this.config.digitalOutput2()));
 		this.setOutput(digitaloutput2, false);
-		
-		BooleanWriteChannel digitaloutput3 = this.componentManager.getChannel(ChannelAddress.fromString(this.config.digitalOutput3()));
-		this.setOutput(digitaloutput3, false);		
+
+		BooleanWriteChannel digitaloutput3 = this.componentManager
+				.getChannel(ChannelAddress.fromString(this.config.digitalOutput3()));
+		this.setOutput(digitaloutput3, false);
 	}
 
 	public void digitalOutputAfterInverterOffInOffgrid() throws IllegalArgumentException, OpenemsNamedException {
-		BooleanWriteChannel digitaloutput1 = this.componentManager.getChannel(ChannelAddress.fromString(this.config.digitalOutput1()));
+		BooleanWriteChannel digitaloutput1 = this.componentManager
+				.getChannel(ChannelAddress.fromString(this.config.digitalOutput1()));
 		this.setOutput(digitaloutput1, true);
-		
-		BooleanWriteChannel digitaloutput2 = this.componentManager.getChannel(ChannelAddress.fromString(this.config.digitalOutput2()));
+
+		BooleanWriteChannel digitaloutput2 = this.componentManager
+				.getChannel(ChannelAddress.fromString(this.config.digitalOutput2()));
 		this.setOutput(digitaloutput2, false);
-		
-		BooleanWriteChannel digitaloutput3 = this.componentManager.getChannel(ChannelAddress.fromString(this.config.digitalOutput3()));
-		this.setOutput(digitaloutput3, true);		
+
+		BooleanWriteChannel digitaloutput3 = this.componentManager
+				.getChannel(ChannelAddress.fromString(this.config.digitalOutput3()));
+		this.setOutput(digitaloutput3, true);
 	}
 
+	/**
+	 * Setting the frequency in the off grid mode
+	 * 
+	 * @throws OpenemsNamedException
+	 */
 	public void setFreq() throws OpenemsNamedException {
-		
+
 		IntegerWriteChannel setFreq = this.channel(SinexcelChannelId.SET_OFF_GRID_FREQUENCY);
 		setFreq.setNextWriteValue(52); // 52 hz frequency
-		
+
 	}
-	
-//	private void setOutput(BooleanWriteChannel channel, boolean value) throws IllegalArgumentException, OpenemsNamedException {
-//		try {			
-//			Optional<Boolean> currentValueOpt = channel.value().asOptional();
-//			if (!currentValueOpt.isPresent() || currentValueOpt.get() != value) {
-//				this.logInfo(this.log, "Set output [" + channel.address() + "] " + (value) + ".");
-//				channel.setNextWriteValue(value);
-//			}
-//		} catch (OpenemsException e) {
-//			this.logError(this.log, "Unable to set output: [" + channel.address() + "] " + e.getMessage());
-//		}
-//	}
-	
 }

@@ -3,9 +3,11 @@ package io.openems.edge.ess.sinexcel;
 import io.openems.common.exceptions.OpenemsError.OpenemsNamedException;
 import io.openems.common.types.OptionsEnum;
 import io.openems.edge.common.sum.GridMode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class OngridHandler {
-	// private final Logger log = LoggerFactory.getLogger(OngridHandler.class);
+	private final Logger log = LoggerFactory.getLogger(OngridHandler.class);
 	private final StateMachine parent;
 
 	private State state = State.UNDEFINED;
@@ -15,7 +17,7 @@ public class OngridHandler {
 	}
 
 	protected StateMachine.State run() throws IllegalArgumentException, OpenemsNamedException {
-		System.out.println("Inside ongrid run");
+		log.info("[Inside ongrid run]");
 		GridMode gridMode = this.parent.parent.getGridMode().getNextValue().asEnum();
 		switch (gridMode) {
 		case ON_GRID:
@@ -51,14 +53,14 @@ public class OngridHandler {
 	}
 
 	private State switchOff() throws OpenemsNamedException {
-		System.out.println("in ongridhandler, in siwtch off method");
+		log.info("in ongridhandler, in siwtch off method");
 		this.parent.parent.inverterOff();
 		this.parent.parent.digitalOutputAfterInverterOffInOngrid();
 		return State.ERROR_SWITCHOFF;
 	}
 
 	private State doUndefined() throws IllegalArgumentException, OpenemsNamedException {
-		System.out.println("In ongrid handler do undefined method");
+		log.info("In ongrid handler do undefined method");
 		Boolean contactorOk = this.parent.parent.isFirstCheckContactorOkInOngrid();
 		if (contactorOk) {
 			this.state = State.RUN_ONGRID;
@@ -73,10 +75,8 @@ public class OngridHandler {
 	}
 
 	private State doOngrid() throws OpenemsNamedException {
-		System.out.println("In ongrid handler , doongrid method");
+		log.info("In ongrid handler , doongrid method");
 		CurrentState currentState = this.parent.getSinexcelState();
-		// GridMode gridMode = this.parent.parent.getGridMode().getNextValue().asEnum();
-
 		switch (currentState) {
 		case UNDEFINED:
 		case SLEEPING:

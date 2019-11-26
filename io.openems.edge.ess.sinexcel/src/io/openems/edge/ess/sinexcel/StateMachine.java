@@ -19,47 +19,33 @@ public class StateMachine {
 
 	public StateMachine(EssSinexcel parent) throws OpenemsNamedException {
 		this.parent = parent;
-
 	}
 
 	public void run() throws IllegalArgumentException, OpenemsNamedException {
-
-		// State gridMode = this.getCurrentGridMode();
-
-		// State nextState = null;
-
 		boolean stateChanged;
 		do {
 			stateChanged = false;
-
 			switch (state) {
 			case UNDEFINED:
 				stateChanged = changeState(this.handleUndefined());
-	            //nextState = this.handleUndefined();
 				break;
 			case GOING_ONGRID:
 				stateChanged = changeState(this.goingOngridHandler.run());
-				//nextState = this.goingOngridHandler.run();
 				break;
 			case ONGRID:
 				stateChanged = changeState(this.ongridHandler.run());
-				//nextState = this.ongridHandler.run();
 				break;
 			case GOING_OFFGRID:
 				stateChanged = changeState(this.goingOffgridHandler.run());
-				//nextState = this.goingOffgridHandler.run();
 				break;
 			case OFFGRID:
 				stateChanged = changeState(this.offgridHandler.run());
-				//nextState = this.offgridHandler.run();
 				break;
 			case ERROR:
 				stateChanged = changeState(this.errorHandler());
-				//nextState = this.errorHandler();
 				break;
 			}
 		} while (stateChanged);
-
 	}
 	
 	/**
@@ -82,7 +68,6 @@ public class StateMachine {
 		
 		GridMode gridMode = this.parent.getGridMode().getNextValue().asEnum();
 		this.log.info("mode is  [" + gridMode + "]");
-		//STATE_28
 		
 		switch (gridMode) {
 		case ON_GRID:
@@ -92,8 +77,7 @@ public class StateMachine {
 		case UNDEFINED:
 			this.log.info("In handleUndefined(), Grid-Mode is [" + gridMode + "]");
 			return State.UNDEFINED;
-		}
-		
+		}		
 		return State.ERROR;
 	}
 
@@ -117,8 +101,6 @@ public class StateMachine {
 		case OFF_GRID:
 			return State.OFFGRID;
 		case UNDEFINED:
-			System.out.println("In handleUndefined(), Grid-Mode is [" + gridMode + "]");
-			//this.log.info("In handleUndefined(), Grid-Mode is [" + gridMode + "]");
 			return State.UNDEFINED;
 		}
 		return State.UNDEFINED;
@@ -162,5 +144,4 @@ public class StateMachine {
 		System.out.println("[Current State is : " + curState.toString() + "]");
 		return curState;
 	}
-
 }

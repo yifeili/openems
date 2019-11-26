@@ -17,7 +17,7 @@ public class GoingOffgridHandler {
 
 	// WAIT
 	private LocalDateTime startedWaiting = null;
-	private final static int WAIT_SECONDS = 5;
+	private final static int WAIT_SECONDS = 50;
 
 	public GoingOffgridHandler(StateMachine parent) {
 		this.parent = parent;
@@ -29,7 +29,6 @@ public class GoingOffgridHandler {
 	}
 
 	protected StateMachine.State run() throws OpenemsNamedException {
-		System.out.println("GoingOffgridHandler.run");
 		switch (this.state) {
 		case UNDEFINED:
 			this.state = this.doUndefined();
@@ -70,16 +69,11 @@ public class GoingOffgridHandler {
 		}
 
 		/*
-		 * To switch the PCS to off-grid mode,
-		 * requires a stop command to the PCS, and a physical disconnection to the
-		 * utility before the PCS can be switched to off-grid mode, followed with a
-		 * start command.
+		 * To switch the PCS to off-grid mode, requires a stop command to the PCS, and a
+		 * physical disconnection to the utility before the PCS can be switched to
+		 * off-grid mode, followed with a start command.
 		 * 
 		 */
-		
-	
-		
-		// this.parent.parent.inverterOff();
 		if (this.startedWaiting.plusSeconds(WAIT_SECONDS).isAfter(LocalDateTime.now())) {
 			this.log.info("doWaitFirstSeconds() waiting the first seconds, sending the stop command");
 			this.parent.parent.inverterOff();
@@ -96,7 +90,7 @@ public class GoingOffgridHandler {
 	public enum State implements OptionsEnum {
 		UNDEFINED(-1, "Undefined"), //
 		WAIT(1, "For the first seconds just wait"), //
-		FINISH_GOING_OFFGRID(3, "Finish Going Off-Grid"); //
+		FINISH_GOING_OFFGRID(2, "Finish Going Off-Grid"); //
 
 		private final int value;
 		private final String name;
