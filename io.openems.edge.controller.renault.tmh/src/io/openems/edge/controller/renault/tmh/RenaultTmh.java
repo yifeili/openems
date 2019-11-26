@@ -16,6 +16,7 @@ import org.osgi.service.event.EventHandler;
 import io.openems.edge.bridge.modbus.api.AbstractOpenemsModbusComponent;
 import io.openems.edge.bridge.modbus.api.BridgeModbus;
 import io.openems.edge.bridge.modbus.api.ModbusProtocol;
+import io.openems.edge.bridge.modbus.api.element.SignedDoublewordElement;
 import io.openems.edge.bridge.modbus.api.element.UnsignedWordElement;
 import io.openems.edge.bridge.modbus.api.task.FC16WriteRegistersTask;
 import io.openems.edge.bridge.modbus.api.task.FC3ReadRegistersTask;
@@ -143,7 +144,7 @@ public class RenaultTmh extends AbstractOpenemsModbusComponent
 						 * Technical Unit Level Points
 						 */
 						m(RenaultTmhChannelId.SYSTEM_STATUS_TMH, new UnsignedWordElement(0)),
-						m(RenaultTmhChannelId.POWER_REQUEST_ACTIVE_POWER, new ),
+						m(RenaultTmhChannelId.POWER_REQUEST_ACTIVE_POWER, new SignedDoublewordElement(1)),
 						m(RenaultTmhChannelId.POWER_REQUEST_REACTIVE_POWER, new UnsignedWordElement(3)),
 						m(RenaultTmhChannelId.ERROR_RESET, new UnsignedWordElement(5)),
 						m(RenaultTmhChannelId.ALIVE_COUNTER_TMH, new UnsignedWordElement(6)),
