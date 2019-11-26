@@ -117,7 +117,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 				config.modbus_id()); //
 		this.initializeBattery(config.battery_id());
 		this.config = config;
-		this.WATCHDOG = config.watchdoginterval();
+//		this.WATCHDOG = config.watchdoginterval();
 //		this.MAX_APPARENT_POWER = config.maxApparentPower();
 	}
 
@@ -278,9 +278,12 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 	 */
 	private void checkIfPowerIsAllowed() {
 		// If the battery system is not ready no power can be applied!
-		if (battery.getReadyForWorking().value().orElse(false) && checkWatchdogCounter()) {
-			this.isPowerAllowed = true;
-		}
+		
+		this.isPowerAllowed = battery.getReadyForWorking().value().orElse(false);
+		
+//		if (battery.getReadyForWorking().value().orElse(false) && checkWatchdogCounter()) {
+//			this.isPowerAllowed = true;
+//		}
 		
 
 		// Read important Channels from battery
