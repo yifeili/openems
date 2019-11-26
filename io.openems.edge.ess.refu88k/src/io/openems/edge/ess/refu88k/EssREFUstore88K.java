@@ -1,6 +1,9 @@
 package io.openems.edge.ess.refu88k;
 
 import java.time.LocalDateTime;
+import java.util.Map.Entry;
+import java.util.TreeMap;
+
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
@@ -37,6 +40,7 @@ import io.openems.edge.common.channel.EnumReadChannel;
 import io.openems.edge.common.channel.EnumWriteChannel;
 import io.openems.edge.common.channel.IntegerReadChannel;
 import io.openems.edge.common.channel.IntegerWriteChannel;
+import io.openems.edge.common.channel.value.Value;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.event.EdgeEventConstants;
 import io.openems.edge.common.modbusslave.ModbusSlave;
@@ -113,7 +117,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 				config.modbus_id()); //
 		this.initializeBattery(config.battery_id());
 		this.config = config;
-//		this.WATCHDOG = config.watchdoginterval();
+		this.WATCHDOG = config.watchdoginterval();
 //		this.MAX_APPARENT_POWER = config.maxApparentPower();
 	}
 
@@ -190,7 +194,6 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 			/*
 			 * The inverter is grid connected. AC Relays are closed. The IGBT's are locked.
 			 */
-//			this.setWatchdogTimer();
 			this.checkIfPowerIsAllowed();
 			this.doGridConnectedHandling();
 			break;
@@ -199,7 +202,6 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 			 * The inverter feeds and derating is active. The IGBT's are working and AC
 			 * relays are closed.
 			 */
-//			this.setWatchdogTimer();
 			this.checkIfPowerIsAllowed();
 			this.timeNoPowerRequired();
 			break;
@@ -208,7 +210,6 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 			 * The inverter feeds with max possible power. The IGBT's are working and AC
 			 * relays are closed.
 			 */
-//			this.setWatchdogTimer();
 			this.checkIfPowerIsAllowed();
 			this.timeNoPowerRequired();
 			break;
@@ -277,7 +278,10 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 	 */
 	private void checkIfPowerIsAllowed() {
 		// If the battery system is not ready no power can be applied!
-		this.isPowerAllowed = battery.getReadyForWorking().value().orElse(false);
+		if (battery.getReadyForWorking().value().orElse(false) && checkWatchdogCounter()) {
+			this.isPowerAllowed = true;
+		}
+		
 
 		// Read important Channels from battery
 		int optV = battery.getVoltage().value().orElse(0);
@@ -343,8 +347,41 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 	 */	
 	private void doStandbyHandling() {
 		this.isPowerAllowed = false;
-//		this.setWatchdogTimer();
 		this.exitStandbyMode();
+	}
+	
+	
+	/**
+	 * 
+	 * Checks the Watchdog Counter! 
+	 * 
+	 */	
+	private boolean checkWatchdogCounter() {
+		IntegerReadChannel pcsHbChannel = this.channel(REFUStore88KChannelId.PCS_HB);	
+		Integer pcsHbCurrentValue = pcsHbChannel.value().get();
+		LocalDateTime pcsHbCurrentTime =  pcsHbChannel.value().getTimestamp();
+		
+		if (pcsHbCurrentTime.plusSeconds(WATCHDOG).isBefore(LocalDateTime.now())) {
+			return false;
+		}
+		
+		TreeMap<LocalDateTime, Value<Integer>> pastValues = pcsHbChannel.getPastValues();
+		
+		if (pastValues == null || pastValues.size() < 1) {
+			//Comparison not possible
+			return true;
+		}
+		
+		Entry<LocalDateTime, Value<Integer>> lastEntry = pastValues.lastEntry();
+		Integer valueLastEntry = lastEntry.getValue().get();
+		LocalDateTime timeLastEntry = lastEntry.getKey();
+		
+		if (timeLastEntry.plusSeconds(WATCHDOG).isBefore(LocalDateTime.now())) {
+			return false;
+		} else if (valueLastEntry + WATCHDOG <= pcsHbCurrentValue) {
+			return false;
+		}
+		return true;
 	}
 	
 	
@@ -354,20 +391,16 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 	 * Sets the configured Watchdog time! 
 	 * 
 	 */	
-	private void setWatchdogTimer() {
-		
-		IntegerReadChannel pcsHbChannel = this.channel(REFUStore88KChannelId.PCS_HB);
-		IntegerWriteChannel controllerHbChannel = this.channel(REFUStore88KChannelId.CONTROLLER_HB);
-		
-//		if (pcsHbChannel.getNextValue().get() > pcsHbChannel.getPastValues()) {
-//			
+//	private void setWatchdogTimer() {
+//		
+//		IntegerReadChannel pcsHbChannel = this.channel(REFUStore88KChannelId.PCS_HB);
+//		IntegerWriteChannel controllerHbChannel = this.channel(REFUStore88KChannelId.CONTROLLER_HB);
+//		
+//		try {
+//			controllerHbChannel.setNextWriteValue(pcsHbChannel.getNextValue().get() + 10);
+//		} catch (OpenemsNamedException e) {
+//			log.error("problem occurred while trying set readWriteParamId" + e.getMessage());
 //		}
-		
-		try {
-			controllerHbChannel.setNextWriteValue(pcsHbChannel.getNextValue().get() + 10);
-		} catch (OpenemsNamedException e) {
-			log.error("problem occurred while trying set readWriteParamId" + e.getMessage());
-		}
 //		IntegerWriteChannel readWriteParamId = this.channel(REFUStore88KChannelId.READ_WRITE_PARAM_ID);
 //		IntegerWriteChannel readWriteParamIndex = this.channel(REFUStore88KChannelId.READ_WRITE_PARAM_INDEX);
 //		
@@ -400,7 +433,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 //				
 //			}
 //		}
-	}
+//	}
 
 	
 	/**
@@ -554,6 +587,8 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 			this.log.debug("Power is not allowed!");
 			activePower = 0;
 			reactivePower = 0;
+			maxBatAChaChannel.setNextWriteValue(0);
+			maxBatADischaChannel.setNextWriteValue(0);
 		}
 		
 		/*
