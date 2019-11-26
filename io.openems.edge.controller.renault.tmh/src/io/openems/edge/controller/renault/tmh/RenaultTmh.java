@@ -143,7 +143,7 @@ public class RenaultTmh extends AbstractOpenemsModbusComponent
 						 * Technical Unit Level Points
 						 */
 						m(RenaultTmhChannelId.SYSTEM_STATUS_TMH, new UnsignedWordElement(0)),
-						m(RenaultTmhChannelId.POWER_REQUEST_ACTIVE_POWER, new UnsignedWordElement(1)),
+						m(RenaultTmhChannelId.POWER_REQUEST_ACTIVE_POWER, new ),
 						m(RenaultTmhChannelId.POWER_REQUEST_REACTIVE_POWER, new UnsignedWordElement(3)),
 						m(RenaultTmhChannelId.ERROR_RESET, new UnsignedWordElement(5)),
 						m(RenaultTmhChannelId.ALIVE_COUNTER_TMH, new UnsignedWordElement(6)),
