@@ -32,7 +32,7 @@ public enum RenaultTmhChannelId implements io.openems.edge.common.channel.Channe
 	/*
 	 * Inverter Level Points (n)
 	 */
-	INVERTER_STATUS_n(Doc.of(OperatingState.values())), //
+	INVERTER_STATUS_n(Doc.of(InverterStatus.values())), //
 	POWER_REQUEST_ACTIVE_POWER_n(Doc.of(OpenemsType.INTEGER).unit(Unit.WATT).accessMode(AccessMode.READ_ONLY)), //
 	POWER_REQUEST_REACTIVE_POWER_n(Doc.of(OpenemsType.INTEGER).unit(Unit.VOLT_AMPERE_REACTIVE).accessMode(AccessMode.READ_ONLY)), //
 	
@@ -63,21 +63,21 @@ public enum RenaultTmhChannelId implements io.openems.edge.common.channel.Channe
 	 * Energy Storage Unit Level Points (i)
 	 */
 	ESU_ID(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.WRITE_ONLY)), //
-	ESU_STATUS_i_ESS(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.WRITE_ONLY)), //
+	ESU_STATUS_i_ESS(Doc.of(EsuStatus.values())), //
 
 	/*
 	 * Battery Pack Level Points (m)
 	 */
 	BATTERY_ID(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.WRITE_ONLY)), //
-	BATTERY_PACK_STATUS_m(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.WRITE_ONLY)), //
-	STATE_OF_CHARGE_BATTERY_m(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.WRITE_ONLY)), //
-	DAILY_ENERGY_THROUGHPUT_BATTERY_m(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.WRITE_ONLY)), //
-	BATTERY_PACK_m_VOLTAGE(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.WRITE_ONLY)), //
-	BATTERY_PACK_m_CELL_VOLTAGE_MAXIMUM(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.WRITE_ONLY)), //
-	BATTERY_PACK_m_CELL_VOLTAGE_MINIMUM(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.WRITE_ONLY)), //
-	BATTERY_m_PACK_CURRENT(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.WRITE_ONLY)), //
-	BATTERY_m_PACK_TEMPERATUR(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.WRITE_ONLY)), //
-	BATTERY_m_STATE_OF_HEALTH(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.WRITE_ONLY)), //
+	BATTERY_PACK_STATUS_m(Doc.of(BatteryPackStatus.values())), //
+	STATE_OF_CHARGE_BATTERY_m(Doc.of(OpenemsType.INTEGER).unit(Unit.PERCENT).accessMode(AccessMode.WRITE_ONLY)), //
+	DAILY_ENERGY_THROUGHPUT_BATTERY_m(Doc.of(OpenemsType.INTEGER).unit(Unit.WATT_HOURS).accessMode(AccessMode.WRITE_ONLY)), //
+	BATTERY_PACK_m_VOLTAGE(Doc.of(OpenemsType.INTEGER).unit(Unit.VOLT).accessMode(AccessMode.WRITE_ONLY)), //
+	BATTERY_PACK_m_CELL_VOLTAGE_MAXIMUM(Doc.of(OpenemsType.INTEGER).unit(Unit.VOLT).accessMode(AccessMode.WRITE_ONLY)), //
+	BATTERY_PACK_m_CELL_VOLTAGE_MINIMUM(Doc.of(OpenemsType.INTEGER).unit(Unit.VOLT).accessMode(AccessMode.WRITE_ONLY)), //
+	BATTERY_m_PACK_CURRENT(Doc.of(OpenemsType.INTEGER).unit(Unit.AMPERE).accessMode(AccessMode.WRITE_ONLY)), //
+	BATTERY_m_PACK_TEMPERATUR(Doc.of(OpenemsType.INTEGER).unit(Unit.DEGREE_CELSIUS).accessMode(AccessMode.WRITE_ONLY)), //
+	BATTERY_m_STATE_OF_HEALTH(Doc.of(OpenemsType.INTEGER).unit(Unit.PERCENT).accessMode(AccessMode.WRITE_ONLY)), //
 	BATTERY_m_SPARE_A(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.WRITE_ONLY)), //
 	BATTERY_m_SPARE_B(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.WRITE_ONLY)), //
 	BATTERY_m_SPARE_C(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.WRITE_ONLY)), //
@@ -87,21 +87,17 @@ public enum RenaultTmhChannelId implements io.openems.edge.common.channel.Channe
 	 * Inverter Points (n)
 	 */
 	INVERTER_ID(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.WRITE_ONLY)), //
-	INVERTER_n_STATUS(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.WRITE_ONLY)), //
-	INVERTER_n_DC_VOLTAGE(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.WRITE_ONLY)), //
-	INVERTER_n_AC_VOLTAGE(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.WRITE_ONLY)), //
-	INVERTER_n_AC_CURRENT(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.WRITE_ONLY)), //
-	INVERTER_n_ACTIVE_POWER(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.WRITE_ONLY)), //
-	INVERTER_n_REACTIVE_POWER(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.WRITE_ONLY)), //
-	INVERTER_n_APPARENT_POWER(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.WRITE_ONLY)), //
+	INVERTER_n_STATUS(Doc.of(InverterStatus.values())), //
+	INVERTER_n_DC_VOLTAGE(Doc.of(OpenemsType.INTEGER).unit(Unit.VOLT).accessMode(AccessMode.WRITE_ONLY)), //
+	INVERTER_n_AC_VOLTAGE(Doc.of(OpenemsType.INTEGER).unit(Unit.VOLT).accessMode(AccessMode.WRITE_ONLY)), //
+	INVERTER_n_AC_CURRENT(Doc.of(OpenemsType.INTEGER).unit(Unit.AMPERE).accessMode(AccessMode.WRITE_ONLY)), //
+	INVERTER_n_ACTIVE_POWER(Doc.of(OpenemsType.INTEGER).unit(Unit.WATT).accessMode(AccessMode.WRITE_ONLY)), //
+	INVERTER_n_REACTIVE_POWER(Doc.of(OpenemsType.INTEGER).unit(Unit.VOLT_AMPERE_REACTIVE).accessMode(AccessMode.WRITE_ONLY)), //
+	INVERTER_n_APPARENT_POWER(Doc.of(OpenemsType.INTEGER).unit(Unit.VOLT_AMPERE).accessMode(AccessMode.WRITE_ONLY)), //
 	INVERTER_n_SPARE_A(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.WRITE_ONLY)), //
 	INVERTER_n_SPARE_B(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.WRITE_ONLY)), //
 	INVERTER_n_SPARE_C(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.WRITE_ONLY)), //
 	INVERTER_n_SPARE_D(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.WRITE_ONLY)), //
-	
-	
-	
-
 	
 	;
 	private final Doc doc;
