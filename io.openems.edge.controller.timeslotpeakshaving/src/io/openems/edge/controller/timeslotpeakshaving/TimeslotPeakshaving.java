@@ -185,7 +185,7 @@ public class TimeslotPeakshaving extends AbstractOpenemsComponent implements Con
 	/**
 	 * Gets the current ActivePower.
 	 * 
-	 * @return
+	 * @return int  power to charge or discharge
 	 */
 	private int getPower(ManagedSymmetricEss ess, SymmetricMeter meter) {		
 		LocalDateTime now = LocalDateTime.now(this.clock);
@@ -259,6 +259,13 @@ public class TimeslotPeakshaving extends AbstractOpenemsComponent implements Con
 		return 0;
 	}
 
+	/**
+	 * This method, calculates the peakshave power using the pid filter, 
+	 * 
+	 * @param ess
+	 * @param meter
+	 * @return pidoutput
+	 */
 	private int peakShave(ManagedSymmetricEss ess, SymmetricMeter meter) {
 		/*
 		 * Check that we are On-Grid (and warn on undefined Grid-Mode)
