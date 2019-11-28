@@ -600,7 +600,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 		 */
 		
 		IntegerReadChannel wMaxInverterChannel = this.channel(REFUStore88KChannelId.W_RTG);
-		MAX_APPARENT_POWER = wMaxInverterChannel.getNextValue().get();
+		MAX_APPARENT_POWER = wMaxInverterChannel.value().get();
 		IntegerWriteChannel wMaxChannel = this.channel(REFUStore88KChannelId.W_MAX);
 		wMaxChannel.setNextWriteValue(MAX_APPARENT_POWER); // Set WMax
 
