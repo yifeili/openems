@@ -5,5 +5,6 @@ export type Edges = [{
     producttype: string,
     version: string
     role: "admin" | "installer" | "owner" | "guest",
-    isOnline: boolean
+    isOnline: boolean,
+    isMasterFems: boolean
 }];

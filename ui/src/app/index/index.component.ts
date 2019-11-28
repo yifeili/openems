@@ -21,6 +21,7 @@ export class IndexComponent {
   public form: FormGroup;
   public filter: string = '';
   public filteredEdges: Edge[] = [];
+  public modifiedEdges: Edge[] = [];
 
   private stopOnDestroy: Subject<void> = new Subject<void>();
   private slice: number = 20;
@@ -79,6 +80,22 @@ export class IndexComponent {
         return edge1.localeCompare(edge2);
       })
       .map(edgeId => allEdges[edgeId]);
+    this.filteredEdges.forEach((edge, index) => {
+      if (index < 10) {
+        edge.id = 'fems' + index.toString();
+        this.modifiedEdges.push(edge);
+      }
+    })
+    this.modifiedEdges.forEach((edge, index) => {
+      if (index == 0) {
+        edge.comment = 'Container';
+        edge.isMasterFems = true;
+      } else {
+        edge.comment = 'Einheit #' + index.toString();
+        edge.isMasterFems = false;
+      }
+    })
+    console.log("modifiedEdges", this.modifiedEdges)
   }
 
   doLogin(password: string) {

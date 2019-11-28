@@ -23,12 +23,13 @@ import { EdgeConfig } from './edgeconfig';
 export class Edge {
 
   constructor(
-    public readonly id: string,
-    public readonly comment: string,
-    public readonly producttype: string,
-    public readonly version: string,
-    public readonly role: Role,
-    public isOnline: boolean
+    public id: string,
+    public comment: string,
+    public producttype: string,
+    public version: string,
+    public role: Role,
+    public isOnline: boolean,
+    public isMasterFems: boolean
   ) { }
 
   // holds currently subscribed channels, identified by source id
