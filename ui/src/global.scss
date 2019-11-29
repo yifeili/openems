@@ -15,6 +15,10 @@
     color: #2d8fab;
 }
 
+ion-button.status {
+    width: 90px;
+}
+
 //252px for the exact width of my-date-range-picker in PickDateComponent
 .pickdate-popover .popover-content{
     width: 251px;

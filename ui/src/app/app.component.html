@@ -12,11 +12,11 @@
       <!-- page title is shown if the current page isn't Live nor History -->
       <ion-title *ngIf="currentPage != 'IndexLive' && currentPage != 'IndexHistory'" class="ion-hide-md-up"
         slot="start">
-        {{ service.currentPageTitle }}
+        Renault - Monitoring
       </ion-title>
       <!-- page title is hidden when 'smartphone resolution' is reached -->
       <ion-title class="ion-hide-md-down" slot="start">
-        {{ service.currentPageTitle }}
+        Renault - Monitoring
       </ion-title>
       <ng-container *ngIf="service.currentEdge | async as edge">
         <ng-container *ngIf="currentPage == 'IndexLive' || currentPage == 'IndexHistory'">

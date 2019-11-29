@@ -42,8 +42,17 @@
 
     <ion-row class="ion-justify-content-center">
       <ion-col size="12" size-sm="6" size-md="4">
+        <ion-item button color="light" lines="none" routerLink="/status">
+          <ion-label>Einheit #3: modbus0:SlaveCommunicationFailed</ion-label>
+          <ion-icon name="alert" color="danger"></ion-icon>
+        </ion-item>
+      </ion-col>
+    </ion-row>
+
+    <ion-row class="ion-justify-content-center">
+      <ion-col size="12" size-sm="6" size-md="4">
         <ion-list lines="full">
-          <ion-item *ngFor="let edge of modifiedEdges" lines="inset" [color]="edge.isMasterFems ? 'light' : ''"
+          <ion-item *ngFor="let edge of modifiedEdges" lines="inset" [color]="edge.isMasterFems ? 'secondary' : ''"
             [routerLink]="['/device', edge.id]">
             <ion-label>
               <h2 class="ion-text-wrap">{{ edge.comment }}</h2>

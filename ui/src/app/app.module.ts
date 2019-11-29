@@ -25,6 +25,8 @@ import { ChartOptionsPopoverComponent } from './shared/chartoptions/popover/popo
 import { PickDatePopoverComponent } from './shared/pickdate/popover/popover.component';
 import { SharedModule } from './shared/shared.module';
 import { Language } from './shared/translate/language';
+import { StatusModule } from './status/status.module';
+import { FemsStatusModule } from './femsstatus/femsstatus.module';
 
 @NgModule({
   declarations: [
@@ -52,6 +54,8 @@ import { Language } from './shared/translate/language';
     AppRoutingModule,
     SharedModule,
     AboutModule,
+    StatusModule,
+    FemsStatusModule,
     SettingsModule,
     EdgeModule,
     EdgeSettingsModule,

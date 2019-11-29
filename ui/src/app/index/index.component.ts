@@ -81,7 +81,7 @@ export class IndexComponent {
       })
       .map(edgeId => allEdges[edgeId]);
     this.filteredEdges.forEach((edge, index) => {
-      if (index < 10) {
+      if (index < 9) {
         edge.id = 'fems' + index.toString();
         this.modifiedEdges.push(edge);
       }

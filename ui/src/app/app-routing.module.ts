@@ -16,6 +16,8 @@ import { IndexComponent as EdgeSettingsComponentUpdateIndexComponentComponent } 
 import { ComponentUpdateComponent as EdgeSettingsComponentUpdateComponentComponent } from './edge/settings/component/update/update.component';
 import { NetworkComponent as EdgeSettingsNetworkComponent } from './edge/settings/network/network.component';
 import { ProfileComponent as EdgeSettingsProfileComponent } from './edge/settings/profile/profile.component';
+import { StatusComponent } from './status/status.component';
+import { FemsStatusComponent } from './femsstatus/femsstatus.component';
 
 const routes: Routes = [
   { path: '', redirectTo: 'index', pathMatch: 'full' },
@@ -23,6 +25,8 @@ const routes: Routes = [
 
   { path: 'about', component: AboutComponent },
   { path: 'settings', component: SettingsComponent },
+  { path: 'status', component: StatusComponent },
+  { path: 'femsstatus', component: FemsStatusComponent },
 
   { path: 'device/:edgeId', redirectTo: 'device/:edgeId/live', pathMatch: 'full' },
   { path: 'device/:edgeId/live', component: EdgeLiveComponent },
