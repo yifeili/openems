@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentContext;
@@ -26,7 +27,13 @@ import org.slf4j.LoggerFactory;
 
 import io.openems.common.channel.AccessMode;
 import io.openems.common.channel.Unit;
+import io.openems.common.exceptions.OpenemsError;
 import io.openems.common.exceptions.OpenemsError.OpenemsNamedException;
+import io.openems.common.jsonrpc.base.JsonrpcRequest;
+import io.openems.common.jsonrpc.base.JsonrpcResponseSuccess;
+import io.openems.common.jsonrpc.request.SetCellUnderVoltageProtectionRequest;
+import io.openems.common.session.Role;
+import io.openems.common.session.User;
 import io.openems.edge.battery.api.Battery;
 import io.openems.edge.battery.soltaro.ChannelIdImpl;
 import io.openems.edge.battery.soltaro.ModuleParameters;
@@ -56,6 +63,7 @@ import io.openems.edge.common.channel.IntegerWriteChannel;
 import io.openems.edge.common.channel.StateChannel;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.event.EdgeEventConstants;
+import io.openems.edge.common.jsonapi.JsonApi;
 import io.openems.edge.common.modbusslave.ModbusSlave;
 import io.openems.edge.common.modbusslave.ModbusSlaveTable;
 import io.openems.edge.common.taskmanager.Priority;
@@ -68,9 +76,8 @@ import io.openems.edge.common.taskmanager.Priority;
 		property = EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_AFTER_PROCESS_IMAGE //
 )
 public class SingleRack extends AbstractOpenemsModbusComponent
-		implements Battery, OpenemsComponent, EventHandler, ModbusSlave {
+		implements Battery, OpenemsComponent, EventHandler, ModbusSlave, JsonApi {
 
-	// , // JsonApi // TODO
 
 	protected static final int SYSTEM_ON = 1;
 	protected final static int SYSTEM_OFF = 0;
@@ -1429,5 +1436,35 @@ public class SingleRack extends AbstractOpenemsModbusComponent
 				OpenemsComponent.getModbusSlaveNatureTable(accessMode), //
 				Battery.getModbusSlaveNatureTable(accessMode) //
 		);
+	}
+
+	@Override
+	public CompletableFuture<? extends JsonrpcResponseSuccess> handleJsonrpcRequest(//
+		User user, JsonrpcRequest request) throws OpenemsNamedException //
+	{
+			user.assertRoleIsAtLeast("handleJsonrpcRequest", Role.ADMIN);
+
+			switch (request.getMethod()) {
+
+			case SetCellUnderVoltageProtectionRequest.METHOD:
+				return this.SetCellUnderVoltageProtectionRequest(user, SetCellUnderVoltageProtectionRequest.from(request));
+			
+			default:
+				throw OpenemsError.JSONRPC_UNHANDLED_METHOD.exception(request.getMethod());
+			}
+		}
+
+	private CompletableFuture<? extends JsonrpcResponseSuccess> SetCellUnderVoltageProtectionRequest( //
+			User user, SetCellUnderVoltageProtectionRequest from //
+	) throws OpenemsNamedException { //
+	
+		IntegerWriteChannel iwc = this.channel(SingleRackChannelId.STOP_PARAMETER_CELL_UNDER_VOLTAGE_PROTECTION);
+		iwc.setNextWriteValue(from.getCellUnderVoltageProtection());
+		
+		iwc = this.channel(SingleRackChannelId.STOP_PARAMETER_CELL_UNDER_VOLTAGE_RECOVER);
+		iwc.setNextWriteValue(from.getCellUnderVoltageProtectionRecover());
+				
+		JsonrpcResponseSuccess response = JsonrpcResponseSuccess.from(from.toJsonObject());
+		return CompletableFuture.completedFuture(response);		
 	}
 }

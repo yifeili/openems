@@ -18,6 +18,7 @@ import io.openems.common.jsonrpc.request.ComponentJsonApiRequest;
 import io.openems.common.jsonrpc.request.CreateComponentConfigRequest;
 import io.openems.common.jsonrpc.request.DeleteComponentConfigRequest;
 import io.openems.common.jsonrpc.request.GetEdgeConfigRequest;
+import io.openems.common.jsonrpc.request.SetCellUnderVoltageProtectionRequest;
 import io.openems.common.jsonrpc.request.SetChannelValueRequest;
 import io.openems.common.jsonrpc.request.SubscribeSystemLogRequest;
 import io.openems.common.jsonrpc.request.UpdateComponentConfigRequest;
@@ -92,6 +93,10 @@ public class OnRequest implements io.openems.common.websocket.OnRequest {
 		case SubscribeSystemLogRequest.METHOD:
 			resultFuture = this.handleSubscribeSystemLogRequest(user, SubscribeSystemLogRequest.from(request));
 			break;
+			
+		case SetCellUnderVoltageProtectionRequest.METHOD:
+			resultFuture = this.handleComponentJsonApiRequest(user, ComponentJsonApiRequest.from(request));
+			break;
 
 		default:
 			this.parent.logWarn(this.log, "Unhandled Request: " + request);
@@ -111,6 +116,7 @@ public class OnRequest implements io.openems.common.websocket.OnRequest {
 		});
 		return result;
 	}
+
 
 	/**
 	 * Handles a GetEdgeConfigRequest.

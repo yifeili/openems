@@ -12,12 +12,14 @@ Export-Package: \
 	
 -includeresource: {readme.adoc}
 
--buildpath: ${buildpath},\
+-buildpath: \
+	${buildpath},\
 	io.openems.common;version=latest,\
 	io.openems.edge.battery.api;version=latest,\
 	io.openems.edge.bridge.modbus,\
 	io.openems.edge.common;version=latest,\
-	slf4j.api
+	slf4j.api,\
+	com.google.gson
 
 -testpath: ${testpath}
 
