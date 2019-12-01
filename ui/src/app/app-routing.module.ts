@@ -10,6 +10,7 @@ import { SettingsComponent as EdgeSettingsComponent } from './edge/settings/sett
 import { SystemLogComponent as EdgeSettingsSystemLogComponent } from './edge/settings/systemlog/systemlog.component';
 import { SystemExecuteComponent as EdgeSettingsSystemExecuteComponent } from './edge/settings/systemexecute/systemexecute.component';
 import { ChannelsComponent as EdgeSettingsChannelsComponent } from './edge/settings/channels/channels.component';
+import { CommandsComponent as EdgeSettingsCommandsComponent } from './edge/settings/commands/commands.component';
 import { IndexComponent as EdgeSettingsComponentInstallIndexComponentComponent } from './edge/settings/component/install/index.component';
 import { ComponentInstallComponent as EdgeSettingsComponentInstallComponentComponent } from './edge/settings/component/install/install.component';
 import { IndexComponent as EdgeSettingsComponentUpdateIndexComponentComponent } from './edge/settings/component/update/index.component';
@@ -32,6 +33,7 @@ const routes: Routes = [
   { path: 'device/:edgeId/settings/systemlog', component: EdgeSettingsSystemLogComponent },
   { path: 'device/:edgeId/settings/systemexecute', component: EdgeSettingsSystemExecuteComponent },
   { path: 'device/:edgeId/settings/channels', component: EdgeSettingsChannelsComponent },
+  { path: 'device/:edgeId/settings/commands', component: EdgeSettingsCommandsComponent },
   { path: 'device/:edgeId/settings/component.install', component: EdgeSettingsComponentInstallIndexComponentComponent },
   { path: 'device/:edgeId/settings/component.install/:factoryId', component: EdgeSettingsComponentInstallComponentComponent },
   { path: 'device/:edgeId/settings/component.update', component: EdgeSettingsComponentUpdateIndexComponentComponent },

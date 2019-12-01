@@ -9,6 +9,7 @@ import { NetworkComponent } from './network/network.component';
 import { ProfileComponent } from './profile/profile.component';
 import { SettingsComponent } from './settings.component';
 import { SystemExecuteComponent } from './systemexecute/systemexecute.component';
+import { CommandsComponent } from './commands/commands.component';
 
 @NgModule({
   imports: [
@@ -17,6 +18,7 @@ import { SystemExecuteComponent } from './systemexecute/systemexecute.component'
   declarations: [
     SettingsComponent,
     ChannelsComponent,
+    CommandsComponent,
     ComponentInstallIndexComponent,
     ComponentInstallComponent,
     ComponentUpdateIndexComponent,
