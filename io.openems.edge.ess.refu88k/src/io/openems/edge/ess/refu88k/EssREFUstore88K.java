@@ -359,33 +359,33 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 	 * Checks the Watchdog Counter! 
 	 * 
 	 */	
-	private boolean checkWatchdogCounter() {
-		IntegerReadChannel pcsHbChannel = this.channel(REFUStore88KChannelId.PCS_HB);	
-		Integer pcsHbCurrentValue = pcsHbChannel.value().get();
-		LocalDateTime pcsHbCurrentTime =  pcsHbChannel.value().getTimestamp();
-		
-		if (pcsHbCurrentTime.plusSeconds(WATCHDOG).isBefore(LocalDateTime.now())) {
-			return false;
-		}
-		
-		TreeMap<LocalDateTime, Value<Integer>> pastValues = pcsHbChannel.getPastValues();
-		
-		if (pastValues == null || pastValues.size() < 1) {
-			//Comparison not possible
-			return true;
-		}
-		
-		Entry<LocalDateTime, Value<Integer>> lastEntry = pastValues.lastEntry();
-		Integer valueLastEntry = lastEntry.getValue().get();
-		LocalDateTime timeLastEntry = lastEntry.getKey();
-		
-		if (timeLastEntry.plusSeconds(WATCHDOG).isBefore(LocalDateTime.now())) {
-			return false;
-		} else if (valueLastEntry + WATCHDOG <= pcsHbCurrentValue) {
-			return false;
-		}
-		return true;
-	}
+//	private boolean checkWatchdogCounter() {
+//		IntegerReadChannel pcsHbChannel = this.channel(REFUStore88KChannelId.PCS_HB);	
+//		Integer pcsHbCurrentValue = pcsHbChannel.value().get();
+//		LocalDateTime pcsHbCurrentTime =  pcsHbChannel.value().getTimestamp();
+//		
+//		if (pcsHbCurrentTime.plusSeconds(WATCHDOG).isBefore(LocalDateTime.now())) {
+//			return false;
+//		}
+//		
+//		TreeMap<LocalDateTime, Value<Integer>> pastValues = pcsHbChannel.getPastValues();
+//		
+//		if (pastValues == null || pastValues.size() < 1) {
+//			//Comparison not possible
+//			return true;
+//		}
+//		
+//		Entry<LocalDateTime, Value<Integer>> lastEntry = pastValues.lastEntry();
+//		Integer valueLastEntry = lastEntry.getValue().get();
+//		LocalDateTime timeLastEntry = lastEntry.getKey();
+//		
+//		if (timeLastEntry.plusSeconds(WATCHDOG).isBefore(LocalDateTime.now())) {
+//			return false;
+//		} else if (valueLastEntry + WATCHDOG <= pcsHbCurrentValue) {
+//			return false;
+//		}
+//		return true;
+//	}
 	
 	
 	
