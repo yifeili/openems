@@ -31,14 +31,13 @@ import org.osgi.service.metatype.annotations.AttributeDefinition;
 	String Battery_target() default "";
 	
 	@AttributeDefinition(name = "Topping charge", description = "The topping charge voltage is the voltage that the battery supposed to finally reach in the charging procedure")
-    int toppingCharge() default 4370;
-	
+    int toppingCharge() default 4370;	
 	
 	// input channel ------------------------
 	@AttributeDefinition(name = "DigitalInput", description = "input output channel which specify the gridmode")
     String digitalInput1() default "io0/DigitalInputM1C1";
 	
-	@AttributeDefinition(name = "DigitalInput", description = "This channels indicates Gridmode")
+	@AttributeDefinition(name = "DigitalInput", description = "This channels indicates Bender waiting or not")
     String digitalInput2() default "io0/DigitalInputM1C2";
 	
 	@AttributeDefinition(name = "DigitalInput", description = "input output channel which specify the gridmode")

@@ -7,6 +7,15 @@ import io.openems.edge.common.sum.GridMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * This state machine is a starting point of running the sinexcel in the particular grid mode(on/ off grid).
+ * 
+ * There are 6 states {@link #State}, First state is always undefined state,  
+ * {@link #handleUndefined()} Method would set the statemachine state to on/ off/ undefined state
+ * {@link #offgridHandler} and {@link #ongridHandler} would run the sinexcel in the respective modes
+ * {@link #goingOffgridHandler} and {@link #goingOngridHandler} are the transitional state while switching gridmodes
+ * 
+ */
 public class StateMachine {
 
 	protected final EssSinexcel parent;
@@ -41,6 +50,7 @@ public class StateMachine {
 			case OFFGRID:
 				stateChanged = changeState(this.offgridHandler.run());
 				break;
+			// This is state not usually reached
 			case ERROR:
 				stateChanged = changeState(this.errorHandler());
 				break;
@@ -62,6 +72,12 @@ public class StateMachine {
 			return false;
 	}
 
+	/**
+	 * This method is a handler for Error in the state machine. 
+	 * it is just a places holding for errorstate, most of the error handling is done in the respective gridModes
+	 * 
+	 * @return
+	 */
 	private State errorHandler() {
 		CurrentState currentState = getSinexcelState();
 		this.log.info("in error handler [" + currentState + "]");
@@ -106,6 +122,11 @@ public class StateMachine {
 		return State.UNDEFINED;
 	}
 
+	/**
+	 * States used in sinexcel, There are 6 state; 4 concrete states, 2 transitional states
+	 * The transitional states are used to perform actions while switching the "on and off gridmodes" 
+	 *
+	 */
 	public enum State implements OptionsEnum {
 		UNDEFINED(-1, "Undefined"), //
 		GOING_ONGRID(1, "Going On-Grid"), //
@@ -138,6 +159,12 @@ public class StateMachine {
 		}
 	}
 
+	/**
+	 * This method get the current state of the Sinexcel
+	 * {@link #CurrentState}
+	 * 
+	 * @return
+	 */
 	protected CurrentState getSinexcelState() {
 		EnumReadChannel currentState = this.parent.channel(SinexcelChannelId.SINEXCEL_STATE);
 		CurrentState curState = currentState.value().asEnum();

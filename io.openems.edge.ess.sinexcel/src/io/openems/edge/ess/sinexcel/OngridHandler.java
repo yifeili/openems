@@ -6,6 +6,19 @@ import io.openems.edge.common.sum.GridMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Ongrid handler, One of the states in sinexcel running,
+ * When there is no change in the gridmode, It does the operations for Ongrid  mode
+ * <p><ul>
+ * <li> Set the digital output {@link io.openems.edge.ess.sinexcel.EssSinexcel#setDigitalOutputInOngrid()} , see "commercial 30 on grid.pdf" in "doc" folder
+ * <li> First state is undefined {@link #doUndefined()}, 
+ * which checks the first round check of the contactorOk or not {@link io.openems.edge.ess.sinexcel.EssSinexcel#isFirstCheckContactorOkInOngrid}
+ * <li> Runs the Sinexcel in the ongrid mode
+ * <li> If there is a error, the sinexcel is switched off in {@link #switchOff()}
+ * </ul><p>
+ * 
+ */
+
 public class OngridHandler {
 	private final Logger log = LoggerFactory.getLogger(OngridHandler.class);
 	private final StateMachine parent;
@@ -52,6 +65,13 @@ public class OngridHandler {
 		return StateMachine.State.ONGRID;
 	}
 
+	/**
+	 * This method Switches of the Inverter and sets the digital output channels to specific values,
+	 * values are shown in "commercial 30 on grid.pdf" in "doc" folder
+	 * 
+	 * @return
+	 * @throws OpenemsNamedException
+	 */
 	private State switchOff() throws OpenemsNamedException {
 		log.info("in ongridhandler, in siwtch off method");
 		this.parent.parent.inverterOff();
@@ -59,6 +79,18 @@ public class OngridHandler {
 		return State.ERROR_SWITCHOFF;
 	}
 
+	/**
+	 * This method would starting point in ongrid functions,
+	 * This would do checks 
+	 * <p><ul>
+	 * <li>  
+	 * <li>	 
+	 * </ul><p>
+	 * 
+	 * @return
+	 * @throws IllegalArgumentException
+	 * @throws OpenemsNamedException
+	 */
 	private State doUndefined() throws IllegalArgumentException, OpenemsNamedException {
 		log.info("In ongrid handler do undefined method");
 		Boolean contactorOk = this.parent.parent.isFirstCheckContactorOkInOngrid();

@@ -992,7 +992,7 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 
 		if ((isdigitalInput1.isPresent() && isdigitalInput1.get() == true)
 				&& (isdigitalInput2.isPresent() && isdigitalInput2.get() == false)
-				&& (isdigitalInput3.isPresent() && isdigitalInput3.get() == false)) {
+				&& (isdigitalInput3.isPresent() && isdigitalInput3.get() == true)) {
 			return true;
 		} else {
 			return false;
