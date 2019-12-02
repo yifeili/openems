@@ -1,7 +1,9 @@
-package io.openems.edge.evcs.ocpp.ies.keywatt.singleccs;
+package io.openems.edge.evcs.ocpp.keywatt.singleccs;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.osgi.service.component.ComponentContext;
@@ -14,6 +16,8 @@ import org.osgi.service.event.EventConstants;
 import org.osgi.service.event.EventHandler;
 import org.osgi.service.metatype.annotations.Designate;
 
+import eu.chargetime.ocpp.model.Request;
+import eu.chargetime.ocpp.model.core.ChangeConfigurationRequest;
 import io.openems.common.exceptions.OpenemsError.OpenemsNamedException;
 import io.openems.edge.common.component.ComponentManager;
 import io.openems.edge.common.component.OpenemsComponent;
@@ -22,18 +26,19 @@ import io.openems.edge.evcs.api.ChargingType;
 import io.openems.edge.evcs.api.Evcs;
 import io.openems.edge.evcs.api.ManagedEvcs;
 import io.openems.edge.evcs.api.MeasuringEvcs;
-import io.openems.edge.evcs.ocpp.core.AbstractOcppEvcsComponent;
-import io.openems.edge.evcs.ocpp.core.OcppInformations;
-import io.openems.edge.evcs.ocpp.core.OcppProfileType;
+import io.openems.edge.evcs.ocpp.api.AbstractOcppEvcsComponent;
+import io.openems.edge.evcs.ocpp.api.OcppInformations;
+import io.openems.edge.evcs.ocpp.api.OcppProfileType;
+import io.openems.edge.evcs.ocpp.api.OcppRequests;
 import io.openems.edge.evcs.ocpp.server.OcppServerImpl;
 
 @Designate(ocd = Config.class, factory = true)
-@Component(//
+@Component( //
 		name = "Evcs.Ocpp.IesKeywattSingle", //
 		immediate = true, //
 		configurationPolicy = ConfigurationPolicy.REQUIRE, //
 		property = EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_EXECUTE_WRITE)
-public class IesKeywattSingleCcs extends AbstractOcppEvcsComponent
+public class IesKeywattSingleCCS extends AbstractOcppEvcsComponent
 		implements Evcs, ManagedEvcs, MeasuringEvcs, OpenemsComponent, EventHandler {
 
 	// Profiles that a Ies KeyWatt is supporting
@@ -51,8 +56,8 @@ public class IesKeywattSingleCcs extends AbstractOcppEvcsComponent
 	@Reference
 	protected ComponentManager componentManager;
 
-	public IesKeywattSingleCcs() {
-		super(//
+	public IesKeywattSingleCCS() {
+		super( //
 				PROFILE_TYPES, //
 				OpenemsComponent.ChannelId.values(), //
 				Evcs.ChannelId.values(), //
@@ -108,5 +113,31 @@ public class IesKeywattSingleCcs extends AbstractOcppEvcsComponent
 	@Override
 	public void handleEvent(Event event) {
 		super.handleEvent(event);
+	}
+
+	@Override
+	public OcppRequests getSupportedRequests() {
+		return new OcppRequests() {
+
+			@Override
+			public Request setChargePowerLimit(String chargePower) {
+				ChangeConfigurationRequest request = new ChangeConfigurationRequest();
+
+				request.setKey("PowerLimit");
+				request.setValue(chargePower);
+				
+				return request;
+			}
+		};
+	}
+
+	@Override
+	public List<Request> getRequiredRequestsAfterConnection() {
+		return new ArrayList<Request>();
+	}
+
+	@Override
+	public List<Request> getRequiredRequestsDuringConnection() {
+		return new ArrayList<Request>();
 	}
 }
