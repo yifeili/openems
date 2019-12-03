@@ -14,8 +14,8 @@ export class CommandsComponent {
   public edge: Edge = null;
   public config: EdgeConfig = null;
   public bmsId: string;
-  public cuvp: number;
-  public cuvpr: number;
+  public cuvp: string;
+  public cuvpr: string;
 
   constructor(
     private service: Service,

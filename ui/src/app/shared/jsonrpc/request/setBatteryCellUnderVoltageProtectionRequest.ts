@@ -23,8 +23,8 @@ export class SetBatteryCellUnderVoltageProtectionRequest extends JsonrpcRequest 
     public constructor(
         public readonly params: {
             bmsId: string,
-            cellUnderVoltageProtection: number,
-            cellUnderVoltageProtectionRecover: number
+            cellUnderVoltageProtection: string,
+            cellUnderVoltageProtectionRecover: string
         }
     ) {
         super(SetBatteryCellUnderVoltageProtectionRequest.METHOD, params);
