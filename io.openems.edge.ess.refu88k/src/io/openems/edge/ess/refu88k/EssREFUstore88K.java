@@ -45,6 +45,7 @@ import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.event.EdgeEventConstants;
 import io.openems.edge.common.modbusslave.ModbusSlave;
 import io.openems.edge.common.modbusslave.ModbusSlaveTable;
+import io.openems.edge.common.sum.GridMode;
 import io.openems.edge.common.taskmanager.Priority;
 import io.openems.edge.ess.api.ManagedSymmetricEss;
 import io.openems.edge.ess.api.SymmetricEss;
@@ -196,6 +197,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 			 */
 			this.checkIfPowerIsAllowed();
 			this.doGridConnectedHandling();
+			this.channel(SymmetricEss.ChannelId.GRID_MODE).setNextValue(GridMode.ON_GRID);
 			break;
 		case THROTTLED:
 			/*
@@ -204,6 +206,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 			 */
 			this.checkIfPowerIsAllowed();
 			this.timeNoPowerRequired();
+			this.channel(SymmetricEss.ChannelId.GRID_MODE).setNextValue(GridMode.ON_GRID);
 			break;
 		case MPPT:
 			/*
@@ -212,6 +215,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 			 */
 			this.checkIfPowerIsAllowed();
 			this.timeNoPowerRequired();
+			this.channel(SymmetricEss.ChannelId.GRID_MODE).setNextValue(GridMode.ON_GRID);
 			break;
 		case SHUTTING_DOWN:
 			/*

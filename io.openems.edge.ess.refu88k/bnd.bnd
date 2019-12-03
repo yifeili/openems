@@ -7,7 +7,7 @@ Export-Package: \
 	io.openems.edge.ess.power.api
 Private-Package: io.openems.edge.ess.refu88k
 
--includeresource: {readme.md}
+-includeresource: {readme.adoc}
 
 -buildpath: \
 	osgi.enroute.base.api;version=2.1,\
