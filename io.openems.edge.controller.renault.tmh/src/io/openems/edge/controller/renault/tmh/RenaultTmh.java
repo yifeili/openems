@@ -48,7 +48,6 @@ import io.openems.common.exceptions.OpenemsError.OpenemsNamedException;
 		configurationPolicy = ConfigurationPolicy.REQUIRE, //
 		property = { EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_AFTER_PROCESS_IMAGE,//
 		}
-
 )
 
 
@@ -137,8 +136,21 @@ public class RenaultTmh extends AbstractOpenemsModbusComponent
 	
 	private final static int TMH_MODBUS_ADDRESS_OFFSET_ESU_LEVEL_POINT = (7)+((i-1)*5);
 	private final static int TMH_MODBUS_ADDRESS_OFFSET_INVERTER_LEVEL_POINT = (7)+(5*i)+(5*(n-1));
-	private final static int ESS_MODBUS_ADDRESS_OFFSET_ESU_LEVEL_POINT = (28)+((i-1)*5);
-	private final static int ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_LEVEL_POINT = (28)+(i*5)+((m-1)*16);
+	
+	private final static int ESS_MODBUS_ADDRESS_OFFSET_TU_LEVEL_POINT = 0;
+	private final static int ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_1_LEVEL_POINT = 26;
+	private final static int ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_2_LEVEL_POINT = 41;
+	private final static int ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_3_LEVEL_POINT = 56;
+	private final static int ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_4_LEVEL_POINT = 71;
+	private final static int ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_5_LEVEL_POINT = 86;
+	private final static int ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_6_LEVEL_POINT = 101;
+	private final static int ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_7_LEVEL_POINT = 116;
+	private final static int ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_8_LEVEL_POINT = 131;
+	private final static int ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_9_LEVEL_POINT = 146;
+	private final static int ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_10_LEVEL_POINT = 161;
+	private final static int ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_11_LEVEL_POINT = 176;
+	private final static int ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_12_LEVEL_POINT = 191;
+	
 	
 	@Override
 	protected ModbusProtocol defineModbusProtocol() {
@@ -161,18 +173,56 @@ public class RenaultTmh extends AbstractOpenemsModbusComponent
 						m(RenaultTmhChannelId.ALIVE_COUNTER_TMH, new UnsignedWordElement(7)),
 						
 						/*
-						 * Energy Storage Unit Level Points (i)
-						 */
-						m(RenaultTmhChannelId.ESU_STATUS_i_TMH, new UnsignedWordElement(8)),
-						m(RenaultTmhChannelId.POWER_REQUEST_ACTIVE_POWER_i, new SignedDoublewordElement(9)),
-						m(RenaultTmhChannelId.POWER_REQUEST_REACTIVE_POWER_i, new SignedDoublewordElement(11)),
-						
-						/*
 						 * Inverter Level Points (n)
 						 */
-						m(RenaultTmhChannelId.INVERTER_STATUS_n, new UnsignedWordElement(13)),
-						m(RenaultTmhChannelId.POWER_REQUEST_ACTIVE_POWER_n, new SignedDoublewordElement(14)),
-						m(RenaultTmhChannelId.POWER_REQUEST_REACTIVE_POWER_n, new SignedDoublewordElement(16))),
+						m(RenaultTmhChannelId.INVERTER_STATUS_1, new UnsignedWordElement(8)),
+						m(RenaultTmhChannelId.POWER_REQUEST_ACTIVE_POWER_1, new SignedDoublewordElement(9)),
+						m(RenaultTmhChannelId.POWER_REQUEST_REACTIVE_POWER_1, new SignedDoublewordElement(11)),
+						
+						m(RenaultTmhChannelId.INVERTER_STATUS_2, new UnsignedWordElement(13)),
+						m(RenaultTmhChannelId.POWER_REQUEST_ACTIVE_POWER_2, new SignedDoublewordElement(14)),
+						m(RenaultTmhChannelId.POWER_REQUEST_REACTIVE_POWER_2, new SignedDoublewordElement(16)),
+						
+						m(RenaultTmhChannelId.INVERTER_STATUS_3, new UnsignedWordElement(18)),
+						m(RenaultTmhChannelId.POWER_REQUEST_ACTIVE_POWER_3, new SignedDoublewordElement(19)),
+						m(RenaultTmhChannelId.POWER_REQUEST_REACTIVE_POWER_3, new SignedDoublewordElement(21)),
+						
+						m(RenaultTmhChannelId.INVERTER_STATUS_4, new UnsignedWordElement(23)),
+						m(RenaultTmhChannelId.POWER_REQUEST_ACTIVE_POWER_4, new SignedDoublewordElement(24)),
+						m(RenaultTmhChannelId.POWER_REQUEST_REACTIVE_POWER_4, new SignedDoublewordElement(26)),
+						
+						m(RenaultTmhChannelId.INVERTER_STATUS_5, new UnsignedWordElement(28)),
+						m(RenaultTmhChannelId.POWER_REQUEST_ACTIVE_POWER_5, new SignedDoublewordElement(29)),
+						m(RenaultTmhChannelId.POWER_REQUEST_REACTIVE_POWER_5, new SignedDoublewordElement(31)),
+						
+						m(RenaultTmhChannelId.INVERTER_STATUS_6, new UnsignedWordElement(33)),
+						m(RenaultTmhChannelId.POWER_REQUEST_ACTIVE_POWER_6, new SignedDoublewordElement(34)),
+						m(RenaultTmhChannelId.POWER_REQUEST_REACTIVE_POWER_6, new SignedDoublewordElement(36)),
+						
+						m(RenaultTmhChannelId.INVERTER_STATUS_7, new UnsignedWordElement(38)),
+						m(RenaultTmhChannelId.POWER_REQUEST_ACTIVE_POWER_7, new SignedDoublewordElement(39)),
+						m(RenaultTmhChannelId.POWER_REQUEST_REACTIVE_POWER_7, new SignedDoublewordElement(41)),
+						
+						m(RenaultTmhChannelId.INVERTER_STATUS_8, new UnsignedWordElement(43)),
+						m(RenaultTmhChannelId.POWER_REQUEST_ACTIVE_POWER_8, new SignedDoublewordElement(44)),
+						m(RenaultTmhChannelId.POWER_REQUEST_REACTIVE_POWER_8, new SignedDoublewordElement(46)),
+						
+						m(RenaultTmhChannelId.INVERTER_STATUS_9, new UnsignedWordElement(48)),
+						m(RenaultTmhChannelId.POWER_REQUEST_ACTIVE_POWER_9, new SignedDoublewordElement(49)),
+						m(RenaultTmhChannelId.POWER_REQUEST_REACTIVE_POWER_9, new SignedDoublewordElement(51)),
+						
+						m(RenaultTmhChannelId.INVERTER_STATUS_10, new UnsignedWordElement(53)),
+						m(RenaultTmhChannelId.POWER_REQUEST_ACTIVE_POWER_10, new SignedDoublewordElement(54)),
+						m(RenaultTmhChannelId.POWER_REQUEST_REACTIVE_POWER_10, new SignedDoublewordElement(56)),
+						
+						m(RenaultTmhChannelId.INVERTER_STATUS_11, new UnsignedWordElement(58)),
+						m(RenaultTmhChannelId.POWER_REQUEST_ACTIVE_POWER_11, new SignedDoublewordElement(59)),
+						m(RenaultTmhChannelId.POWER_REQUEST_REACTIVE_POWER_11, new SignedDoublewordElement(61)),
+						
+						m(RenaultTmhChannelId.INVERTER_STATUS_12, new UnsignedWordElement(63)),
+						m(RenaultTmhChannelId.POWER_REQUEST_ACTIVE_POWER_12, new SignedDoublewordElement(64)),
+						m(RenaultTmhChannelId.POWER_REQUEST_REACTIVE_POWER_12, new SignedDoublewordElement(66))),
+				
 				
 				new FC16WriteRegistersTask(0, //
 						
@@ -183,48 +233,156 @@ public class RenaultTmh extends AbstractOpenemsModbusComponent
 						/*
 						 * Technical Unit Level Points
 						 */						
-						m(RenaultTmhChannelId.TECHNICAL_UNIT_ID, new UnsignedDoublewordElement(0)),
-						m(RenaultTmhChannelId.SYSTEM_STATUS_ESS, new UnsignedWordElement(2)),
-						m(RenaultTmhChannelId.CURRENT_MEASURED_ACTIVE_POWER, new SignedDoublewordElement(3)),
-						m(RenaultTmhChannelId.CURRENT_MEASURED_REACTIVE_POWER, new SignedDoublewordElement(5)),
-						m(RenaultTmhChannelId.ALIVE_COUNTER_ESS, new UnsignedWordElement(7)),
-						m(RenaultTmhChannelId.MAXIMUM_AVAILABLE_POWER_DISCHARGE, new UnsignedDoublewordElement(8)),
-						m(RenaultTmhChannelId.MAXIMUM_AVAILABLE_POWER_CHARGE, new UnsignedDoublewordElement(10)),
-						m(RenaultTmhChannelId.AVAILABLE_ENERGY_DISCHARGE, new UnsignedDoublewordElement(12)),
-						m(RenaultTmhChannelId.AVAILABLE_ENERGY_CHARGE, new UnsignedDoublewordElement(14)),
-						m(RenaultTmhChannelId.STORAGE_SYSTEM_ERROR, new UnsignedDoublewordElement(16)),
-						m(RenaultTmhChannelId.PAD_REGISTER_0, new UnsignedDoublewordElement(18)),
-						m(RenaultTmhChannelId.PAD_REGISTER_1, new UnsignedDoublewordElement(20)),
-						m(RenaultTmhChannelId.TECHNICAL_UNIT_ENERGY_THROUGHPUT_YTD, new UnsignedDoublewordElement(22)),
-						m(RenaultTmhChannelId.INDOOR_AMBIENT_TEMPERATURE, new SignedDoublewordElement(24)),
+						m(RenaultTmhChannelId.TECHNICAL_UNIT_ID, new UnsignedDoublewordElement(ESS_MODBUS_ADDRESS_OFFSET_TU_LEVEL_POINT)),
+						m(RenaultTmhChannelId.SYSTEM_STATUS_ESS, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_TU_LEVEL_POINT + 2)),
+						m(RenaultTmhChannelId.CURRENT_MEASURED_ACTIVE_POWER, new SignedDoublewordElement(ESS_MODBUS_ADDRESS_OFFSET_TU_LEVEL_POINT + 3)),
+						m(RenaultTmhChannelId.CURRENT_MEASURED_REACTIVE_POWER, new SignedDoublewordElement(ESS_MODBUS_ADDRESS_OFFSET_TU_LEVEL_POINT + 5)),
+						m(RenaultTmhChannelId.ALIVE_COUNTER_ESS, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_TU_LEVEL_POINT + 7)),
+						m(RenaultTmhChannelId.MAXIMUM_AVAILABLE_POWER_DISCHARGE, new UnsignedDoublewordElement(ESS_MODBUS_ADDRESS_OFFSET_TU_LEVEL_POINT + 8)),
+						m(RenaultTmhChannelId.MAXIMUM_AVAILABLE_POWER_CHARGE, new UnsignedDoublewordElement(ESS_MODBUS_ADDRESS_OFFSET_TU_LEVEL_POINT + 10)),
+						m(RenaultTmhChannelId.AVAILABLE_ENERGY_DISCHARGE, new UnsignedDoublewordElement(ESS_MODBUS_ADDRESS_OFFSET_TU_LEVEL_POINT + 12)),
+						m(RenaultTmhChannelId.AVAILABLE_ENERGY_CHARGE, new UnsignedDoublewordElement(ESS_MODBUS_ADDRESS_OFFSET_TU_LEVEL_POINT + 14)),
+						m(RenaultTmhChannelId.STORAGE_SYSTEM_ERROR, new UnsignedDoublewordElement(ESS_MODBUS_ADDRESS_OFFSET_TU_LEVEL_POINT + 16)),
+						m(RenaultTmhChannelId.PAD_REGISTER_0, new UnsignedDoublewordElement(ESS_MODBUS_ADDRESS_OFFSET_TU_LEVEL_POINT + 18)),
+						m(RenaultTmhChannelId.PAD_REGISTER_1, new UnsignedDoublewordElement(ESS_MODBUS_ADDRESS_OFFSET_TU_LEVEL_POINT + 20)),
+						m(RenaultTmhChannelId.TECHNICAL_UNIT_ENERGY_THROUGHPUT_YTD, new UnsignedDoublewordElement(ESS_MODBUS_ADDRESS_OFFSET_TU_LEVEL_POINT + 22)),
+						m(RenaultTmhChannelId.INDOOR_AMBIENT_TEMPERATURE, new SignedDoublewordElement(ESS_MODBUS_ADDRESS_OFFSET_TU_LEVEL_POINT + 24)),
 
-						/*
-						 * Energy Storage Unit Level Points (i)
-						 */
-						m(RenaultTmhChannelId.ESU_ID, new UnsignedDoublewordElement(26)),
-						m(RenaultTmhChannelId.ESU_STATUS_i_ESS, new UnsignedWordElement(28)),
-						
 						/*
 						 * Battery Pack Level Points (m)
 						 */
-						m(RenaultTmhChannelId.BATTERY_ID, new UnsignedDoublewordElement(29)),
-						m(RenaultTmhChannelId.BATTERY_PACK_STATUS_m, new UnsignedWordElement(31)),
-						m(RenaultTmhChannelId.STATE_OF_CHARGE_BATTERY_m, new UnsignedWordElement(32),
+						m(RenaultTmhChannelId.BATTERY_ID_1, new UnsignedDoublewordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_1_LEVEL_POINT)),
+						m(RenaultTmhChannelId.BATTERY_PACK_STATUS_1, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_1_LEVEL_POINT + 2)),
+						m(RenaultTmhChannelId.STATE_OF_CHARGE_BATTERY_1, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_1_LEVEL_POINT + 3),
 								ElementToChannelConverter.SCALE_FACTOR_1),						
-						m(RenaultTmhChannelId.DAILY_ENERGY_THROUGHPUT_BATTERY_m, new UnsignedWordElement(33)),
-						m(RenaultTmhChannelId.BATTERY_PACK_m_VOLTAGE, new UnsignedWordElement(34)),
-						m(RenaultTmhChannelId.BATTERY_PACK_m_CELL_VOLTAGE_MAXIMUM, new UnsignedWordElement(35),
+						m(RenaultTmhChannelId.DAILY_ENERGY_THROUGHPUT_BATTERY_1, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_1_LEVEL_POINT + 4)),
+						m(RenaultTmhChannelId.BATTERY_PACK_1_VOLTAGE, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_1_LEVEL_POINT + 5)),
+						m(RenaultTmhChannelId.BATTERY_PACK_1_CELL_VOLTAGE_MAXIMUM, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_1_LEVEL_POINT + 6),
 								ElementToChannelConverter.SCALE_FACTOR_MINUS_3),
-						m(RenaultTmhChannelId.BATTERY_PACK_m_CELL_VOLTAGE_MINIMUM, new UnsignedWordElement(36),
+						m(RenaultTmhChannelId.BATTERY_PACK_1_CELL_VOLTAGE_MINIMUM, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_1_LEVEL_POINT + 7),
 								ElementToChannelConverter.SCALE_FACTOR_MINUS_3),
-						m(RenaultTmhChannelId.BATTERY_m_PACK_CURRENT, new SignedWordElement(37),
+						m(RenaultTmhChannelId.BATTERY_1_PACK_CURRENT, new SignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_1_LEVEL_POINT + 8),
 								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
-						m(RenaultTmhChannelId.BATTERY_m_PACK_TEMPERATUR, new SignedWordElement(38)),
-						m(RenaultTmhChannelId.BATTERY_m_STATE_OF_HEALTH, new UnsignedWordElement(39)),
-						m(RenaultTmhChannelId.BATTERY_m_SPARE_A, new UnsignedWordElement(40)),
-						m(RenaultTmhChannelId.BATTERY_m_SPARE_B, new UnsignedWordElement(41)),
-						m(RenaultTmhChannelId.BATTERY_m_SPARE_C, new UnsignedWordElement(42)),
-						m(RenaultTmhChannelId.BATTERY_m_SPARE_D, new UnsignedWordElement(43)),
+						m(RenaultTmhChannelId.BATTERY_1_PACK_TEMPERATUR, new SignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_1_LEVEL_POINT + 9)),
+						m(RenaultTmhChannelId.BATTERY_1_STATE_OF_HEALTH, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_1_LEVEL_POINT + 10)),
+						m(RenaultTmhChannelId.BATTERY_1_SPARE_A, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_1_LEVEL_POINT + 11)),
+						m(RenaultTmhChannelId.BATTERY_1_SPARE_B, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_1_LEVEL_POINT + 12)),
+						m(RenaultTmhChannelId.BATTERY_1_SPARE_C, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_1_LEVEL_POINT + 13)),
+						m(RenaultTmhChannelId.BATTERY_1_SPARE_D, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_1_LEVEL_POINT + 14)),
+						
+						m(RenaultTmhChannelId.BATTERY_ID_2, new UnsignedDoublewordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_2_LEVEL_POINT)),
+						m(RenaultTmhChannelId.BATTERY_PACK_STATUS_2, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_2_LEVEL_POINT + 2)),
+						m(RenaultTmhChannelId.STATE_OF_CHARGE_BATTERY_2, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_2_LEVEL_POINT + 3),
+								ElementToChannelConverter.SCALE_FACTOR_1),						
+						m(RenaultTmhChannelId.DAILY_ENERGY_THROUGHPUT_BATTERY_2, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_2_LEVEL_POINT + 4)),
+						m(RenaultTmhChannelId.BATTERY_PACK_2_VOLTAGE, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_2_LEVEL_POINT + 5)),
+						m(RenaultTmhChannelId.BATTERY_PACK_2_CELL_VOLTAGE_MAXIMUM, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_2_LEVEL_POINT + 6),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_3),
+						m(RenaultTmhChannelId.BATTERY_PACK_2_CELL_VOLTAGE_MINIMUM, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_2_LEVEL_POINT + 7),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_3),
+						m(RenaultTmhChannelId.BATTERY_2_PACK_CURRENT, new SignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_2_LEVEL_POINT + 8),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
+						m(RenaultTmhChannelId.BATTERY_2_PACK_TEMPERATUR, new SignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_2_LEVEL_POINT + 9)),
+						m(RenaultTmhChannelId.BATTERY_2_STATE_OF_HEALTH, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_2_LEVEL_POINT + 10)),
+						m(RenaultTmhChannelId.BATTERY_2_SPARE_A, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_2_LEVEL_POINT + 11)),
+						m(RenaultTmhChannelId.BATTERY_2_SPARE_B, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_2_LEVEL_POINT + 12)),
+						m(RenaultTmhChannelId.BATTERY_2_SPARE_C, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_2_LEVEL_POINT + 13)),
+						m(RenaultTmhChannelId.BATTERY_2_SPARE_D, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_2_LEVEL_POINT + 14)),
+						
+						m(RenaultTmhChannelId.BATTERY_ID_3, new UnsignedDoublewordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_3_LEVEL_POINT)),
+						m(RenaultTmhChannelId.BATTERY_PACK_STATUS_3, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_3_LEVEL_POINT + 2)),
+						m(RenaultTmhChannelId.STATE_OF_CHARGE_BATTERY_3, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_3_LEVEL_POINT + 3),
+								ElementToChannelConverter.SCALE_FACTOR_1),						
+						m(RenaultTmhChannelId.DAILY_ENERGY_THROUGHPUT_BATTERY_3, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_3_LEVEL_POINT + 4)),
+						m(RenaultTmhChannelId.BATTERY_PACK_3_VOLTAGE, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_3_LEVEL_POINT + 5)),
+						m(RenaultTmhChannelId.BATTERY_PACK_3_CELL_VOLTAGE_MAXIMUM, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_3_LEVEL_POINT + 6),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_3),
+						m(RenaultTmhChannelId.BATTERY_PACK_3_CELL_VOLTAGE_MINIMUM, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_3_LEVEL_POINT + 7),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_3),
+						m(RenaultTmhChannelId.BATTERY_3_PACK_CURRENT, new SignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_3_LEVEL_POINT + 8),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
+						m(RenaultTmhChannelId.BATTERY_3_PACK_TEMPERATUR, new SignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_3_LEVEL_POINT + 9)),
+						m(RenaultTmhChannelId.BATTERY_3_STATE_OF_HEALTH, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_3_LEVEL_POINT + 10)),
+						m(RenaultTmhChannelId.BATTERY_3_SPARE_A, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_3_LEVEL_POINT + 11)),
+						m(RenaultTmhChannelId.BATTERY_3_SPARE_B, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_3_LEVEL_POINT + 12)),
+						m(RenaultTmhChannelId.BATTERY_3_SPARE_C, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_3_LEVEL_POINT + 13)),
+						m(RenaultTmhChannelId.BATTERY_3_SPARE_D, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_3_LEVEL_POINT + 14)),
+						
+						m(RenaultTmhChannelId.BATTERY_ID_4, new UnsignedDoublewordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_4_LEVEL_POINT)),
+						m(RenaultTmhChannelId.BATTERY_PACK_STATUS_4, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_4_LEVEL_POINT + 2)),
+						m(RenaultTmhChannelId.STATE_OF_CHARGE_BATTERY_4, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_4_LEVEL_POINT + 3),
+								ElementToChannelConverter.SCALE_FACTOR_1),						
+						m(RenaultTmhChannelId.DAILY_ENERGY_THROUGHPUT_BATTERY_4, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_4_LEVEL_POINT + 4)),
+						m(RenaultTmhChannelId.BATTERY_PACK_4_VOLTAGE, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_4_LEVEL_POINT + 5)),
+						m(RenaultTmhChannelId.BATTERY_PACK_4_CELL_VOLTAGE_MAXIMUM, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_4_LEVEL_POINT + 6),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_3),
+						m(RenaultTmhChannelId.BATTERY_PACK_4_CELL_VOLTAGE_MINIMUM, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_4_LEVEL_POINT + 7),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_3),
+						m(RenaultTmhChannelId.BATTERY_4_PACK_CURRENT, new SignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_4_LEVEL_POINT + 8),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
+						m(RenaultTmhChannelId.BATTERY_4_PACK_TEMPERATUR, new SignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_4_LEVEL_POINT + 9)),
+						m(RenaultTmhChannelId.BATTERY_4_STATE_OF_HEALTH, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_4_LEVEL_POINT + 10)),
+						m(RenaultTmhChannelId.BATTERY_4_SPARE_A, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_4_LEVEL_POINT + 11)),
+						m(RenaultTmhChannelId.BATTERY_4_SPARE_B, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_4_LEVEL_POINT + 12)),
+						m(RenaultTmhChannelId.BATTERY_4_SPARE_C, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_4_LEVEL_POINT + 13)),
+						m(RenaultTmhChannelId.BATTERY_4_SPARE_D, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_4_LEVEL_POINT + 14)),
+						
+						m(RenaultTmhChannelId.BATTERY_ID_5, new UnsignedDoublewordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_5_LEVEL_POINT)),
+						m(RenaultTmhChannelId.BATTERY_PACK_STATUS_5, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_5_LEVEL_POINT + 2)),
+						m(RenaultTmhChannelId.STATE_OF_CHARGE_BATTERY_5, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_5_LEVEL_POINT + 3),
+								ElementToChannelConverter.SCALE_FACTOR_1),						
+						m(RenaultTmhChannelId.DAILY_ENERGY_THROUGHPUT_BATTERY_5, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_5_LEVEL_POINT + 4)),
+						m(RenaultTmhChannelId.BATTERY_PACK_5_VOLTAGE, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_5_LEVEL_POINT + 5)),
+						m(RenaultTmhChannelId.BATTERY_PACK_5_CELL_VOLTAGE_MAXIMUM, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_5_LEVEL_POINT + 6),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_3),
+						m(RenaultTmhChannelId.BATTERY_PACK_5_CELL_VOLTAGE_MINIMUM, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_5_LEVEL_POINT + 7),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_3),
+						m(RenaultTmhChannelId.BATTERY_5_PACK_CURRENT, new SignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_5_LEVEL_POINT + 8),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
+						m(RenaultTmhChannelId.BATTERY_5_PACK_TEMPERATUR, new SignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_5_LEVEL_POINT + 9)),
+						m(RenaultTmhChannelId.BATTERY_5_STATE_OF_HEALTH, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_5_LEVEL_POINT + 10)),
+						m(RenaultTmhChannelId.BATTERY_5_SPARE_A, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_5_LEVEL_POINT + 11)),
+						m(RenaultTmhChannelId.BATTERY_5_SPARE_B, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_5_LEVEL_POINT + 12)),
+						m(RenaultTmhChannelId.BATTERY_5_SPARE_C, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_5_LEVEL_POINT + 13)),
+						m(RenaultTmhChannelId.BATTERY_5_SPARE_D, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_5_LEVEL_POINT + 14)),
+						
+						m(RenaultTmhChannelId.BATTERY_ID_6, new UnsignedDoublewordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_6_LEVEL_POINT)),
+						m(RenaultTmhChannelId.BATTERY_PACK_STATUS_6, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_6_LEVEL_POINT + 2)),
+						m(RenaultTmhChannelId.STATE_OF_CHARGE_BATTERY_6, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_6_LEVEL_POINT + 3),
+								ElementToChannelConverter.SCALE_FACTOR_1),						
+						m(RenaultTmhChannelId.DAILY_ENERGY_THROUGHPUT_BATTERY_5, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_6_LEVEL_POINT + 4)),
+						m(RenaultTmhChannelId.BATTERY_PACK_6_VOLTAGE, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_6_LEVEL_POINT + 5)),
+						m(RenaultTmhChannelId.BATTERY_PACK_6_CELL_VOLTAGE_MAXIMUM, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_6_LEVEL_POINT + 6),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_3),
+						m(RenaultTmhChannelId.BATTERY_PACK_6_CELL_VOLTAGE_MINIMUM, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_6_LEVEL_POINT + 7),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_3),
+						m(RenaultTmhChannelId.BATTERY_6_PACK_CURRENT, new SignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_6_LEVEL_POINT + 8),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
+						m(RenaultTmhChannelId.BATTERY_6_PACK_TEMPERATUR, new SignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_6_LEVEL_POINT + 9)),
+						m(RenaultTmhChannelId.BATTERY_6_STATE_OF_HEALTH, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_6_LEVEL_POINT + 10)),
+						m(RenaultTmhChannelId.BATTERY_6_SPARE_A, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_6_LEVEL_POINT + 11)),
+						m(RenaultTmhChannelId.BATTERY_6_SPARE_B, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_6_LEVEL_POINT + 12)),
+						m(RenaultTmhChannelId.BATTERY_6_SPARE_C, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_6_LEVEL_POINT + 13)),
+						m(RenaultTmhChannelId.BATTERY_6_SPARE_D, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_6_LEVEL_POINT + 14)),
+						
+						m(RenaultTmhChannelId.BATTERY_ID_7, new UnsignedDoublewordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_6_LEVEL_POINT)),
+						m(RenaultTmhChannelId.BATTERY_PACK_STATUS_7, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_6_LEVEL_POINT + 2)),
+						m(RenaultTmhChannelId.STATE_OF_CHARGE_BATTERY_7, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_6_LEVEL_POINT + 3),
+								ElementToChannelConverter.SCALE_FACTOR_1),						
+						m(RenaultTmhChannelId.DAILY_ENERGY_THROUGHPUT_BATTERY_7, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_6_LEVEL_POINT + 4)),
+						m(RenaultTmhChannelId.BATTERY_PACK_7_VOLTAGE, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_6_LEVEL_POINT + 5)),
+						m(RenaultTmhChannelId.BATTERY_PACK_7_CELL_VOLTAGE_MAXIMUM, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_6_LEVEL_POINT + 6),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_3),
+						m(RenaultTmhChannelId.BATTERY_PACK_7_CELL_VOLTAGE_MINIMUM, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_6_LEVEL_POINT + 7),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_3),
+						m(RenaultTmhChannelId.BATTERY_7_PACK_CURRENT, new SignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_6_LEVEL_POINT + 8),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
+						m(RenaultTmhChannelId.BATTERY_7_PACK_TEMPERATUR, new SignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_6_LEVEL_POINT + 9)),
+						m(RenaultTmhChannelId.BATTERY_7_STATE_OF_HEALTH, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_6_LEVEL_POINT + 10)),
+						m(RenaultTmhChannelId.BATTERY_7_SPARE_A, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_6_LEVEL_POINT + 11)),
+						m(RenaultTmhChannelId.BATTERY_7_SPARE_B, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_6_LEVEL_POINT + 12)),
+						m(RenaultTmhChannelId.BATTERY_7_SPARE_C, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_6_LEVEL_POINT + 13)),
+						m(RenaultTmhChannelId.BATTERY_7_SPARE_D, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_6_LEVEL_POINT + 14)),
 						
 						/*
 						 * Inverter Points (n)
