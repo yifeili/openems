@@ -9,8 +9,9 @@ import org.slf4j.LoggerFactory;
 /**
  * Ongrid handler, One of the states in sinexcel running,
  * When there is no change in the gridmode, It does the operations for Ongrid  mode
+ * 
  * <p><ul>
- * <li> Set the digital output {@link io.openems.edge.ess.sinexcel.EssSinexcel#setDigitalOutputInOngrid()} , see "commercial 30 on grid.pdf" in "doc" folder
+ * <li> Set the digital output {@link io.openems.edge.ess.sinexcel.EssSinexcel#setDigitalOutputInOngrid()} 
  * <li> First state is undefined {@link #doUndefined()}, 
  * which checks the first round check of the contactorOk or not {@link io.openems.edge.ess.sinexcel.EssSinexcel#isFirstCheckContactorOkInOngrid}
  * <li> Runs the Sinexcel in the ongrid mode
@@ -80,11 +81,14 @@ public class OngridHandler {
 	}
 
 	/**
-	 * This method would starting point in ongrid functions,
-	 * This would do checks 
+	 * This method would be starting point in ongrid functions,
+	 * This would do two checks 
 	 * <p><ul>
-	 * <li>  
-	 * <li>	 
+	 * <li>  First check is , all the digital inputs are "false", then its in ongrid mode
+	 * 
+	 * <li>else	<p><ul> 
+	 * <li>  if the digital input 1 and digital input 2 are "true" then should go to off grid
+	 * <li> else goto error state, then switch of the inverter
 	 * </ul><p>
 	 * 
 	 * @return
@@ -106,6 +110,12 @@ public class OngridHandler {
 		return state;
 	}
 
+	/**
+	 * First state is always the undefined state of all the states in the Sinexcel, 
+	 *  
+	 * @return
+	 * @throws OpenemsNamedException
+	 */
 	private State doOngrid() throws OpenemsNamedException {
 		log.info("In ongrid handler , doongrid method");
 		CurrentState currentState = this.parent.getSinexcelState();

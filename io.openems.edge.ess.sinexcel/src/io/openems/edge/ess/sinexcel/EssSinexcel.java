@@ -800,8 +800,8 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 		Optional<Boolean> isGridMode = gridModeChannel.value().asOptional();
 		Optional<Boolean> isBenderWaiting = benderWaitingChannel.value().asOptional();
 
-		System.out.println("isGridMode : " + isGridMode.get());
-		System.out.println("isBenderWaiting : " + isBenderWaiting.get());
+		//System.out.println("isGridMode : " + isGridMode.get());
+		//System.out.println("isBenderWaiting : " + isBenderWaiting.get());
 
 		if (isGridMode.isPresent() && isGridMode.get() == false) {
 			this.getGridMode().setNextValue(GridMode.ON_GRID);
@@ -865,6 +865,11 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 		return this.channel(SinexcelChannelId.BAT_VOLTAGE);
 	}
 
+	/**
+	 * 
+	 * @throws IllegalArgumentException
+	 * @throws OpenemsNamedException
+	 */
 	public void setDigitalOutputInOngrid() throws IllegalArgumentException, OpenemsNamedException {
 		BooleanWriteChannel digitaloutput1 = this.componentManager
 				.getChannel(ChannelAddress.fromString(this.config.digitalOutput1()));
@@ -879,6 +884,11 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 		this.setOutput(digitaloutput3, true);
 	}
 
+	/**
+	 * 
+	 * @throws IllegalArgumentException
+	 * @throws OpenemsNamedException
+	 */
 	public void setDigitalOutputInOffgrid() throws IllegalArgumentException, OpenemsNamedException {
 		BooleanWriteChannel digitaloutput1 = this.componentManager
 				.getChannel(ChannelAddress.fromString(this.config.digitalOutput1()));

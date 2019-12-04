@@ -6,6 +6,19 @@ import io.openems.edge.common.sum.GridMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Offgrid handler, One of the states in sinexcel running,
+ * When there is no change in the gridmode, It does the operations for Offgrid  mode
+ * 
+ * <p><ul>
+ * <li> Set the digital output {@link io.openems.edge.ess.sinexcel.EssSinexcel#setDigitalOutputInOffgrid()} 
+ * <li> First state is undefined {@link #doUndefined()}, 
+ * which checks the first round check of the contactorOk or not {@link io.openems.edge.ess.sinexcel.EssSinexcel#isFirstCheckContactorOkInOngrid}
+ * <li> Runs the Sinexcel in the ongrid mode
+ * <li> If there is a error, the sinexcel is switched off in {@link #switchOff()}
+ * </ul><p>
+ * 
+ */
 public class OffgridHandler {
 
 	private final Logger log = LoggerFactory.getLogger(OngridHandler.class);
@@ -66,10 +79,8 @@ public class OffgridHandler {
 	private State doUndefined() throws IllegalArgumentException, OpenemsNamedException {
 		boolean contactorChk = this.parent.parent.isFirstCheckContactorFault();
 		if (contactorChk) {
-			System.out.println("first if");
 			return State.RUN_OFFGRID;
 		} else {
-			System.out.println("second else");
 			return State.ERROR_SWITCHOFF;
 		}
 	}

@@ -8,13 +8,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This state machine is a starting point of running the sinexcel in the particular grid mode(on/ off grid).
+ * This state machine is a starting point of running the sinexcel in any grid mode(on/ off grid).
  * 
  * There are 6 states {@link #State}, First state is always undefined state,  
- * {@link #handleUndefined()} Method would set the statemachine state to on/ off/ undefined state
- * {@link #offgridHandler} and {@link #ongridHandler} would run the sinexcel in the respective modes
- * {@link #goingOffgridHandler} and {@link #goingOngridHandler} are the transitional state while switching gridmodes
- * 
+ * <p><ul>
+ * <li> {@link #handleUndefined()} Method would set the statemachine state to on/ off/ undefined state
+ * <li> {@link #offgridHandler} and {@link #ongridHandler} would run the sinexcel in the respective modes
+ * <li> {@link #goingOffgridHandler} and {@link #goingOngridHandler} are the transitional state while switching gridmodes
+ * </ul><p>
  */
 public class StateMachine {
 
