@@ -25,15 +25,19 @@ import org.osgi.service.metatype.annotations.Designate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
+
 import io.openems.common.channel.AccessMode;
 import io.openems.common.channel.Unit;
 import io.openems.common.exceptions.OpenemsError;
 import io.openems.common.exceptions.OpenemsError.OpenemsNamedException;
+import io.openems.common.jsonrpc.base.JsonrpcMessage;
 import io.openems.common.jsonrpc.base.JsonrpcRequest;
 import io.openems.common.jsonrpc.base.JsonrpcResponseSuccess;
-import io.openems.common.jsonrpc.request.SetCellUnderVoltageProtectionRequest;
 import io.openems.common.session.Role;
 import io.openems.common.session.User;
+import io.openems.common.utils.JsonUtils;
 import io.openems.edge.battery.api.Battery;
 import io.openems.edge.battery.soltaro.ChannelIdImpl;
 import io.openems.edge.battery.soltaro.ModuleParameters;
@@ -78,7 +82,10 @@ import io.openems.edge.common.taskmanager.Priority;
 public class SingleRack extends AbstractOpenemsModbusComponent
 		implements Battery, OpenemsComponent, EventHandler, ModbusSlave, JsonApi {
 
-
+	public final static String METHOD_SET_BATTERY_CELL_UNDERVOLTAGE_PROTECTION = "setBatteryCellUnderVoltageProtection";
+	public final static String CELL_UNDER_VOLTAGE_PROTECTION = "cellUnderVoltageProtection";
+	public final static String CELL_UNDER_VOLTAGE_PROTECTION_RECOVER = "cellUnderVoltageProtectionRecover";
+	
 	protected static final int SYSTEM_ON = 1;
 	protected final static int SYSTEM_OFF = 0;
 
@@ -1440,31 +1447,55 @@ public class SingleRack extends AbstractOpenemsModbusComponent
 
 	@Override
 	public CompletableFuture<? extends JsonrpcResponseSuccess> handleJsonrpcRequest(//
-		User user, JsonrpcRequest request) throws OpenemsNamedException //
-	{
-			user.assertRoleIsAtLeast("handleJsonrpcRequest", Role.ADMIN);
+			User user, //
+			JsonrpcRequest request//
+	) throws OpenemsNamedException { //
 
-			switch (request.getMethod()) {
+		user.assertRoleIsAtLeast("handleJsonrpcRequest", Role.ADMIN);
 
-			case SetCellUnderVoltageProtectionRequest.METHOD:
-				return this.SetCellUnderVoltageProtectionRequest(user, SetCellUnderVoltageProtectionRequest.from(request));
-			
-			default:
-				throw OpenemsError.JSONRPC_UNHANDLED_METHOD.exception(request.getMethod());
-			}
+		JsonObject o = request.getParams();
+		String method = o.get(JsonrpcMessage.METHOD).getAsString();
+		int cellUnderVoltageProtection = o.get(CELL_UNDER_VOLTAGE_PROTECTION).getAsInt();
+		int cellUnderVoltageProtectionRecover = o.get(CELL_UNDER_VOLTAGE_PROTECTION_RECOVER).getAsInt();
+
+		switch (method) {
+
+		case METHOD_SET_BATTERY_CELL_UNDERVOLTAGE_PROTECTION:
+			return this.setCellUnderVoltageProtection(//
+					request, //
+					cellUnderVoltageProtection, //
+					cellUnderVoltageProtectionRecover//
+			);
+
+		default:
+			throw OpenemsError.JSONRPC_UNHANDLED_METHOD.exception(request.getMethod());
+		}
+	}
+
+	private CompletableFuture<? extends JsonrpcResponseSuccess> setCellUnderVoltageProtection( //
+			JsonrpcRequest request, //
+			int cellUnderVoltageProtection, //
+			int cellUnderVoltageProtectionRecover//
+	) throws OpenemsNamedException { //
+
+		IntegerWriteChannel iwc = this.channel(SingleRackChannelId.STOP_PARAMETER_CELL_UNDER_VOLTAGE_PROTECTION);
+		iwc.setNextWriteValue(cellUnderVoltageProtection);
+
+		iwc = this.channel(SingleRackChannelId.STOP_PARAMETER_CELL_UNDER_VOLTAGE_RECOVER);
+		iwc.setNextWriteValue(cellUnderVoltageProtectionRecover);
+
+		JsonObject message = new JsonObject();
+		message.add(JsonrpcRequest.ID, new JsonPrimitive(request.getId().toString()));
+
+		try {
+			System.out.println("SETTING RANGES SUCCESSFUL!");
+			message.add(JsonrpcRequest.RESULT, JsonUtils.parse("{message: \"Set the ranges was successful\"}"));
+		} catch (Exception e) {
+			message.add(JsonrpcRequest.RESULT, JsonUtils.parse("{message: \"Set the ranges was not successful\"}"));
+			message.add(JsonrpcRequest.ERROR, JsonUtils.parse("{errormessage: \"" + e.getMessage() + "\"}"));
 		}
 
-	private CompletableFuture<? extends JsonrpcResponseSuccess> SetCellUnderVoltageProtectionRequest( //
-			User user, SetCellUnderVoltageProtectionRequest from //
-	) throws OpenemsNamedException { //
-	
-		IntegerWriteChannel iwc = this.channel(SingleRackChannelId.STOP_PARAMETER_CELL_UNDER_VOLTAGE_PROTECTION);
-		iwc.setNextWriteValue(from.getCellUnderVoltageProtection());
-		
-		iwc = this.channel(SingleRackChannelId.STOP_PARAMETER_CELL_UNDER_VOLTAGE_RECOVER);
-		iwc.setNextWriteValue(from.getCellUnderVoltageProtectionRecover());
-				
-		JsonrpcResponseSuccess response = JsonrpcResponseSuccess.from(from.toJsonObject());
-		return CompletableFuture.completedFuture(response);		
+		JsonrpcResponseSuccess response = JsonrpcResponseSuccess.from(message);
+		return CompletableFuture.completedFuture(response);
 	}
 }

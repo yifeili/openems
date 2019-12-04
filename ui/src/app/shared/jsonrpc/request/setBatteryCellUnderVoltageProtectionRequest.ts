@@ -9,7 +9,7 @@ import { JsonrpcRequest } from "../base";
  *   "id": UUID,
  *   "method": "setBatteryCellUnderVoltageProtection",
  *   "params": {
- *     "bmsId": string,
+ *     "componentId": string,
  *     "cellUnderVoltageProtection": number,
  *     "cellUnderVoltageProtectionRecover": number
  *   }
@@ -18,11 +18,10 @@ import { JsonrpcRequest } from "../base";
  */
 export class SetBatteryCellUnderVoltageProtectionRequest extends JsonrpcRequest {
 
-    static METHOD: string = "setBatteryCellUnderVoltageProtection";
+    static METHOD: string = "componentJsonApi";
 
     public constructor(
         public readonly params: {
-            bmsId: string,
             cellUnderVoltageProtection: string,
             cellUnderVoltageProtectionRecover: string
         }
