@@ -3,10 +3,11 @@ package io.openems.edge.airconditioner.envicool;
 import io.openems.common.types.OptionsEnum;
 
 public enum WorkState implements OptionsEnum {
+	
 	UNDEFINED(-1, "Undefined"), //
-	Standby(1, "Standby"), //
-	Running(2, "Running"), //
-	FAULT(3, "Fault");
+	Standby(0, "Standby"), //
+	Running(1, "Running"), //
+	FAULT(2, "Fault");
 
 	private final int value;
 	private final String name;
@@ -30,5 +31,4 @@ public enum WorkState implements OptionsEnum {
 	public OptionsEnum getUndefined() {
 		return FAULT;
 	}
-
 }

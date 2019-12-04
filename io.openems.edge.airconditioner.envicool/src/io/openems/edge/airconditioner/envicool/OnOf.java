@@ -4,8 +4,8 @@ import io.openems.common.types.OptionsEnum;
 
 public enum OnOf implements OptionsEnum {
 	UNDEFINED(-1, "Undefined"),
-	ON(1, "On"),
-	OFF(2, "Off");
+	OFF(0, "Off"),
+	ON(1, "On");
 
 	private final int value;
 	private final String name;
@@ -27,6 +27,6 @@ public enum OnOf implements OptionsEnum {
 
 	@Override
 	public OptionsEnum getUndefined() {
-		return this.getUndefined();
+		return UNDEFINED;
 	}
 }

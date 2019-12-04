@@ -1,4 +1,4 @@
-package io.openems.edge.evcs.ocpp.keywatt.singleccs;
+package io.openems.edge.evcs.ocpp.ies.keywatt.singleccs;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,10 +26,10 @@ import io.openems.edge.evcs.api.ChargingType;
 import io.openems.edge.evcs.api.Evcs;
 import io.openems.edge.evcs.api.ManagedEvcs;
 import io.openems.edge.evcs.api.MeasuringEvcs;
-import io.openems.edge.evcs.ocpp.api.AbstractOcppEvcsComponent;
-import io.openems.edge.evcs.ocpp.api.OcppInformations;
-import io.openems.edge.evcs.ocpp.api.OcppProfileType;
-import io.openems.edge.evcs.ocpp.api.OcppRequests;
+import io.openems.edge.evcs.ocpp.core.AbstractOcppEvcsComponent;
+import io.openems.edge.evcs.ocpp.core.OcppInformations;
+import io.openems.edge.evcs.ocpp.core.OcppProfileType;
+import io.openems.edge.evcs.ocpp.core.OcppRequests;
 import io.openems.edge.evcs.ocpp.server.OcppServerImpl;
 
 @Designate(ocd = Config.class, factory = true)
@@ -38,7 +38,7 @@ import io.openems.edge.evcs.ocpp.server.OcppServerImpl;
 		immediate = true, //
 		configurationPolicy = ConfigurationPolicy.REQUIRE, //
 		property = EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_EXECUTE_WRITE)
-public class IesKeywattSingleCCS extends AbstractOcppEvcsComponent
+public class IesKeywattSingleCcs extends AbstractOcppEvcsComponent
 		implements Evcs, ManagedEvcs, MeasuringEvcs, OpenemsComponent, EventHandler {
 
 	// Profiles that a Ies KeyWatt is supporting
@@ -56,7 +56,7 @@ public class IesKeywattSingleCCS extends AbstractOcppEvcsComponent
 	@Reference
 	protected ComponentManager componentManager;
 
-	public IesKeywattSingleCCS() {
+	public IesKeywattSingleCcs() {
 		super( //
 				PROFILE_TYPES, //
 				OpenemsComponent.ChannelId.values(), //
