@@ -85,7 +85,7 @@ public class SingleRack extends AbstractOpenemsModbusComponent
 	public final static String METHOD_SET_BATTERY_CELL_UNDERVOLTAGE_PROTECTION = "setBatteryCellUnderVoltageProtection";
 	public final static String CELL_UNDER_VOLTAGE_PROTECTION = "cellUnderVoltageProtection";
 	public final static String CELL_UNDER_VOLTAGE_PROTECTION_RECOVER = "cellUnderVoltageProtectionRecover";
-	
+
 	protected static final int SYSTEM_ON = 1;
 	protected final static int SYSTEM_OFF = 0;
 
@@ -1454,7 +1454,7 @@ public class SingleRack extends AbstractOpenemsModbusComponent
 		user.assertRoleIsAtLeast("handleJsonrpcRequest", Role.ADMIN);
 
 		JsonObject o = request.getParams();
-		String method = o.get(JsonrpcMessage.METHOD).getAsString();
+		String method = o.get(JsonrpcMessage.JSON_ELEMENT_METHOD).getAsString();
 		int cellUnderVoltageProtection = o.get(CELL_UNDER_VOLTAGE_PROTECTION).getAsInt();
 		int cellUnderVoltageProtectionRecover = o.get(CELL_UNDER_VOLTAGE_PROTECTION_RECOVER).getAsInt();
 
@@ -1478,21 +1478,26 @@ public class SingleRack extends AbstractOpenemsModbusComponent
 			int cellUnderVoltageProtectionRecover//
 	) throws OpenemsNamedException { //
 
-		IntegerWriteChannel iwc = this.channel(SingleRackChannelId.STOP_PARAMETER_CELL_UNDER_VOLTAGE_PROTECTION);
-		iwc.setNextWriteValue(cellUnderVoltageProtection);
-
-		iwc = this.channel(SingleRackChannelId.STOP_PARAMETER_CELL_UNDER_VOLTAGE_RECOVER);
-		iwc.setNextWriteValue(cellUnderVoltageProtectionRecover);
-
 		JsonObject message = new JsonObject();
-		message.add(JsonrpcRequest.ID, new JsonPrimitive(request.getId().toString()));
+		message.add(JsonrpcMessage.JSON_ELEMENT_ID, new JsonPrimitive(request.getId().toString()));
 
 		try {
-			System.out.println("SETTING RANGES SUCCESSFUL!");
-			message.add(JsonrpcRequest.RESULT, JsonUtils.parse("{message: \"Set the ranges was successful\"}"));
+			IntegerWriteChannel iwc = this.channel(SingleRackChannelId.STOP_PARAMETER_CELL_UNDER_VOLTAGE_PROTECTION);
+			iwc.setNextWriteValue(cellUnderVoltageProtection);
+
+			iwc = this.channel(SingleRackChannelId.STOP_PARAMETER_CELL_UNDER_VOLTAGE_RECOVER);
+			iwc.setNextWriteValue(cellUnderVoltageProtectionRecover);
+
+			log.info("SETTING RANGES SUCCESSFUL!");
+
+			message.add(JsonrpcMessage.JSON_ELEMENT_RESULT,
+					JsonUtils.parse("{message: \"Set the ranges was successful\"}"));
 		} catch (Exception e) {
-			message.add(JsonrpcRequest.RESULT, JsonUtils.parse("{message: \"Set the ranges was not successful\"}"));
-			message.add(JsonrpcRequest.ERROR, JsonUtils.parse("{errormessage: \"" + e.getMessage() + "\"}"));
+			log.error("SETTING RANGES NOT SUCCESSFUL!" + e.getMessage());
+			message.add(JsonrpcMessage.JSON_ELEMENT_RESULT,
+					JsonUtils.parse("{message: \"Set the ranges was not successful\"}"));
+			message.add(JsonrpcMessage.JSON_ELEMENT_ERROR,
+					JsonUtils.parse("{errormessage: \"" + e.getMessage() + "\"}"));
 		}
 
 		JsonrpcResponseSuccess response = JsonrpcResponseSuccess.from(message);

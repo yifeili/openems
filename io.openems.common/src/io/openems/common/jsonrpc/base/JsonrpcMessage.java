@@ -22,24 +22,33 @@ import io.openems.common.utils.StringUtils;
  */
 public abstract class JsonrpcMessage {
 
+
+
 	public final static String JSONRPC_VERSION = "2.0";
+	
+	private static final String JSON_ELEMENT_JSONRPC = "jsonrpc";
+	public static final String JSON_ELEMENT_METHOD = "method";
+	public static final String JSON_ELEMENT_RESULT = "result";
+	public static final String JSON_ELEMENT_ID = "id";
+	public static final String JSON_ELEMENT_ERROR = "error";
+	private static final String JSON_ELEMENT_PARAMS = "params";
 
 	public static JsonrpcMessage from(String json) throws OpenemsNamedException {
 		return from(JsonUtils.parseToJsonObject(json));
 	}
 
 	public static JsonrpcMessage from(JsonObject j) throws OpenemsNamedException {
-		if (j.has("method") && j.has("params")) {
-			if (j.has("id")) {
+		if (j.has(JSON_ELEMENT_METHOD) && j.has(JsonrpcMessage.JSON_ELEMENT_PARAMS)) {
+			if (j.has(JsonrpcMessage.JSON_ELEMENT_ID)) {
 				return GenericJsonrpcRequest.from(j);
 			} else {
 				return GenericJsonrpcNotification.from(j);
 			}
 
-		} else if (j.has("result")) {
+		} else if (j.has(JSON_ELEMENT_RESULT)) {
 			return GenericJsonrpcResponseSuccess.from(j);
 
-		} else if (j.has("error")) {
+		} else if (j.has(JSON_ELEMENT_ERROR)) {
 			return JsonrpcResponseError.from(j);
 		}
 		throw new OpenemsException(
@@ -48,7 +57,7 @@ public abstract class JsonrpcMessage {
 
 	public JsonObject toJsonObject() {
 		return JsonUtils.buildJsonObject() //
-				.addProperty("jsonrpc", JSONRPC_VERSION) //
+				.addProperty(JsonrpcMessage.JSON_ELEMENT_JSONRPC, JSONRPC_VERSION) //
 				.build();
 	}
 
