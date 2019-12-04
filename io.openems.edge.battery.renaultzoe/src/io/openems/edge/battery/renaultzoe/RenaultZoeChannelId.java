@@ -73,7 +73,7 @@ public enum RenaultZoeChannelId implements io.openems.edge.common.channel.Channe
 	// IntegerReadChannels
 	SERIAL_NO(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)),
 	MOD_V(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)),
-	STATE(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)),
+	STATE2(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)),
 	WARR_DT(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)),
 	INST_DT(Doc.of(OpenemsType.INTEGER).unit(Unit.NONE).accessMode(AccessMode.READ_ONLY)),
 	AH_RTG(Doc.of(OpenemsType.INTEGER).unit(Unit.AMPERE_HOURS).accessMode(AccessMode.READ_ONLY)),

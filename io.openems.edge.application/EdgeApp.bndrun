@@ -21,6 +21,7 @@
 	bnd.identity;id='io.openems.common',\
 	bnd.identity;id='io.openems.edge.application',\
 	bnd.identity;id='io.openems.edge.battery.bmw',\
+	bnd.identity;id='io.openems.edge.battery.renaultzoe'\
 	bnd.identity;id='io.openems.edge.battery.soltaro',\
 	bnd.identity;id='io.openems.edge.bridge.modbus',\
 	bnd.identity;id='io.openems.edge.common',\
@@ -109,6 +110,7 @@
 	io.openems.common;version=snapshot,\
 	io.openems.edge.application;version=snapshot,\
 	io.openems.edge.battery.bmw;version=snapshot,\
+	io.openems.edge.battery.renaultzoe;version=snapshot,\
 	io.openems.edge.battery.soltaro;version=snapshot,\
 	io.openems.edge.bridge.modbus;version=snapshot,\
 	io.openems.edge.common;version=snapshot,\
