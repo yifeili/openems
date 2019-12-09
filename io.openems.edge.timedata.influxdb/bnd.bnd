@@ -15,7 +15,8 @@ Private-Package: io.openems.edge.timedata.influxdb
 	io.openems.wrapper.influxdb-java;version=latest,\
 	com.google.gson,\
 	com.google.guava,\
-	slf4j.api
+	slf4j.api,\
+	org.influxdb:influxdb-java;version=1.16,\
 
 -testpath: ${testpath}
 

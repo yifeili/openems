@@ -16,7 +16,8 @@ EnRoute-Application: io.openems.edge.application
 	io.openems.edge.scheduler.api;version=latest,\
 	com.google.guava,\
 	slf4j.api,\
-	io.openems.wrapper.sdnotify;version=latest
+	io.openems.wrapper.sdnotify;version=latest,\
+	info.faljse:SDNotify;version=1.3,\
 
 -testpath: ${testpath}
 

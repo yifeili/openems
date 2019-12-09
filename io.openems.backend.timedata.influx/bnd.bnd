@@ -18,7 +18,8 @@ Private-Package: \
 	io.openems.wrapper.influxdb-java;version=latest,\
 	com.google.gson,\
 	com.google.guava,\
-	slf4j.api
+	slf4j.api,\
+	org.influxdb:influxdb-java;version=2.16,\
 
 -testpath: ${testpath}
 

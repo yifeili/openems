@@ -17,7 +17,8 @@ Private-Package:  \
 	io.openems.wrapper.websocket;version=latest,\
 	org.ops4j.pax.logging.pax-logging-api,\
 	com.google.gson,\
-	com.google.guava
+	com.google.guava,\
+	org.java-websocket:Java-WebSocket;version=1.4,\
 
 -testpath: ${testpath}
 

@@ -170,7 +170,36 @@ public interface SymmetricMeter extends OpenemsComponent {
 		 * </ul>
 		 */
 		CURRENT(Doc.of(OpenemsType.INTEGER) //
-				.unit(Unit.MILLIAMPERE)); //
+				.unit(Unit.MILLIAMPERE)), //
+
+		//Consolinno Channel:
+
+		POSITIVE_ACTIVE_ENERGY_TOTAL(Doc.of(OpenemsType.FLOAT).unit(Unit.WATT_SECONDS)),
+		POSITIVE_ACTIVE_ENERGY_TARIF_ONE(Doc.of(OpenemsType.FLOAT).unit(Unit.WATT_SECONDS)),
+		POSITIVE_ACTIVE_ENERGY_TARIF_TWO(Doc.of(OpenemsType.FLOAT).unit(Unit.WATT_SECONDS)),
+		ELECTRICITY_EFFECTIVE_VALUE(Doc.of(OpenemsType.FLOAT).unit(Unit.WATT)),
+		NEGATIVE_ACTIVE_ENERGY_TOTAL(Doc.of(OpenemsType.FLOAT).unit(Unit.WATT_SECONDS)),
+		INSTANTANEOUS_VOLTAGE_PHASE_ONE(Doc.of(OpenemsType.FLOAT).unit(Unit.VOLT)),
+		INSTANTANEOUS_VOLTAGE_PHASE_TWO(Doc.of(OpenemsType.FLOAT).unit(Unit.VOLT)),
+		INSTANTANEOUS_VOLTAGE_PHASE_THREE(Doc.of(OpenemsType.FLOAT).unit(Unit.VOLT)),
+		INSTANTANEOUS_AMPERAGE_PHASE_ONE(Doc.of(OpenemsType.FLOAT).unit(Unit.AMPERE)),
+		INSTANTANEOUS_AMPERAGE_PHASE_TWO(Doc.of(OpenemsType.FLOAT).unit(Unit.AMPERE)),
+		INSTANTANEOUS_AMPERAGE_PHASE_THREE(Doc.of(OpenemsType.FLOAT).unit(Unit.AMPERE)),
+		PHASE_ANGLE_MOMENTARY_VALUE_ONE(Doc.of(OpenemsType.FLOAT)),
+		PHASE_ANGLE_MOMENTARY_VALUE_TWO(Doc.of(OpenemsType.FLOAT)),
+		PHASE_ANGLE_MOMENTARY_VALUE_FOUR(Doc.of(OpenemsType.FLOAT)),
+		PHASE_ANGLE_MOMENTARY_VALUE_FIFTEEN(Doc.of(OpenemsType.FLOAT)),
+		PHASE_ANGLE_MOMENTARY_VALUE_TWENTY_SIX(Doc.of(OpenemsType.FLOAT)),
+		FREQUENCY_MOMENTARY_VALUE_TOTAL(Doc.of(OpenemsType.FLOAT).unit(Unit.HERTZ)),
+		ENERGY_USAGE_LAST_DAY(Doc.of(OpenemsType.FLOAT).unit(Unit.WATT_SECONDS)),
+		ENERGY_USAGE_LAST_WEEK(Doc.of(OpenemsType.FLOAT).unit(Unit.WATT_SECONDS)),
+		ENERGY_USAGE_LAST_MONTH(Doc.of(OpenemsType.FLOAT).unit(Unit.WATT_SECONDS)),
+		ENERGY_USAGE_LAST_YEAR(Doc.of(OpenemsType.FLOAT).unit(Unit.WATT_SECONDS)),
+		ENERGY_USAGE_SINCE_LAST_RESET(Doc.of(OpenemsType.FLOAT).unit(Unit.WATT_SECONDS)),
+		GENERAL_USAGE(Doc.of(OpenemsType.LONG)),
+		PRODUCTION_NUMBER(Doc.of(OpenemsType.STRING)),
+		CHECKSUM(Doc.of(OpenemsType.FLOAT)),
+		INTERNAL_ERROR(Doc.of(OpenemsType.STRING));
 
 		private final Doc doc;
 

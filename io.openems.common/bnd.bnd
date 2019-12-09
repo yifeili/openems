@@ -30,7 +30,8 @@ Export-Package: \
 	com.google.guava,\
 	com.google.gson,\
 	org.ops4j.pax.logging.pax-logging-api,\
-	org.dhatim:fastexcel
+	org.dhatim:fastexcel,\
+	org.java-websocket:Java-WebSocket;version=1.4,\
 
 -testpath: ${testpath}
 

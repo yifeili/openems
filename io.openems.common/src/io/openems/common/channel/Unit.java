@@ -118,11 +118,16 @@ public enum Unit {
 	// ##########
 	// Energy
 	// ##########
+	/**
+	 * Unit of Energy[Ws]
+	 */
+	WATT_SECONDS("Ws"),
 
 	/**
 	 * Unit of Energy [Wh]
 	 */
 	WATT_HOURS("Wh"),
+
 
 	/**
 	 * Unit of Energy [kWh]
