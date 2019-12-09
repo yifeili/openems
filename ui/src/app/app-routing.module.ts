@@ -18,6 +18,7 @@ import { NetworkComponent as EdgeSettingsNetworkComponent } from './edge/setting
 import { ProfileComponent as EdgeSettingsProfileComponent } from './edge/settings/profile/profile.component';
 import { StatusComponent } from './status/status.component';
 import { FemsStatusComponent } from './femsstatus/femsstatus.component';
+import { MasterLiveComponent } from './masterLive/masterlive.component';
 
 const routes: Routes = [
   { path: '', redirectTo: 'index', pathMatch: 'full' },
@@ -27,6 +28,7 @@ const routes: Routes = [
   { path: 'settings', component: SettingsComponent },
   { path: 'status', component: StatusComponent },
   { path: 'femsstatus', component: FemsStatusComponent },
+  { path: 'masterlive', component: MasterLiveComponent },
 
   { path: 'device/:edgeId', redirectTo: 'device/:edgeId/live', pathMatch: 'full' },
   { path: 'device/:edgeId/live', component: EdgeLiveComponent },

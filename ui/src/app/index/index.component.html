@@ -52,20 +52,39 @@
     <ion-row class="ion-justify-content-center">
       <ion-col size="12" size-sm="6" size-md="4">
         <ion-list lines="full">
-          <ion-item *ngFor="let edge of modifiedEdges" lines="inset" [color]="edge.isMasterFems ? 'secondary' : ''"
-            [routerLink]="['/device', edge.id]">
-            <ion-label>
-              <h2 class="ion-text-wrap">{{ edge.comment }}</h2>
-            </ion-label>
-            <ion-label>
-              <ng-container *ngIf="env.backend === 'OpenEMS Backend'">
-                <p>ID: {{ edge.id }}</p>
-                <p class="ion-text-wrap">Typ: {{ edge.producttype }}</p>
-              </ng-container>
-              <p class="ion-text-wrap">Angemeldet als: {{ edge.getRoleString() }}.</p>
-            </ion-label>
-            <ion-icon slot="end" name="play" color="primary"></ion-icon>
-          </ion-item>
+          <ng-container *ngFor="let edge of modifiedEdges">
+            <ng-container *ngIf="edge.isMasterFems">
+              <ion-item lines="inset" [color]="edge.isMasterFems ? 'secondary' : ''" routerLink="/masterlive">
+                <ion-label>
+                  <h2 class="ion-text-wrap">{{ edge.comment }}</h2>
+                </ion-label>
+                <ion-label>
+                  <ng-container *ngIf="env.backend === 'OpenEMS Backend'">
+                    <p>ID: {{ edge.id }}</p>
+                    <p class="ion-text-wrap">Typ: {{ edge.producttype }}</p>
+                  </ng-container>
+                  <p class="ion-text-wrap">Angemeldet als: {{ edge.getRoleString() }}.</p>
+                </ion-label>
+                <ion-icon slot="end" name="play" color="primary"></ion-icon>
+              </ion-item>
+            </ng-container>
+            <ng-container *ngIf="!edge.isMasterFems">
+              <ion-item lines="inset" [color]="edge.isMasterFems ? 'secondary' : ''"
+                [routerLink]="['/device', edge.id]">
+                <ion-label>
+                  <h2 class="ion-text-wrap">{{ edge.comment }}</h2>
+                </ion-label>
+                <ion-label>
+                  <ng-container *ngIf="env.backend === 'OpenEMS Backend'">
+                    <p>ID: {{ edge.id }}</p>
+                    <p class="ion-text-wrap">Typ: {{ edge.producttype }}</p>
+                  </ng-container>
+                  <p class="ion-text-wrap">Angemeldet als: {{ edge.getRoleString() }}.</p>
+                </ion-label>
+                <ion-icon slot="end" name="play" color="primary"></ion-icon>
+              </ion-item>
+            </ng-container>
+          </ng-container>
 
         </ion-list>
       </ion-col>

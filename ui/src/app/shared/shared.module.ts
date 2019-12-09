@@ -26,6 +26,7 @@ import { Service } from './service/service';
 import { Utils } from './service/utils';
 import { Websocket } from './service/websocket';
 import { Language } from './translate/language';
+import { ClimateModalComponent } from '../masterLive/modal/modalclimate.component';
 
 @NgModule({
   imports: [
@@ -55,6 +56,7 @@ import { Language } from './translate/language';
     ChartOptionsComponent,
     PercentageBarComponent,
     PickDateComponent,
+    ClimateModalComponent
   ],
   exports: [
     // pipes

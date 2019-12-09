@@ -56,35 +56,35 @@
   </ion-header>
 
   <ion-content>
-    <ion-grid>
-      <ion-row class="ion-justify-content-center">
+    <!-- <ion-grid> -->
+    <ion-row class="ion-justify-content-center">
 
-        <ion-col *ngIf="websocket.status == 'connecting'" size="12" size-md="6">
-          <ion-card>
-            <ion-item>
-              <ion-icon slot="start" name="wifi"></ion-icon>
-              <ion-label class="ion-text-wrap">
-                <h2>Verbindung wird aufgebaut...</h2>
-                <!-- TODO translate -->
-              </ion-label>
-            </ion-item>
-          </ion-card>
-        </ion-col>
+      <ion-col *ngIf="websocket.status == 'connecting'" size="12" size-md="6">
+        <ion-card>
+          <ion-item>
+            <ion-icon slot="start" name="wifi"></ion-icon>
+            <ion-label class="ion-text-wrap">
+              <h2>Verbindung wird aufgebaut...</h2>
+              <!-- TODO translate -->
+            </ion-label>
+          </ion-item>
+        </ion-card>
+      </ion-col>
 
-        <ion-col *ngIf="websocket.status == 'failed'" size="12" size-md="6">
-          <ion-card>
-            <ion-item>
-              <ion-icon slot="start" name="close-circle"></ion-icon>
-              <ion-label class="ion-text-wrap">
-                <h2 translate [translateParams]="{value: 'OpenEMS'}">Index.ConnectionFailed</h2>
-                <p color="light">{{ env.url }}</p>
-              </ion-label>
-            </ion-item>
-          </ion-card>
-        </ion-col>
+      <ion-col *ngIf="websocket.status == 'failed'" size="12" size-md="6">
+        <ion-card>
+          <ion-item>
+            <ion-icon slot="start" name="close-circle"></ion-icon>
+            <ion-label class="ion-text-wrap">
+              <h2 translate [translateParams]="{value: 'OpenEMS'}">Index.ConnectionFailed</h2>
+              <p color="light">{{ env.url }}</p>
+            </ion-label>
+          </ion-item>
+        </ion-card>
+      </ion-col>
 
-      </ion-row>
-    </ion-grid>
+    </ion-row>
+    <!-- </ion-grid> -->
 
     <!-- Side Menu  -->
     <ion-menu type="overlay" side="start" contentId="content">

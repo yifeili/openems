@@ -1,0 +1,29 @@
+<ion-header>
+  <ion-toolbar class="ion-justify-content-center" color="primary">
+    <ion-title>Klimaanlage</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="modalCtrl.dismiss()">
+        <ion-icon name="close"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-card-content class="underline">
+    <table class="full_width">
+      <tr>
+        <td style="width:65%" translate>General.State</td>
+        <td class="align_right" style="width: 35%" translate>
+          General.On
+        </td>
+      </tr>
+      <tr>
+        <td style="width:65%">Temperatur</td>
+        <td class="align_right" style="width: 35%">
+          22.5 °C
+        </td>
+      </tr>
+    </table>
+  </ion-card-content>
+</ion-content>

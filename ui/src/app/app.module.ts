@@ -27,6 +27,8 @@ import { SharedModule } from './shared/shared.module';
 import { Language } from './shared/translate/language';
 import { StatusModule } from './status/status.module';
 import { FemsStatusModule } from './femsstatus/femsstatus.module';
+import { MasterLiveModule } from './masterLive/masterlive.module';
+import { ClimateModalComponent } from './masterLive/modal/modalclimate.component';
 
 @NgModule({
   declarations: [
@@ -39,7 +41,8 @@ import { FemsStatusModule } from './femsstatus/femsstatus.module';
   ],
   entryComponents: [
     PickDatePopoverComponent,
-    ChartOptionsPopoverComponent
+    ChartOptionsPopoverComponent,
+    ClimateModalComponent
   ],
   imports: [
     BrowserModule,
@@ -56,6 +59,7 @@ import { FemsStatusModule } from './femsstatus/femsstatus.module';
     AboutModule,
     StatusModule,
     FemsStatusModule,
+    MasterLiveModule,
     SettingsModule,
     EdgeModule,
     EdgeSettingsModule,
