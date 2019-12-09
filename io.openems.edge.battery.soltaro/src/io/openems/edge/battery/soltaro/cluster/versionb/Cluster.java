@@ -95,9 +95,6 @@ public class Cluster extends AbstractOpenemsModbusComponent
 	// determined at once
 	private LocalDateTime pendingTimestamp;
 
-	private ResetState resetState = ResetState.NONE;
-	private boolean resetDone;
-
 	public Cluster() {
 		super(//
 				OpenemsComponent.ChannelId.values(), //
@@ -182,17 +179,13 @@ public class Cluster extends AbstractOpenemsModbusComponent
 			// handling the rrors
 			if (LocalDateTime.now().isAfter(errorDelayIsOver)) {
 				errorDelayIsOver = null;
-				resetDone = false;
 				if (this.isError()) {
 					this.setStateMachineState(State.ERROR);
 				} else {
 					this.setStateMachineState(State.UNDEFINED);
 				}
-			} else if (!resetDone) {
-				this.handleErrorsWithReset();
 			}
 			break;
-
 		case INIT:
 			if (this.isSystemRunning()) {
 				this.setStateMachineState(State.RUNNING);
@@ -272,32 +265,15 @@ public class Cluster extends AbstractOpenemsModbusComponent
 			}
 			break;
 		case ERROR_HANDLING:
-			this.handleErrorsWithReset();
+			this.handleErrorsWithoutReset();
 			break;
 		}
 		this.getReadyForWorking().setNextValue(readyForWorking);
 	}
 
-	private void handleErrorsWithReset() {
-		// To reset the cell drift phenomenon, first sleep and then reset the system
-		switch (this.resetState) {
-		case NONE:
-			this.resetState = ResetState.SLEEP;
-			break;
-		case SLEEP:
-			this.sleepSystem();
-			this.resetState = ResetState.RESET;
-			break;
-		case RESET:
-			this.resetSystem();
-			this.resetState = ResetState.FINISHED;
-			break;
-		case FINISHED:
-			this.resetState = ResetState.NONE;
-			this.setStateMachineState(State.ERRORDELAY);
-			resetDone = true;
-			break;
-		}
+	private void handleErrorsWithoutReset() {
+		this.stopSystem();		
+		this.setStateMachineState(State.ERRORDELAY);
 	}
 
 	private boolean isError() {
@@ -376,6 +352,8 @@ public class Cluster extends AbstractOpenemsModbusComponent
 				+ "|Charge:" + this.getChargeMaxVoltage().value() + ";" + this.getChargeMaxCurrent().value();
 	}
 
+	@SuppressWarnings("unused")
+	// TODO comes later via JsonRpcRequest
 	private void sleepSystem() {
 		// Write sleep and reset to all racks
 		for (SingleRack rack : this.racks.values()) {
@@ -389,6 +367,8 @@ public class Cluster extends AbstractOpenemsModbusComponent
 		}
 	}
 
+	@SuppressWarnings("unused")
+	// TODO comes later via JsonRpcRequest
 	private void resetSystem() {
 		// Write reset to all racks and the master
 

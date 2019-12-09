@@ -30,7 +30,6 @@ import io.openems.common.exceptions.OpenemsError.OpenemsNamedException;
 import io.openems.edge.battery.api.Battery;
 import io.openems.edge.battery.soltaro.ChannelIdImpl;
 import io.openems.edge.battery.soltaro.ModuleParameters;
-import io.openems.edge.battery.soltaro.ResetState;
 import io.openems.edge.battery.soltaro.State;
 import io.openems.edge.battery.soltaro.single.versionb.Enums.AutoSetFunction;
 import io.openems.edge.battery.soltaro.single.versionb.Enums.ContactorControl;
@@ -101,10 +100,7 @@ public class SingleRack extends AbstractOpenemsModbusComponent
 	private LocalDateTime configuringFinished = null;
 	private int delayAutoIdSeconds = 5;
 	private int delayAfterConfiguringFinished = 5;
-
-	private ResetState resetState = ResetState.NONE;
-	private boolean resetDone;
-
+	
 	private LocalDateTime pendingTimestamp;
 
 	public SingleRack() {
@@ -155,17 +151,14 @@ public class SingleRack extends AbstractOpenemsModbusComponent
 
 		case ERRORDELAY:
 			// If we are in the error delay time, the system is resetted, this can help
-			// handling the rrors
+			// handling the errors
 			if (LocalDateTime.now().isAfter(errorDelayIsOver)) {
 				errorDelayIsOver = null;
-				resetDone = false;
 				if (this.isError()) {
 					this.setStateMachineState(State.ERROR);
 				} else {
 					this.setStateMachineState(State.UNDEFINED);
 				}
-			} else if (!resetDone) {
-				this.handleErrorsWithReset();
 			}
 			break;
 		case INIT:
@@ -248,7 +241,8 @@ public class SingleRack extends AbstractOpenemsModbusComponent
 			}
 			break;
 		case ERROR_HANDLING:
-			this.handleErrorsWithReset();
+			//this.handleErrorsWithReset();
+			this.handleErrorsWithoutReset();
 			break;
 		}
 
@@ -279,28 +273,13 @@ public class SingleRack extends AbstractOpenemsModbusComponent
 		}
 	}
 
-	private void handleErrorsWithReset() {
-		// To reset , first sleep and then reset the system
-		switch (this.resetState) {
-		case NONE:
-			this.resetState = ResetState.SLEEP;
-			break;
-		case SLEEP:
-			this.sleepSystem();
-			this.resetState = ResetState.RESET;
-			break;
-		case RESET:
-			this.resetSystem();
-			this.resetState = ResetState.FINISHED;
-			break;
-		case FINISHED:
-			this.resetState = ResetState.NONE;
-			this.setStateMachineState(State.ERRORDELAY);
-			resetDone = true;
-			break;
-		}
+	private void handleErrorsWithoutReset() {
+		this.stopSystem();		
+		this.setStateMachineState(State.ERRORDELAY);
 	}
 
+	@SuppressWarnings("unused")
+	// TODO comes later via JsonRpcRequest
 	private void resetSystem() {
 
 		IntegerWriteChannel resetChannel = this.channel(SingleRackChannelId.SYSTEM_RESET);
@@ -311,6 +290,8 @@ public class SingleRack extends AbstractOpenemsModbusComponent
 		}
 	}
 
+	@SuppressWarnings("unused")
+	// TODO comes later via JsonRpcRequest
 	private void sleepSystem() {
 
 		IntegerWriteChannel sleepChannel = this.channel(SingleRackChannelId.SLEEP);
@@ -319,7 +300,6 @@ public class SingleRack extends AbstractOpenemsModbusComponent
 		} catch (OpenemsNamedException e) {
 			System.out.println("Error while trying to sleep the system!");
 		}
-
 	}
 
 	/*

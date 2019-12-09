@@ -284,6 +284,7 @@ public class SingleRack extends AbstractOpenemsModbusComponent
 			break;
 		case ERROR_HANDLING:
 			// Cannot handle errors
+			this.setStateMachineState(State.OFF);
 			break;
 		}
 
