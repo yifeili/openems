@@ -296,14 +296,16 @@ public class TimeslotPeakshaving extends AbstractOpenemsComponent implements Con
 			calculatedPower = 0;
 		}
 
-		/*
-		 * Apply PID filter
-		 */
-		int minPower = this.power.getMinPower(ess, Phase.ALL, Pwr.ACTIVE);
-		int maxPower = this.power.getMaxPower(ess, Phase.ALL, Pwr.ACTIVE);
-		this.pidFilter.setLimits(minPower, maxPower);
-		int pidOutput = (int) this.pidFilter.applyPidFilter(ess.getActivePower().value().orElse(0), calculatedPower);
-		return pidOutput;
+//		/*
+//		 * Apply PID filter
+//		 */
+//		int minPower = this.power.getMinPower(ess, Phase.ALL, Pwr.ACTIVE);
+//		int maxPower = this.power.getMaxPower(ess, Phase.ALL, Pwr.ACTIVE);
+//		this.pidFilter.setLimits(minPower, maxPower);
+//		int pidOutput = (int) this.pidFilter.applyPidFilter(ess.getActivePower().value().orElse(0), calculatedPower);
+//		return pidOutput;
+		
+		return calculatedPower;
 	}
 
 	/**
