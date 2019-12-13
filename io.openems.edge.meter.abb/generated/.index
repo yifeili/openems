@@ -1,18 +1,18 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<repository xmlns="http://www.osgi.org/xmlns/repository/v1.0.0" name="io.openems.edge.meter.abb" increment="1575297649257">
+<repository xmlns="http://www.osgi.org/xmlns/repository/v1.0.0" name="io.openems.edge.meter.abb" increment="1576220306778">
   <resource>
     <capability namespace="osgi.identity">
       <attribute name="license" value="https://opensource.org/licenses/EPL-2.0"/>
       <attribute name="osgi.identity" value="io.openems.edge.meter.abb"/>
       <attribute name="type" value="osgi.bundle"/>
-      <attribute name="version" value="1.0.0.201912021440" type="Version"/>
+      <attribute name="version" value="1.0.0.201912130658" type="Version"/>
     </capability>
     <capability namespace="osgi.wiring.bundle">
-      <attribute name="bundle-version" value="1.0.0.201912021440" type="Version"/>
+      <attribute name="bundle-version" value="1.0.0.201912130658" type="Version"/>
       <attribute name="osgi.wiring.bundle" value="io.openems.edge.meter.abb"/>
     </capability>
     <capability namespace="osgi.wiring.host">
-      <attribute name="bundle-version" value="1.0.0.201912021440" type="Version"/>
+      <attribute name="bundle-version" value="1.0.0.201912130658" type="Version"/>
       <attribute name="osgi.wiring.host" value="io.openems.edge.meter.abb"/>
     </capability>
     <capability namespace="osgi.wiring.package">
@@ -36,7 +36,7 @@
       <attribute name="size" value="29613" type="Long"/>
       <attribute name="url" value="generated/io.openems.edge.meter.abb.jar"/>
       <attribute name="mime" value="application/vnd.osgi.bundle"/>
-      <attribute name="osgi.content" value="FF789748CABAC2FB3971EFAC7CF49DA80144CA8BC6DA5ECDDD6F248342BF1526"/>
+      <attribute name="osgi.content" value="5CA7AF2A3F7E2B65AE10800B94538AD560C24FE479BDBA96AA8BE415FE264E9E"/>
     </capability>
     <capability namespace="bndtools.workspace">
       <attribute name="bndtools.workspace" value="file:/C:/Users/wolfgang.miethaner/git/openems_ws"/>
