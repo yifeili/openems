@@ -357,20 +357,20 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 	
 	
 	
-	private void setWatchdogTimer() {
-		
-		IntegerReadChannel pcsHbChannel = this.channel(REFUStore88KChannelId.PCS_HB);
-		IntegerWriteChannel controllerHbChannel = this.channel(REFUStore88KChannelId.CONTROLLER_HB);
-		
+//	private void setWatchdogTimer() {
+//		
+//		IntegerReadChannel pcsHbChannel = this.channel(REFUStore88KChannelId.PCS_HB);
+//		IntegerWriteChannel controllerHbChannel = this.channel(REFUStore88KChannelId.CONTROLLER_HB);
+//		
 //		if (pcsHbChannel.getNextValue().get() > pcsHbChannel.getPastValues()) {
 //			
 //		}
-		
-		try {
-			controllerHbChannel.setNextWriteValue(pcsHbChannel.getNextValue().get() + 10);
-		} catch (OpenemsNamedException e) {
-			log.error("problem occurred while trying set readWriteParamId" + e.getMessage());
-		}
+//		
+//		try {
+//			controllerHbChannel.setNextWriteValue(pcsHbChannel.getNextValue().get() + 10);
+//		} catch (OpenemsNamedException e) {
+//			log.error("problem occurred while trying set readWriteParamId" + e.getMessage());
+//		}
 //		IntegerWriteChannel readWriteParamId = this.channel(REFUStore88KChannelId.READ_WRITE_PARAM_ID);
 //		IntegerWriteChannel readWriteParamIndex = this.channel(REFUStore88KChannelId.READ_WRITE_PARAM_INDEX);
 //		
@@ -403,7 +403,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 //				
 //			}
 //		}
-	}
+//	}
 
 	
 	/**
