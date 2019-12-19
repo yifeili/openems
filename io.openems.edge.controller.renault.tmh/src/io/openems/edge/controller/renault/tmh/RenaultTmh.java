@@ -1,5 +1,7 @@
 package io.openems.edge.controller.renault.tmh;
 
+import java.util.Optional;
+
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
@@ -109,7 +111,6 @@ public class RenaultTmh extends AbstractOpenemsModbusComponent
 	}
 	
 	
-	
 	@Override
 	public void handleEvent(Event event) {
 		if (!this.isEnabled()) {
@@ -122,7 +123,39 @@ public class RenaultTmh extends AbstractOpenemsModbusComponent
 	}
 
 	
+	@Override
+	public void run() throws OpenemsNamedException {
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+	}
 	
+	
+	private void setAliveCounter() {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	private SystemStatus determineSystemStatus() {
+		// Read State from Inverter and Battery
+		SystemStatus state = SystemStatus.UNDEFINED;
+		
+		
+		
+		
+		return state;
+	}
+
+
+
 	@Override
 	public ModbusSlaveTable getModbusSlaveTable(AccessMode accessMode) {
 		return new ModbusSlaveTable( //
@@ -130,12 +163,6 @@ public class RenaultTmh extends AbstractOpenemsModbusComponent
 		);
 	}
 
-	private static int i = 1;
-	private static int n = 1;
-	private static int m = 1;
-	
-	private final static int TMH_MODBUS_ADDRESS_OFFSET_ESU_LEVEL_POINT = (7)+((i-1)*5);
-	private final static int TMH_MODBUS_ADDRESS_OFFSET_INVERTER_LEVEL_POINT = (7)+(5*i)+(5*(n-1));
 	
 	private final static int ESS_MODBUS_ADDRESS_OFFSET_TU_LEVEL_POINT = 0;
 	private final static int ESS_MODBUS_ADDRESS_OFFSET_BATTERY_PACK_1_LEVEL_POINT = 26;
@@ -170,7 +197,7 @@ public class RenaultTmh extends AbstractOpenemsModbusComponent
 	protected ModbusProtocol defineModbusProtocol() {
 		// TODO Auto-generated method stub
 		return new ModbusProtocol(this, //
-				new FC3ReadRegistersTask(0, Priority.ONCE, //
+				new FC3ReadRegistersTask(0, Priority.HIGH, //
 						
 						/**
 						 * TMH to ESS
@@ -498,7 +525,7 @@ public class RenaultTmh extends AbstractOpenemsModbusComponent
 						
 						
 						/*
-						 * Inverter Points (n)
+						 * Inverter Points
 						 */
 						m(RenaultTmhChannelId.INVERTER_1_ID, new UnsignedDoublewordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_1_LEVEL_POINT)),
 						m(RenaultTmhChannelId.INVERTER_1_STATUS, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_1_LEVEL_POINT + 2)),
@@ -519,42 +546,219 @@ public class RenaultTmh extends AbstractOpenemsModbusComponent
 						m(RenaultTmhChannelId.INVERTER_1_SPARE_C, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_1_LEVEL_POINT + 11)),
 						m(RenaultTmhChannelId.INVERTER_1_SPARE_D, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_1_LEVEL_POINT + 12)),
 						
-						m(RenaultTmhChannelId.INVERTER_2_ID, new UnsignedDoublewordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_1_LEVEL_POINT)),
-						m(RenaultTmhChannelId.INVERTER_2_STATUS, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_1_LEVEL_POINT + 2)),
-						m(RenaultTmhChannelId.INVERTER_2_DC_VOLTAGE, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_1_LEVEL_POINT + 3),
+						m(RenaultTmhChannelId.INVERTER_2_ID, new UnsignedDoublewordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_2_LEVEL_POINT)),
+						m(RenaultTmhChannelId.INVERTER_2_STATUS, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_2_LEVEL_POINT + 2)),
+						m(RenaultTmhChannelId.INVERTER_2_DC_VOLTAGE, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_2_LEVEL_POINT + 3),
 								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
-						m(RenaultTmhChannelId.INVERTER_2_AC_VOLTAGE, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_1_LEVEL_POINT + 4),
+						m(RenaultTmhChannelId.INVERTER_2_AC_VOLTAGE, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_2_LEVEL_POINT + 4),
 								ElementToChannelConverter.SCALE_FACTOR_MINUS_2),
-						m(RenaultTmhChannelId.INVERTER_2_AC_CURRENT, new SignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_1_LEVEL_POINT + 5),
+						m(RenaultTmhChannelId.INVERTER_2_AC_CURRENT, new SignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_2_LEVEL_POINT + 5),
 								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
-						m(RenaultTmhChannelId.INVERTER_2_ACTIVE_POWER, new SignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_1_LEVEL_POINT + 6),
+						m(RenaultTmhChannelId.INVERTER_2_ACTIVE_POWER, new SignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_2_LEVEL_POINT + 6),
 								ElementToChannelConverter.SCALE_FACTOR_1),
-						m(RenaultTmhChannelId.INVERTER_2_REACTIVE_POWER, new SignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_1_LEVEL_POINT + 7),
+						m(RenaultTmhChannelId.INVERTER_2_REACTIVE_POWER, new SignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_2_LEVEL_POINT + 7),
 								ElementToChannelConverter.SCALE_FACTOR_1),
-						m(RenaultTmhChannelId.INVERTER_2_APPARENT_POWER, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_1_LEVEL_POINT + 8),
+						m(RenaultTmhChannelId.INVERTER_2_APPARENT_POWER, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_2_LEVEL_POINT + 8),
 								ElementToChannelConverter.SCALE_FACTOR_1),
-						m(RenaultTmhChannelId.INVERTER_2_SPARE_A, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_1_LEVEL_POINT + 9)),
-						m(RenaultTmhChannelId.INVERTER_2_SPARE_B, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_1_LEVEL_POINT + 10)),
-						m(RenaultTmhChannelId.INVERTER_2_SPARE_C, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_1_LEVEL_POINT + 11)),
-						m(RenaultTmhChannelId.INVERTER_2_SPARE_D, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_1_LEVEL_POINT + 12))
+						m(RenaultTmhChannelId.INVERTER_2_SPARE_A, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_2_LEVEL_POINT + 9)),
+						m(RenaultTmhChannelId.INVERTER_2_SPARE_B, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_2_LEVEL_POINT + 10)),
+						m(RenaultTmhChannelId.INVERTER_2_SPARE_C, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_2_LEVEL_POINT + 11)),
+						m(RenaultTmhChannelId.INVERTER_2_SPARE_D, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_2_LEVEL_POINT + 12)),
 						
+						m(RenaultTmhChannelId.INVERTER_3_ID, new UnsignedDoublewordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_3_LEVEL_POINT)),
+						m(RenaultTmhChannelId.INVERTER_3_STATUS, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_3_LEVEL_POINT + 2)),
+						m(RenaultTmhChannelId.INVERTER_3_DC_VOLTAGE, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_3_LEVEL_POINT + 3),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
+						m(RenaultTmhChannelId.INVERTER_3_AC_VOLTAGE, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_3_LEVEL_POINT + 4),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_2),
+						m(RenaultTmhChannelId.INVERTER_3_AC_CURRENT, new SignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_3_LEVEL_POINT + 5),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
+						m(RenaultTmhChannelId.INVERTER_3_ACTIVE_POWER, new SignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_3_LEVEL_POINT + 6),
+								ElementToChannelConverter.SCALE_FACTOR_1),
+						m(RenaultTmhChannelId.INVERTER_3_REACTIVE_POWER, new SignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_3_LEVEL_POINT + 7),
+								ElementToChannelConverter.SCALE_FACTOR_1),
+						m(RenaultTmhChannelId.INVERTER_3_APPARENT_POWER, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_3_LEVEL_POINT + 8),
+								ElementToChannelConverter.SCALE_FACTOR_1),
+						m(RenaultTmhChannelId.INVERTER_3_SPARE_A, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_3_LEVEL_POINT + 9)),
+						m(RenaultTmhChannelId.INVERTER_3_SPARE_B, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_3_LEVEL_POINT + 10)),
+						m(RenaultTmhChannelId.INVERTER_3_SPARE_C, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_3_LEVEL_POINT + 11)),
+						m(RenaultTmhChannelId.INVERTER_3_SPARE_D, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_3_LEVEL_POINT + 12)),
 						
+						m(RenaultTmhChannelId.INVERTER_4_ID, new UnsignedDoublewordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_4_LEVEL_POINT)),
+						m(RenaultTmhChannelId.INVERTER_4_STATUS, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_4_LEVEL_POINT + 2)),
+						m(RenaultTmhChannelId.INVERTER_4_DC_VOLTAGE, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_4_LEVEL_POINT + 3),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
+						m(RenaultTmhChannelId.INVERTER_4_AC_VOLTAGE, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_4_LEVEL_POINT + 4),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_2),
+						m(RenaultTmhChannelId.INVERTER_4_AC_CURRENT, new SignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_4_LEVEL_POINT + 5),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
+						m(RenaultTmhChannelId.INVERTER_4_ACTIVE_POWER, new SignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_4_LEVEL_POINT + 6),
+								ElementToChannelConverter.SCALE_FACTOR_1),
+						m(RenaultTmhChannelId.INVERTER_4_REACTIVE_POWER, new SignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_4_LEVEL_POINT + 7),
+								ElementToChannelConverter.SCALE_FACTOR_1),
+						m(RenaultTmhChannelId.INVERTER_4_APPARENT_POWER, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_4_LEVEL_POINT + 8),
+								ElementToChannelConverter.SCALE_FACTOR_1),
+						m(RenaultTmhChannelId.INVERTER_4_SPARE_A, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_4_LEVEL_POINT + 9)),
+						m(RenaultTmhChannelId.INVERTER_4_SPARE_B, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_4_LEVEL_POINT + 10)),
+						m(RenaultTmhChannelId.INVERTER_4_SPARE_C, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_4_LEVEL_POINT + 11)),
+						m(RenaultTmhChannelId.INVERTER_4_SPARE_D, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_4_LEVEL_POINT + 12)),
 						
+						m(RenaultTmhChannelId.INVERTER_5_ID, new UnsignedDoublewordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_5_LEVEL_POINT)),
+						m(RenaultTmhChannelId.INVERTER_5_STATUS, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_5_LEVEL_POINT + 2)),
+						m(RenaultTmhChannelId.INVERTER_5_DC_VOLTAGE, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_5_LEVEL_POINT + 3),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
+						m(RenaultTmhChannelId.INVERTER_5_AC_VOLTAGE, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_5_LEVEL_POINT + 4),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_2),
+						m(RenaultTmhChannelId.INVERTER_5_AC_CURRENT, new SignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_5_LEVEL_POINT + 5),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
+						m(RenaultTmhChannelId.INVERTER_5_ACTIVE_POWER, new SignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_5_LEVEL_POINT + 6),
+								ElementToChannelConverter.SCALE_FACTOR_1),
+						m(RenaultTmhChannelId.INVERTER_5_REACTIVE_POWER, new SignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_5_LEVEL_POINT + 7),
+								ElementToChannelConverter.SCALE_FACTOR_1),
+						m(RenaultTmhChannelId.INVERTER_5_APPARENT_POWER, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_5_LEVEL_POINT + 8),
+								ElementToChannelConverter.SCALE_FACTOR_1),
+						m(RenaultTmhChannelId.INVERTER_5_SPARE_A, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_5_LEVEL_POINT + 9)),
+						m(RenaultTmhChannelId.INVERTER_5_SPARE_B, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_5_LEVEL_POINT + 10)),
+						m(RenaultTmhChannelId.INVERTER_5_SPARE_C, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_5_LEVEL_POINT + 11)),
+						m(RenaultTmhChannelId.INVERTER_5_SPARE_D, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_5_LEVEL_POINT + 12)),
 						
+						m(RenaultTmhChannelId.INVERTER_6_ID, new UnsignedDoublewordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_6_LEVEL_POINT)),
+						m(RenaultTmhChannelId.INVERTER_6_STATUS, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_6_LEVEL_POINT + 2)),
+						m(RenaultTmhChannelId.INVERTER_6_DC_VOLTAGE, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_6_LEVEL_POINT + 3),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
+						m(RenaultTmhChannelId.INVERTER_6_AC_VOLTAGE, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_6_LEVEL_POINT + 4),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_2),
+						m(RenaultTmhChannelId.INVERTER_6_AC_CURRENT, new SignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_6_LEVEL_POINT + 5),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
+						m(RenaultTmhChannelId.INVERTER_6_ACTIVE_POWER, new SignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_6_LEVEL_POINT + 6),
+								ElementToChannelConverter.SCALE_FACTOR_1),
+						m(RenaultTmhChannelId.INVERTER_6_REACTIVE_POWER, new SignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_6_LEVEL_POINT + 7),
+								ElementToChannelConverter.SCALE_FACTOR_1),
+						m(RenaultTmhChannelId.INVERTER_6_APPARENT_POWER, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_6_LEVEL_POINT + 8),
+								ElementToChannelConverter.SCALE_FACTOR_1),
+						m(RenaultTmhChannelId.INVERTER_6_SPARE_A, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_6_LEVEL_POINT + 9)),
+						m(RenaultTmhChannelId.INVERTER_6_SPARE_B, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_6_LEVEL_POINT + 10)),
+						m(RenaultTmhChannelId.INVERTER_6_SPARE_C, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_6_LEVEL_POINT + 11)),
+						m(RenaultTmhChannelId.INVERTER_6_SPARE_D, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_6_LEVEL_POINT + 12)),
 						
+						m(RenaultTmhChannelId.INVERTER_7_ID, new UnsignedDoublewordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_7_LEVEL_POINT)),
+						m(RenaultTmhChannelId.INVERTER_7_STATUS, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_7_LEVEL_POINT + 2)),
+						m(RenaultTmhChannelId.INVERTER_7_DC_VOLTAGE, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_7_LEVEL_POINT + 3),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
+						m(RenaultTmhChannelId.INVERTER_7_AC_VOLTAGE, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_7_LEVEL_POINT + 4),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_2),
+						m(RenaultTmhChannelId.INVERTER_7_AC_CURRENT, new SignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_7_LEVEL_POINT + 5),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
+						m(RenaultTmhChannelId.INVERTER_7_ACTIVE_POWER, new SignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_7_LEVEL_POINT + 6),
+								ElementToChannelConverter.SCALE_FACTOR_1),
+						m(RenaultTmhChannelId.INVERTER_7_REACTIVE_POWER, new SignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_7_LEVEL_POINT + 7),
+								ElementToChannelConverter.SCALE_FACTOR_1),
+						m(RenaultTmhChannelId.INVERTER_7_APPARENT_POWER, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_7_LEVEL_POINT + 8),
+								ElementToChannelConverter.SCALE_FACTOR_1),
+						m(RenaultTmhChannelId.INVERTER_7_SPARE_A, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_7_LEVEL_POINT + 9)),
+						m(RenaultTmhChannelId.INVERTER_7_SPARE_B, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_7_LEVEL_POINT + 10)),
+						m(RenaultTmhChannelId.INVERTER_7_SPARE_C, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_7_LEVEL_POINT + 11)),
+						m(RenaultTmhChannelId.INVERTER_7_SPARE_D, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_7_LEVEL_POINT + 12)),
 						
+						m(RenaultTmhChannelId.INVERTER_8_ID, new UnsignedDoublewordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_8_LEVEL_POINT)),
+						m(RenaultTmhChannelId.INVERTER_8_STATUS, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_8_LEVEL_POINT + 2)),
+						m(RenaultTmhChannelId.INVERTER_8_DC_VOLTAGE, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_8_LEVEL_POINT + 3),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
+						m(RenaultTmhChannelId.INVERTER_8_AC_VOLTAGE, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_8_LEVEL_POINT + 4),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_2),
+						m(RenaultTmhChannelId.INVERTER_8_AC_CURRENT, new SignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_8_LEVEL_POINT + 5),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
+						m(RenaultTmhChannelId.INVERTER_8_ACTIVE_POWER, new SignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_8_LEVEL_POINT + 6),
+								ElementToChannelConverter.SCALE_FACTOR_1),
+						m(RenaultTmhChannelId.INVERTER_8_REACTIVE_POWER, new SignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_8_LEVEL_POINT + 7),
+								ElementToChannelConverter.SCALE_FACTOR_1),
+						m(RenaultTmhChannelId.INVERTER_8_APPARENT_POWER, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_8_LEVEL_POINT + 8),
+								ElementToChannelConverter.SCALE_FACTOR_1),
+						m(RenaultTmhChannelId.INVERTER_8_SPARE_A, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_8_LEVEL_POINT + 9)),
+						m(RenaultTmhChannelId.INVERTER_8_SPARE_B, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_8_LEVEL_POINT + 10)),
+						m(RenaultTmhChannelId.INVERTER_8_SPARE_C, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_8_LEVEL_POINT + 11)),
+						m(RenaultTmhChannelId.INVERTER_8_SPARE_D, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_8_LEVEL_POINT + 12)),
 						
+						m(RenaultTmhChannelId.INVERTER_9_ID, new UnsignedDoublewordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_9_LEVEL_POINT)),
+						m(RenaultTmhChannelId.INVERTER_9_STATUS, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_9_LEVEL_POINT + 2)),
+						m(RenaultTmhChannelId.INVERTER_9_DC_VOLTAGE, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_9_LEVEL_POINT + 3),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
+						m(RenaultTmhChannelId.INVERTER_9_AC_VOLTAGE, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_9_LEVEL_POINT + 4),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_2),
+						m(RenaultTmhChannelId.INVERTER_9_AC_CURRENT, new SignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_9_LEVEL_POINT + 5),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
+						m(RenaultTmhChannelId.INVERTER_9_ACTIVE_POWER, new SignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_9_LEVEL_POINT + 6),
+								ElementToChannelConverter.SCALE_FACTOR_1),
+						m(RenaultTmhChannelId.INVERTER_9_REACTIVE_POWER, new SignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_9_LEVEL_POINT + 7),
+								ElementToChannelConverter.SCALE_FACTOR_1),
+						m(RenaultTmhChannelId.INVERTER_9_APPARENT_POWER, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_9_LEVEL_POINT + 8),
+								ElementToChannelConverter.SCALE_FACTOR_1),
+						m(RenaultTmhChannelId.INVERTER_9_SPARE_A, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_9_LEVEL_POINT + 9)),
+						m(RenaultTmhChannelId.INVERTER_9_SPARE_B, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_9_LEVEL_POINT + 10)),
+						m(RenaultTmhChannelId.INVERTER_9_SPARE_C, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_9_LEVEL_POINT + 11)),
+						m(RenaultTmhChannelId.INVERTER_9_SPARE_D, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_9_LEVEL_POINT + 12)),
 						
-						)
+						m(RenaultTmhChannelId.INVERTER_10_ID, new UnsignedDoublewordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_10_LEVEL_POINT)),
+						m(RenaultTmhChannelId.INVERTER_10_STATUS, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_10_LEVEL_POINT + 2)),
+						m(RenaultTmhChannelId.INVERTER_10_DC_VOLTAGE, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_10_LEVEL_POINT + 3),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
+						m(RenaultTmhChannelId.INVERTER_10_AC_VOLTAGE, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_10_LEVEL_POINT + 4),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_2),
+						m(RenaultTmhChannelId.INVERTER_10_AC_CURRENT, new SignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_10_LEVEL_POINT + 5),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
+						m(RenaultTmhChannelId.INVERTER_10_ACTIVE_POWER, new SignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_10_LEVEL_POINT + 6),
+								ElementToChannelConverter.SCALE_FACTOR_1),
+						m(RenaultTmhChannelId.INVERTER_10_REACTIVE_POWER, new SignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_10_LEVEL_POINT + 7),
+								ElementToChannelConverter.SCALE_FACTOR_1),
+						m(RenaultTmhChannelId.INVERTER_10_APPARENT_POWER, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_10_LEVEL_POINT + 8),
+								ElementToChannelConverter.SCALE_FACTOR_1),
+						m(RenaultTmhChannelId.INVERTER_10_SPARE_A, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_10_LEVEL_POINT + 9)),
+						m(RenaultTmhChannelId.INVERTER_10_SPARE_B, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_10_LEVEL_POINT + 10)),
+						m(RenaultTmhChannelId.INVERTER_10_SPARE_C, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_10_LEVEL_POINT + 11)),
+						m(RenaultTmhChannelId.INVERTER_10_SPARE_D, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_10_LEVEL_POINT + 12)),
+						
+						m(RenaultTmhChannelId.INVERTER_11_ID, new UnsignedDoublewordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_11_LEVEL_POINT)),
+						m(RenaultTmhChannelId.INVERTER_11_STATUS, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_11_LEVEL_POINT + 2)),
+						m(RenaultTmhChannelId.INVERTER_11_DC_VOLTAGE, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_11_LEVEL_POINT + 3),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
+						m(RenaultTmhChannelId.INVERTER_11_AC_VOLTAGE, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_11_LEVEL_POINT + 4),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_2),
+						m(RenaultTmhChannelId.INVERTER_11_AC_CURRENT, new SignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_11_LEVEL_POINT + 5),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
+						m(RenaultTmhChannelId.INVERTER_11_ACTIVE_POWER, new SignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_11_LEVEL_POINT + 6),
+								ElementToChannelConverter.SCALE_FACTOR_1),
+						m(RenaultTmhChannelId.INVERTER_11_REACTIVE_POWER, new SignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_11_LEVEL_POINT + 7),
+								ElementToChannelConverter.SCALE_FACTOR_1),
+						m(RenaultTmhChannelId.INVERTER_11_APPARENT_POWER, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_11_LEVEL_POINT + 8),
+								ElementToChannelConverter.SCALE_FACTOR_1),
+						m(RenaultTmhChannelId.INVERTER_11_SPARE_A, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_11_LEVEL_POINT + 9)),
+						m(RenaultTmhChannelId.INVERTER_11_SPARE_B, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_11_LEVEL_POINT + 10)),
+						m(RenaultTmhChannelId.INVERTER_11_SPARE_C, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_11_LEVEL_POINT + 11)),
+						m(RenaultTmhChannelId.INVERTER_11_SPARE_D, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_11_LEVEL_POINT + 12)),
+						
+						m(RenaultTmhChannelId.INVERTER_12_ID, new UnsignedDoublewordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_12_LEVEL_POINT)),
+						m(RenaultTmhChannelId.INVERTER_12_STATUS, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_12_LEVEL_POINT + 2)),
+						m(RenaultTmhChannelId.INVERTER_12_DC_VOLTAGE, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_12_LEVEL_POINT + 3),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
+						m(RenaultTmhChannelId.INVERTER_12_AC_VOLTAGE, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_12_LEVEL_POINT + 4),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_2),
+						m(RenaultTmhChannelId.INVERTER_12_AC_CURRENT, new SignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_12_LEVEL_POINT + 5),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
+						m(RenaultTmhChannelId.INVERTER_12_ACTIVE_POWER, new SignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_12_LEVEL_POINT + 6),
+								ElementToChannelConverter.SCALE_FACTOR_1),
+						m(RenaultTmhChannelId.INVERTER_12_REACTIVE_POWER, new SignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_12_LEVEL_POINT + 7),
+								ElementToChannelConverter.SCALE_FACTOR_1),
+						m(RenaultTmhChannelId.INVERTER_12_APPARENT_POWER, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_12_LEVEL_POINT + 8),
+								ElementToChannelConverter.SCALE_FACTOR_1),
+						m(RenaultTmhChannelId.INVERTER_12_SPARE_A, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_12_LEVEL_POINT + 9)),
+						m(RenaultTmhChannelId.INVERTER_12_SPARE_B, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_12_LEVEL_POINT + 10)),
+						m(RenaultTmhChannelId.INVERTER_12_SPARE_C, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_12_LEVEL_POINT + 11)),
+						m(RenaultTmhChannelId.INVERTER_12_SPARE_D, new UnsignedWordElement(ESS_MODBUS_ADDRESS_OFFSET_Inverter_12_LEVEL_POINT + 12)))
 				);
 	}
 
 
 
-	@Override
-	public void run() throws OpenemsNamedException {
-		// TODO Auto-generated method stub
-		
-	}
+
 	
 }
