@@ -273,7 +273,7 @@ public class TimeslotPeakshaving extends AbstractOpenemsComponent implements Con
 
 		// Calculate 'real' grid-power (without current ESS charge/discharge)
 		int consumption = meter.getActivePower().value().orElse(0); /* current buy-from/sell-to grid */
-//				- ess.getActivePower().value().orElse(0) /* current charge/discharge Ess */;
+//				+ ess.getActivePower().value().orElse(0) /* current charge/discharge Ess */;
 			
 
 		int calculatedPower;

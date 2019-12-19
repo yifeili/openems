@@ -1,18 +1,18 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<repository xmlns="http://www.osgi.org/xmlns/repository/v1.0.0" name="io.openems.edge.meter.abb" increment="1576743200321">
+<repository xmlns="http://www.osgi.org/xmlns/repository/v1.0.0" name="io.openems.edge.meter.abb" increment="1576753022949">
   <resource>
     <capability namespace="osgi.identity">
       <attribute name="license" value="https://opensource.org/licenses/EPL-2.0"/>
       <attribute name="osgi.identity" value="io.openems.edge.meter.abb"/>
       <attribute name="type" value="osgi.bundle"/>
-      <attribute name="version" value="1.0.0.201912190813" type="Version"/>
+      <attribute name="version" value="1.0.0.201912191057" type="Version"/>
     </capability>
     <capability namespace="osgi.wiring.bundle">
-      <attribute name="bundle-version" value="1.0.0.201912190813" type="Version"/>
+      <attribute name="bundle-version" value="1.0.0.201912191057" type="Version"/>
       <attribute name="osgi.wiring.bundle" value="io.openems.edge.meter.abb"/>
     </capability>
     <capability namespace="osgi.wiring.host">
-      <attribute name="bundle-version" value="1.0.0.201912190813" type="Version"/>
+      <attribute name="bundle-version" value="1.0.0.201912191057" type="Version"/>
       <attribute name="osgi.wiring.host" value="io.openems.edge.meter.abb"/>
     </capability>
     <capability namespace="osgi.wiring.package">
@@ -33,10 +33,10 @@
       <attribute name="objectClass" value="io.openems.edge.common.component.OpenemsComponent,io.openems.edge.meter.api.AsymmetricMeter,io.openems.edge.meter.api.SymmetricMeter" type="List&lt;String&gt;"/>
     </capability>
     <capability namespace="osgi.content">
-      <attribute name="size" value="29613" type="Long"/>
+      <attribute name="size" value="29614" type="Long"/>
       <attribute name="url" value="generated/io.openems.edge.meter.abb.jar"/>
       <attribute name="mime" value="application/vnd.osgi.bundle"/>
-      <attribute name="osgi.content" value="010F3321213DE4ADBED5460E34BB4DAE86F803F88D59765EE43F8256CE809AAB"/>
+      <attribute name="osgi.content" value="6C1B0BB186E9CF3E49B435EBA4F0AE72C2E905ACA57125A0B8C75D998F8F62B4"/>
     </capability>
     <capability namespace="bndtools.workspace">
       <attribute name="bndtools.workspace" value="file:/C:/Users/wolfgang.miethaner/git/openems_ws"/>
