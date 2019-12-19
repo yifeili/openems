@@ -272,23 +272,23 @@ public class TimeslotPeakshaving extends AbstractOpenemsComponent implements Con
 		}
 
 		// Calculate 'real' grid-power (without current ESS charge/discharge)
-		int gridPower = meter.getActivePower().value().orElse(0) /* current buy-from/sell-to grid */
-				- ess.getActivePower().value().orElse(0) /* current charge/discharge Ess */;
+		int consumption = meter.getActivePower().value().orElse(0); /* current buy-from/sell-to grid */
+//				- ess.getActivePower().value().orElse(0) /* current charge/discharge Ess */;
 			
 
 		int calculatedPower;
 		//if (gridPower >= this.config.peakShavingPower()) {
-		if (gridPower >= this.peakShavingPower) {	
+		if (consumption >= this.peakShavingPower) {	
 			/*
 			 * Peak-Shaving
 			 */
-			calculatedPower = gridPower -= this.peakShavingPower;
+			calculatedPower = consumption -= this.peakShavingPower;
 
-		} else if (gridPower <= this.rechargePower) {
+		} else if (consumption <= this.rechargePower) {
 			/*
 			 * Recharge
 			 */
-			calculatedPower = gridPower -= this.rechargePower;
+			calculatedPower = consumption -= this.rechargePower;
 
 		} else {
 			/*
@@ -297,16 +297,14 @@ public class TimeslotPeakshaving extends AbstractOpenemsComponent implements Con
 			calculatedPower = 0;
 		}
 
-//		/*
-//		 * Apply PID filter
-//		 */
-//		int minPower = this.power.getMinPower(ess, Phase.ALL, Pwr.ACTIVE);
-//		int maxPower = this.power.getMaxPower(ess, Phase.ALL, Pwr.ACTIVE);
-//		this.pidFilter.setLimits(minPower, maxPower);
-//		int pidOutput = (int) this.pidFilter.applyPidFilter(ess.getActivePower().value().orElse(0), calculatedPower);
-//		return pidOutput;
-		
-		return calculatedPower;
+		/*
+		 * Apply PID filter
+		 */
+		int minPower = this.power.getMinPower(ess, Phase.ALL, Pwr.ACTIVE);
+		int maxPower = this.power.getMaxPower(ess, Phase.ALL, Pwr.ACTIVE);
+		this.pidFilter.setLimits(minPower, maxPower);
+		int pidOutput = (int) this.pidFilter.applyPidFilter(ess.getActivePower().value().orElse(0), calculatedPower);
+		return pidOutput;
 	}
 
 	/**
