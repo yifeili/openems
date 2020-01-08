@@ -2,7 +2,7 @@ package io.openems.edge.battery.renaultzoe;
 
 import io.openems.common.types.OptionsEnum;
 
-public enum PowerRelayType implements OptionsEnum {
+public enum PowerRelayState implements OptionsEnum {
 	UNDEFINED(-1, "Undefined"), //
 	PRECHARGE(0, "Precharge"), //
 	CLOSED(1, "Closed"), //
@@ -13,7 +13,7 @@ public enum PowerRelayType implements OptionsEnum {
 	private int value;
 	private String name;
 
-	private PowerRelayType(int value, String name) {
+	private PowerRelayState(int value, String name) {
 		this.value = value;
 		this.name = name;
 	}

@@ -93,108 +93,115 @@ public class BatteryRenaultZoe extends AbstractOpenemsModbusComponent
 	}
 
 	private void handleStateMachine() {
-		log.info("BatteryRenaultZoe.handleStateMachine(): State: " + this.getStateMachineState());
-		boolean readyForWorking = false;
-		switch (this.getStateMachineState()) {
-		case ERROR:
-			this.stopSystem();
-			errorDelayIsOver = LocalDateTime.now().plusSeconds(config.errorDelay());
-			this.setStateMachineState(State.ERRORDELAY);
-			break;
-		case ERRORDELAY:
-			if (LocalDateTime.now().isAfter(errorDelayIsOver)) {
-				errorDelayIsOver = null;
-				if (this.isError()) {
-					this.setStateMachineState(State.ERROR);
-				} else {
-					this.setStateMachineState(State.OFF);
-				}
-			}
-			break;
-		case INIT:
-			if (this.isSystemRunning()) {
-				this.setStateMachineState(State.RUNNING);
-				unsuccessfulStarts = 0;
-				startAttemptTime = null;
-			} else {
-				if (startAttemptTime.plusSeconds(config.maxStartTime()).isBefore(LocalDateTime.now())) {
-					startAttemptTime = null;
-					unsuccessfulStarts++;
-					this.stopSystem();
-					this.setStateMachineState(State.STOPPING);
-					if (unsuccessfulStarts >= config.maxStartAttempts()) {
-						errorDelayIsOver = LocalDateTime.now().plusSeconds(config.startUnsuccessfulDelay());
-						this.setStateMachineState(State.ERRORDELAY);
-						unsuccessfulStarts = 0;
-					}
-				}
-			}
-			break;
-		case OFF:
-			log.debug("in case 'OFF'; try to start the system");
-			this.startSystem();
-			log.debug("set state to 'INIT'");
-			this.setStateMachineState(State.INIT);
-			startAttemptTime = LocalDateTime.now();
-			break;
-		case RUNNING:
-			if (this.isError()) {
-				this.setStateMachineState(State.ERROR);
-			} else if (!this.isSystemRunning()) {
-				this.setStateMachineState(State.UNDEFINED);
-			} else {
-				this.setStateMachineState(State.RUNNING);
-				readyForWorking = true;
-			}
-			break;
-		case STOPPING:
-			if (this.isError()) {
-				this.setStateMachineState(State.ERROR);
-			} else {
-				if (this.isSystemStopped()) {
-					this.setStateMachineState(State.OFF);
-				}
-			}
-			break;
-		case UNDEFINED:
-			if (this.isError()) {
-				this.setStateMachineState(State.ERROR);
-			} else if (this.isSystemStopped()) {
-				this.setStateMachineState(State.OFF);
-			} else if (this.isSystemRunning()) {
-				this.setStateMachineState(State.RUNNING);
-			} else if (this.isSystemStatePending()) {
-				this.setStateMachineState(State.PENDING);
-			}
-			break;
-		case PENDING:
-			if (this.pendingTimestamp == null) {
-				this.pendingTimestamp = LocalDateTime.now();
-			}
-			if (this.pendingTimestamp.plusSeconds(this.config.pendingTolerance()).isBefore(LocalDateTime.now())) {
-				// System state could not be determined, stop and start it
-				this.pendingTimestamp = null;
-				this.stopSystem();
-				this.setStateMachineState(State.OFF);
-			} else {
-				if (this.isError()) {
-					this.setStateMachineState(State.ERROR);
-					this.pendingTimestamp = null;
-				} else if (this.isSystemStopped()) {
-					this.setStateMachineState(State.OFF);
-					this.pendingTimestamp = null;
-				} else if (this.isSystemRunning()) {
-					this.setStateMachineState(State.RUNNING);
-					this.pendingTimestamp = null;
-				}
-			}
-			break;
-		case STANDBY:
-			break;
-		}
-
+		boolean readyForWorking = true;
 		this.getReadyForWorking().setNextValue(readyForWorking);
 	}
+	
+	
+	
+//	private void handleStateMachine() {
+//		log.info("BatteryRenaultZoe.handleStateMachine(): State: " + this.getStateMachineState());
+//		boolean readyForWorking = false;
+//		switch (this.getStateMachineState()) {
+//		case ERROR:
+//			this.stopSystem();
+//			errorDelayIsOver = LocalDateTime.now().plusSeconds(config.errorDelay());
+//			this.setStateMachineState(State.ERRORDELAY);
+//			break;
+//		case ERRORDELAY:
+//			if (LocalDateTime.now().isAfter(errorDelayIsOver)) {
+//				errorDelayIsOver = null;
+//				if (this.isError()) {
+//					this.setStateMachineState(State.ERROR);
+//				} else {
+//					this.setStateMachineState(State.OFF);
+//				}
+//			}
+//			break;
+//		case INIT:
+//			if (this.isSystemRunning()) {
+//				this.setStateMachineState(State.RUNNING);
+//				unsuccessfulStarts = 0;
+//				startAttemptTime = null;
+//			} else {
+//				if (startAttemptTime.plusSeconds(config.maxStartTime()).isBefore(LocalDateTime.now())) {
+//					startAttemptTime = null;
+//					unsuccessfulStarts++;
+//					this.stopSystem();
+//					this.setStateMachineState(State.STOPPING);
+//					if (unsuccessfulStarts >= config.maxStartAttempts()) {
+//						errorDelayIsOver = LocalDateTime.now().plusSeconds(config.startUnsuccessfulDelay());
+//						this.setStateMachineState(State.ERRORDELAY);
+//						unsuccessfulStarts = 0;
+//					}
+//				}
+//			}
+//			break;
+//		case OFF:
+//			log.debug("in case 'OFF'; try to start the system");
+//			this.startSystem();
+//			log.debug("set state to 'INIT'");
+//			this.setStateMachineState(State.INIT);
+//			startAttemptTime = LocalDateTime.now();
+//			break;
+//		case RUNNING:
+//			if (this.isError()) {
+//				this.setStateMachineState(State.ERROR);
+//			} else if (!this.isSystemRunning()) {
+//				this.setStateMachineState(State.UNDEFINED);
+//			} else {
+//				this.setStateMachineState(State.RUNNING);
+//				readyForWorking = true;
+//			}
+//			break;
+//		case STOPPING:
+//			if (this.isError()) {
+//				this.setStateMachineState(State.ERROR);
+//			} else {
+//				if (this.isSystemStopped()) {
+//					this.setStateMachineState(State.OFF);
+//				}
+//			}
+//			break;
+//		case UNDEFINED:
+//			if (this.isError()) {
+//				this.setStateMachineState(State.ERROR);
+//			} else if (this.isSystemStopped()) {
+//				this.setStateMachineState(State.OFF);
+//			} else if (this.isSystemRunning()) {
+//				this.setStateMachineState(State.RUNNING);
+//			} else if (this.isSystemStatePending()) {
+//				this.setStateMachineState(State.PENDING);
+//			}
+//			break;
+//		case PENDING:
+//			if (this.pendingTimestamp == null) {
+//				this.pendingTimestamp = LocalDateTime.now();
+//			}
+//			if (this.pendingTimestamp.plusSeconds(this.config.pendingTolerance()).isBefore(LocalDateTime.now())) {
+//				// System state could not be determined, stop and start it
+//				this.pendingTimestamp = null;
+//				this.stopSystem();
+//				this.setStateMachineState(State.OFF);
+//			} else {
+//				if (this.isError()) {
+//					this.setStateMachineState(State.ERROR);
+//					this.pendingTimestamp = null;
+//				} else if (this.isSystemStopped()) {
+//					this.setStateMachineState(State.OFF);
+//					this.pendingTimestamp = null;
+//				} else if (this.isSystemRunning()) {
+//					this.setStateMachineState(State.RUNNING);
+//					this.pendingTimestamp = null;
+//				}
+//			}
+//			break;
+//		case STANDBY:
+//			break;
+//		}
+//
+//		this.getReadyForWorking().setNextValue(readyForWorking);
+//	}
 
 	public State getStateMachineState() {
 		return state;
@@ -256,11 +263,14 @@ public class BatteryRenaultZoe extends AbstractOpenemsModbusComponent
 		}
 	}
 	
+
 	
 
 	@Override
 	public String debugLog() {
-		return "SoC: " + getSoc();
+		return "SoC: " + getSoc().value()
+		+ " | Current: " + getCurrent().value()
+		+ " | Voltage: " + getVoltage().value();
 	}
 
 	private void handleBatteryState() {
@@ -291,89 +301,52 @@ public class BatteryRenaultZoe extends AbstractOpenemsModbusComponent
 				 */
 				new FC3ReadRegistersTask(0x64, Priority.HIGH, //
 						m(Battery.ChannelId.SOC, new UnsignedWordElement(0x64)), //
-						m(RenaultZoeChannelId.AVAILABLE_POWER, new UnsignedWordElement(0x65), //
+						m(RenaultZoeChannelId.AVAILABLE_ENERGY, new UnsignedWordElement(0x65)), //
+						m(RenaultZoeChannelId.AVAILABLE_POWER, new UnsignedWordElement(0x66)), //
+						m(RenaultZoeChannelId.CHARGING_POWER, new UnsignedWordElement(0x67)), //
+						m(RenaultZoeChannelId.CELL_HIGHEST_VOLTAGE, new UnsignedWordElement(0x68)), //
+						m(RenaultZoeChannelId.CELL_LOWEST_VOLTAGE, new UnsignedWordElement(0x69)), //
+						m(Battery.ChannelId.CURRENT, new UnsignedWordElement(0x6A),
 								ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
-						m(RenaultZoeChannelId.HV_BATTERY_TEMP, new UnsignedWordElement(0x66), //
-								ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
-						m(RenaultZoeChannelId.HV_BAT_HEALTH, new UnsignedWordElement(0x67), //
-								ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
-						m(RenaultZoeChannelId.LBCPRUN_ANSWER, new UnsignedWordElement(0x68), //
-								ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
-						m(RenaultZoeChannelId.HV_BATTERY_MAX_TEMP, new UnsignedWordElement(0x69), //
-								ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
-						m(RenaultZoeChannelId.HV_BAT_STATE, new UnsignedWordElement(0x6A), //
-								ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
-						m(RenaultZoeChannelId.LBC_REFUSE_TO_SLEEP, new UnsignedWordElement(0x6B), //
-								ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
-						m(RenaultZoeChannelId.AVAILABLE_ENERGY, new UnsignedWordElement(0x6C), //
-								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
-						m(RenaultZoeChannelId.ISOL_DIAG_AUTHORISATION, new UnsignedWordElement(0x6D), //
-								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
-						m(RenaultZoeChannelId.SAFETY_MODE_1_FLAG, new UnsignedWordElement(0x6E), //
-								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
-						m(RenaultZoeChannelId.HV_ISOLATON_IMPEDANCE, new UnsignedWordElement(0x6F), //
-								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
-						m(RenaultZoeChannelId.CELL_HIGHEST_VOLTAGE, new UnsignedWordElement(0x70), //
-								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
-						m(RenaultZoeChannelId.CELL_LOWEST_VOLTAGE, new UnsignedWordElement(0x71), //
-								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
-						m(RenaultZoeChannelId.CHARGING_POWER, new UnsignedWordElement(0x72), //
-								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
-						m(RenaultZoeChannelId.HV_BAT_INSTANT_CURRENT, new UnsignedWordElement(0x73), //
-								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
-						m(RenaultZoeChannelId.HV_POWER_CONNECTION, new UnsignedWordElement(0x74), //
-								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
-						m(RenaultZoeChannelId.HV_BAT_LEVEL2_FAILURE, new UnsignedWordElement(0x75), //
-								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
-						m(RenaultZoeChannelId.HV_BAT_LEVEL1_FAILURE, new UnsignedWordElement(0x76), //
-								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
-						m(RenaultZoeChannelId.USER_SOC, new UnsignedWordElement(0x77), //
-								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
-						m(RenaultZoeChannelId.HV_NETWORK_VOLTAGE, new UnsignedWordElement(0x78), //
-								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
-						m(RenaultZoeChannelId.HV_BAT_SERIAL_NUMBER, new UnsignedWordElement(0x79), //
-								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
-						m(RenaultZoeChannelId.CELL_LOWEST_VOLTAGE_RCY, new UnsignedWordElement(0x7A), //
-								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
-						m(RenaultZoeChannelId.CELL_HIGHEST_VOLTAGE_RCY, new UnsignedWordElement(0x7B), //
-								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
-						m(RenaultZoeChannelId.HV_BATTERY_MAX_TEMP_RCY, new UnsignedWordElement(0x7C), //
-								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
-						m(RenaultZoeChannelId.LBCRUN_ANSWER_RCY, new UnsignedWordElement(0x7D), //
-								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
-						m(RenaultZoeChannelId.HV_POWER_CONNECTION_RCY, new UnsignedWordElement(0x7E), //
-								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
-						m(RenaultZoeChannelId.HV_BAT_LEVEL2_FAILURE_RCY, new UnsignedWordElement(0x7F), //
-								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
-						m(RenaultZoeChannelId.SAFETY_MODE_1_FLAG_RCY, new UnsignedWordElement(0x80), //
-								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
-						m(RenaultZoeChannelId.LBC2_REFUSE_TO_SLEEP, new UnsignedWordElement(0x81), //
-								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
-						m(RenaultZoeChannelId.ELEC_MASCHINE_SPEED, new UnsignedWordElement(0x82), //
-								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
-						m(RenaultZoeChannelId.ETS_SLEEP_MODE, new UnsignedWordElement(0x83), //
-								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
-						m(RenaultZoeChannelId.SCH_WAKE_UP_SLEEP_COMMAND, new UnsignedWordElement(0x84), //
-								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
-						m(RenaultZoeChannelId.WAKE_UP_TYPE, new UnsignedWordElement(0x85), //
-								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
-						m(RenaultZoeChannelId.LBCPRUN_KEY, new UnsignedWordElement(0x86), //
-								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
-						m(RenaultZoeChannelId.LBCPRUNKEY_RCY, new UnsignedWordElement(0x87), //
-								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
-						m(RenaultZoeChannelId.OPERATING_TYPE, new UnsignedWordElement(0x88), //
-								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
-						m(RenaultZoeChannelId.POWER_RELAY_STATE, new UnsignedWordElement(0x89), //
-								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
-						m(RenaultZoeChannelId.DISTANCE_TOTALIZER_COPY, new UnsignedWordElement(0x8A), //
-								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
-						m(RenaultZoeChannelId.ABSOLUTE_TIME_SINCE_1RST_IGNITION, new UnsignedWordElement(0x8B), //
-								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
-						m(RenaultZoeChannelId.VEHICLE_ID, new UnsignedWordElement(0x8C), //
-								ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
-						new DummyRegisterElement(0x8D, 0x15F),
-						m(RenaultZoeChannelId.STR_ST, new UnsignedWordElement(0x160), //
-								ElementToChannelConverter.SCALE_FACTOR_MINUS_1)
+						m(Battery.ChannelId.VOLTAGE, new UnsignedWordElement(0x6B)), //
+						m(RenaultZoeChannelId.HV_BATTERY_MAX_TEMP, new UnsignedWordElement(0x6C)), //						
+						m(RenaultZoeChannelId.HV_BAT_STATE, new UnsignedWordElement(0x6D)), //
+						m(RenaultZoeChannelId.HV_BAT_HEALTH, new UnsignedWordElement(0x6E)), //
+						m(RenaultZoeChannelId.HV_BATTERY_TEMP, new UnsignedWordElement(0x6F)), //
+						m(RenaultZoeChannelId.HV_ISOLATON_IMPEDANCE, new UnsignedWordElement(0x70)), //
+						m(RenaultZoeChannelId.LBCPRUN_ANSWER, new UnsignedWordElement(0x71)), //
+						m(RenaultZoeChannelId.HV_POWER_CONNECTION, new UnsignedWordElement(0x72)), //
+						m(RenaultZoeChannelId.HV_BAT_LEVEL1_FAILURE, new UnsignedWordElement(0x73)), //
+						m(RenaultZoeChannelId.HV_BAT_LEVEL2_FAILURE, new UnsignedWordElement(0x74)), //
+						m(RenaultZoeChannelId.HV_BAT_SERIAL_NUMBER, new UnsignedWordElement(0x75)), //
+						m(RenaultZoeChannelId.LBC2_REFUSE_TO_SLEEP, new UnsignedWordElement(0x76)), //
+						m(RenaultZoeChannelId.ELEC_MASCHINE_SPEED, new UnsignedWordElement(0x77)), //
+						m(RenaultZoeChannelId.ETS_SLEEP_MODE, new UnsignedWordElement(0x78)), //
+						m(RenaultZoeChannelId.SCH_WAKE_UP_SLEEP_COMMAND, new UnsignedWordElement(0x79)), //
+						m(RenaultZoeChannelId.WAKE_UP_TYPE, new UnsignedWordElement(0x7A)), //
+						m(RenaultZoeChannelId.LBCPRUN_KEY, new UnsignedWordElement(0x7B)), //
+						m(RenaultZoeChannelId.OPERATING_TYPE, new UnsignedWordElement(0x7C)), //
+						m(RenaultZoeChannelId.POWER_RELAY_STATE, new UnsignedWordElement(0x7D)), //
+						m(RenaultZoeChannelId.DISTANCE_TOTALIZER_COPY, new UnsignedWordElement(0x7E)), //
+						m(RenaultZoeChannelId.ABSOLUTE_TIME_SINCE_1RST_IGNITION, new UnsignedWordElement(0x7F)), //
+						m(RenaultZoeChannelId.CELL_LOWEST_VOLTAGE_RCY, new UnsignedWordElement(0x80)), //
+						m(RenaultZoeChannelId.CELL_HIGHEST_VOLTAGE_RCY, new UnsignedWordElement(0x81)), //
+						m(RenaultZoeChannelId.LBCRUN_ANSWER_RCY, new UnsignedWordElement(0x82)), //
+						m(RenaultZoeChannelId.HV_BATTERY_MAX_TEMP_RCY, new UnsignedWordElement(0x83)), //
+						m(RenaultZoeChannelId.HV_POWER_CONNECTION_RCY, new UnsignedWordElement(0x84)), //
+						m(RenaultZoeChannelId.HV_BAT_LEVEL2_FAILURE_RCY, new UnsignedWordElement(0x85)), //
+						m(RenaultZoeChannelId.SAFETY_MODE_1_FLAG_RCY, new UnsignedWordElement(0x86)), //
+						m(RenaultZoeChannelId.LBCPRUN_KEY_RCY, new UnsignedWordElement(0x87)), //
+						m(RenaultZoeChannelId.VEHICLE_ID, new UnsignedWordElement(0x88)), //
+						m(RenaultZoeChannelId.END_OF_CHARGE_REQUEST, new UnsignedWordElement(0x89)), //
+						m(RenaultZoeChannelId.LBC_REFUSE_TO_SLEEP, new UnsignedWordElement(0x8A)), //
+						m(RenaultZoeChannelId.ISOL_DIAG_AUTHORISATION, new UnsignedWordElement(0x8B)), //
+						m(RenaultZoeChannelId.SAFETY_MODE_1_FLAG, new UnsignedWordElement(0x8C)) //
+
+	
+//						new DummyRegisterElement(0x8D, 0x15F),
+//						m(RenaultZoeChannelId.STR_ST, new UnsignedWordElement(0x160), //
+//								ElementToChannelConverter.SCALE_FACTOR_MINUS_1)
 						)//
 //
 //				new FC6WriteRegisterTask(0x161, //
@@ -486,6 +459,13 @@ public class BatteryRenaultZoe extends AbstractOpenemsModbusComponent
 //
 	}
 
+	
+	
+	
+	
+	
+	
+	
 	@Override
 	public ModbusSlaveTable getModbusSlaveTable(AccessMode accessMode) {
 		return new ModbusSlaveTable( //
