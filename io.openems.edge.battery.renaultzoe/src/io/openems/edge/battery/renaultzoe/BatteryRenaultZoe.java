@@ -1,6 +1,7 @@
 package io.openems.edge.battery.renaultzoe;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentContext;
@@ -20,17 +21,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.openems.common.channel.AccessMode;
-import io.openems.common.exceptions.OpenemsError.OpenemsNamedException;
 import io.openems.edge.battery.api.Battery;
 import io.openems.edge.bridge.modbus.api.AbstractOpenemsModbusComponent;
 import io.openems.edge.bridge.modbus.api.BridgeModbus;
 import io.openems.edge.bridge.modbus.api.ElementToChannelConverter;
 import io.openems.edge.bridge.modbus.api.ModbusProtocol;
-import io.openems.edge.bridge.modbus.api.element.DummyRegisterElement;
+import io.openems.edge.bridge.modbus.api.element.SignedWordElement;
 import io.openems.edge.bridge.modbus.api.element.UnsignedWordElement;
 import io.openems.edge.bridge.modbus.api.task.FC3ReadRegistersTask;
 import io.openems.edge.common.channel.EnumReadChannel;
-import io.openems.edge.common.channel.EnumWriteChannel;
 import io.openems.edge.common.channel.IntegerReadChannel;
 import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.event.EdgeEventConstants;
@@ -50,7 +49,7 @@ public class BatteryRenaultZoe extends AbstractOpenemsModbusComponent
 
 	@Reference
 	protected ConfigurationAdmin cm;
-
+	
 	private final Logger log = LoggerFactory.getLogger(BatteryRenaultZoe.class);
 	private String modbusBridgeId;
 	private State state = State.UNDEFINED;
@@ -62,6 +61,7 @@ public class BatteryRenaultZoe extends AbstractOpenemsModbusComponent
 	private LocalDateTime startAttemptTime = null;
 	private LocalDateTime pendingTimestamp;
 
+	
 	public BatteryRenaultZoe() {
 		super(//
 				OpenemsComponent.ChannelId.values(), //
@@ -85,6 +85,8 @@ public class BatteryRenaultZoe extends AbstractOpenemsModbusComponent
 		super.activate(context, config.id(), config.alias(), config.enabled(), config.modbusUnitId(), this.cm, "Modbus",
 				config.modbus_id());
 		this.modbusBridgeId = config.modbus_id();
+		
+		this.doChannelMapping();
 	}
 
 	@Deactivate
@@ -92,116 +94,116 @@ public class BatteryRenaultZoe extends AbstractOpenemsModbusComponent
 		super.deactivate();
 	}
 
-	private void handleStateMachine() {
-		boolean readyForWorking = true;
-		this.getReadyForWorking().setNextValue(readyForWorking);
-	}
-	
-	
-	
 //	private void handleStateMachine() {
-//		log.info("BatteryRenaultZoe.handleStateMachine(): State: " + this.getStateMachineState());
-//		boolean readyForWorking = false;
-//		switch (this.getStateMachineState()) {
-//		case ERROR:
-//			this.stopSystem();
-//			errorDelayIsOver = LocalDateTime.now().plusSeconds(config.errorDelay());
-//			this.setStateMachineState(State.ERRORDELAY);
-//			break;
-//		case ERRORDELAY:
-//			if (LocalDateTime.now().isAfter(errorDelayIsOver)) {
-//				errorDelayIsOver = null;
-//				if (this.isError()) {
-//					this.setStateMachineState(State.ERROR);
-//				} else {
-//					this.setStateMachineState(State.OFF);
-//				}
-//			}
-//			break;
-//		case INIT:
-//			if (this.isSystemRunning()) {
-//				this.setStateMachineState(State.RUNNING);
-//				unsuccessfulStarts = 0;
-//				startAttemptTime = null;
-//			} else {
-//				if (startAttemptTime.plusSeconds(config.maxStartTime()).isBefore(LocalDateTime.now())) {
-//					startAttemptTime = null;
-//					unsuccessfulStarts++;
-//					this.stopSystem();
-//					this.setStateMachineState(State.STOPPING);
-//					if (unsuccessfulStarts >= config.maxStartAttempts()) {
-//						errorDelayIsOver = LocalDateTime.now().plusSeconds(config.startUnsuccessfulDelay());
-//						this.setStateMachineState(State.ERRORDELAY);
-//						unsuccessfulStarts = 0;
-//					}
-//				}
-//			}
-//			break;
-//		case OFF:
-//			log.debug("in case 'OFF'; try to start the system");
-//			this.startSystem();
-//			log.debug("set state to 'INIT'");
-//			this.setStateMachineState(State.INIT);
-//			startAttemptTime = LocalDateTime.now();
-//			break;
-//		case RUNNING:
-//			if (this.isError()) {
-//				this.setStateMachineState(State.ERROR);
-//			} else if (!this.isSystemRunning()) {
-//				this.setStateMachineState(State.UNDEFINED);
-//			} else {
-//				this.setStateMachineState(State.RUNNING);
-//				readyForWorking = true;
-//			}
-//			break;
-//		case STOPPING:
-//			if (this.isError()) {
-//				this.setStateMachineState(State.ERROR);
-//			} else {
-//				if (this.isSystemStopped()) {
-//					this.setStateMachineState(State.OFF);
-//				}
-//			}
-//			break;
-//		case UNDEFINED:
-//			if (this.isError()) {
-//				this.setStateMachineState(State.ERROR);
-//			} else if (this.isSystemStopped()) {
-//				this.setStateMachineState(State.OFF);
-//			} else if (this.isSystemRunning()) {
-//				this.setStateMachineState(State.RUNNING);
-//			} else if (this.isSystemStatePending()) {
-//				this.setStateMachineState(State.PENDING);
-//			}
-//			break;
-//		case PENDING:
-//			if (this.pendingTimestamp == null) {
-//				this.pendingTimestamp = LocalDateTime.now();
-//			}
-//			if (this.pendingTimestamp.plusSeconds(this.config.pendingTolerance()).isBefore(LocalDateTime.now())) {
-//				// System state could not be determined, stop and start it
-//				this.pendingTimestamp = null;
-//				this.stopSystem();
-//				this.setStateMachineState(State.OFF);
-//			} else {
-//				if (this.isError()) {
-//					this.setStateMachineState(State.ERROR);
-//					this.pendingTimestamp = null;
-//				} else if (this.isSystemStopped()) {
-//					this.setStateMachineState(State.OFF);
-//					this.pendingTimestamp = null;
-//				} else if (this.isSystemRunning()) {
-//					this.setStateMachineState(State.RUNNING);
-//					this.pendingTimestamp = null;
-//				}
-//			}
-//			break;
-//		case STANDBY:
-//			break;
-//		}
-//
+//		boolean readyForWorking = true;
 //		this.getReadyForWorking().setNextValue(readyForWorking);
 //	}
+	
+	
+	
+	private void handleStateMachine() {
+		log.info("BatteryRenaultZoe.handleStateMachine(): State: " + this.getStateMachineState());
+		boolean readyForWorking = false;
+		switch (this.getStateMachineState()) {
+		case ERROR:
+			this.stopSystem();
+			errorDelayIsOver = LocalDateTime.now().plusSeconds(config.errorDelay());
+			this.setStateMachineState(State.ERRORDELAY);
+			break;
+		case ERRORDELAY:
+			if (LocalDateTime.now().isAfter(errorDelayIsOver)) {
+				errorDelayIsOver = null;
+				if (this.isError()) {
+					this.setStateMachineState(State.ERROR);
+				} else {
+					this.setStateMachineState(State.OFF);
+				}
+			}
+			break;
+		case INIT:
+			if (this.isSystemRunning()) {
+				this.setStateMachineState(State.RUNNING);
+				unsuccessfulStarts = 0;
+				startAttemptTime = null;
+			} else {
+				if (startAttemptTime.plusSeconds(config.maxStartTime()).isBefore(LocalDateTime.now())) {
+					startAttemptTime = null;
+					unsuccessfulStarts++;
+					this.stopSystem();
+					this.setStateMachineState(State.STOPPING);
+					if (unsuccessfulStarts >= config.maxStartAttempts()) {
+						errorDelayIsOver = LocalDateTime.now().plusSeconds(config.startUnsuccessfulDelay());
+						this.setStateMachineState(State.ERRORDELAY);
+						unsuccessfulStarts = 0;
+					}
+				}
+			}
+			break;
+		case OFF:
+			log.debug("in case 'OFF'; try to start the system");
+			this.startSystem();
+			log.debug("set state to 'INIT'");
+			this.setStateMachineState(State.INIT);
+			startAttemptTime = LocalDateTime.now();
+			break;
+		case RUNNING:
+			if (this.isError()) {
+				this.setStateMachineState(State.ERROR);
+			} else if (!this.isSystemRunning()) {
+				this.setStateMachineState(State.UNDEFINED);
+			} else {
+				this.setStateMachineState(State.RUNNING);
+				readyForWorking = true;
+			}
+			break;
+		case STOPPING:
+			if (this.isError()) {
+				this.setStateMachineState(State.ERROR);
+			} else {
+				if (this.isSystemStopped()) {
+					this.setStateMachineState(State.OFF);
+				}
+			}
+			break;
+		case UNDEFINED:
+			if (this.isError()) {
+				this.setStateMachineState(State.ERROR);
+			} else if (this.isSystemStopped()) {
+				this.setStateMachineState(State.OFF);
+			} else if (this.isSystemRunning()) {
+				this.setStateMachineState(State.RUNNING);
+			} else if (this.isSystemStatePending()) {
+				this.setStateMachineState(State.PENDING);
+			}
+			break;
+		case PENDING:
+			if (this.pendingTimestamp == null) {
+				this.pendingTimestamp = LocalDateTime.now();
+			}
+			if (this.pendingTimestamp.plusSeconds(this.config.pendingTolerance()).isBefore(LocalDateTime.now())) {
+				// System state could not be determined, stop and start it
+				this.pendingTimestamp = null;
+				this.stopSystem();
+				this.setStateMachineState(State.OFF);
+			} else {
+				if (this.isError()) {
+					this.setStateMachineState(State.ERROR);
+					this.pendingTimestamp = null;
+				} else if (this.isSystemStopped()) {
+					this.setStateMachineState(State.OFF);
+					this.pendingTimestamp = null;
+				} else if (this.isSystemRunning()) {
+					this.setStateMachineState(State.RUNNING);
+					this.pendingTimestamp = null;
+				}
+			}
+			break;
+		case STANDBY:
+			break;
+		}
+
+		this.getReadyForWorking().setNextValue(readyForWorking);
+	}
 
 	public State getStateMachineState() {
 		return state;
@@ -217,31 +219,58 @@ public class BatteryRenaultZoe extends AbstractOpenemsModbusComponent
 	}
 
 	private boolean isError() {
-		IntegerReadChannel hvBatLevel2FailureChannel = this.channel(RenaultZoeChannelId.HV_BAT_LEVEL2_FAILURE);
+		boolean isErrorPresent = false;
+		
+		EnumReadChannel hvBatLevel2FailureChannel = this.channel(RenaultZoeChannelId.HV_BAT_LEVEL2_FAILURE);
 		HvBatLevel2Failure hvBatLevel2Failure = hvBatLevel2FailureChannel.value().asEnum();
-		return hvBatLevel2Failure == HvBatLevel2Failure.FAILURE_LEVEL_2_DEFAULT;
+		
+		switch (hvBatLevel2Failure) {
+		case UNDEFINED:
+			break;
+		case NOT_USED:
+			break;
+		case NO_DEFAULT:
+			isErrorPresent = false;
+			break;
+		case FAILURE_LEVEL_2_DEFAULT:
+			isErrorPresent = true;
+			break;
+		case UNAVAILABLE_VALUE:
+			break;
+		}
+		return isErrorPresent;
 	}
 
 	private boolean isSystemRunning() {
-		EnumReadChannel strStChannel = this.channel(RenaultZoeChannelId.STR_ST);
-		StringStatus stringState = strStChannel.value().asEnum();
-		return stringState == StringStatus.ENABLE;
+		// TODO Temporär for testing
+		if (!isError()) {
+			return true;
+		} else {
+			return false;
+		}
+//		EnumReadChannel strStChannel = this.channel(RenaultZoeChannelId.STR_ST);
+//		StringStatus stringState = strStChannel.value().asEnum();
+//		return stringState == StringStatus.ENABLE;
 	}
 
 	private boolean isSystemStopped() {
-		EnumReadChannel strStChannel = this.channel(RenaultZoeChannelId.STR_ST);
-		StringStatus stringState = strStChannel.value().asEnum();
-		return stringState == StringStatus.DISABLE;
+		
+		// TODO Temporär for testing
+		return true;
+		
+//		EnumReadChannel strStChannel = this.channel(RenaultZoeChannelId.STR_ST);
+//		StringStatus stringState = strStChannel.value().asEnum();
+//		return stringState == StringStatus.DISABLE;
 	}
 
 	private void startSystem() {
 		this.log.debug("Start system");
-		EnumWriteChannel conStringChannel = this.channel(RenaultZoeChannelId.CON_STRING);
-		try {
-			conStringChannel.setNextWriteValue(StartStopString.START);
-		} catch (OpenemsNamedException e) {
-			log.error("Problem occurred during send start command");
-		}
+//		EnumWriteChannel conStringChannel = this.channel(RenaultZoeChannelId.CON_STRING);
+//		try {
+//			conStringChannel.setNextWriteValue(StartStopString.START);
+//		} catch (OpenemsNamedException e) {
+//			log.error("Problem occurred during send start command");
+//		}
 	}
 
 	/**
@@ -262,17 +291,8 @@ public class BatteryRenaultZoe extends AbstractOpenemsModbusComponent
 			break;
 		}
 	}
-	
 
 	
-
-	@Override
-	public String debugLog() {
-		return "SoC: " + getSoc().value()
-		+ " | Current: " + getCurrent().value()
-		+ " | Voltage: " + getVoltage().value();
-	}
-
 	private void handleBatteryState() {
 		switch (config.batteryState()) {
 		case DEFAULT:
@@ -292,6 +312,60 @@ public class BatteryRenaultZoe extends AbstractOpenemsModbusComponent
 		this.log.debug("Stop system");
 	}
 
+	
+	/**
+	 * writes current channel values to corresponding values of the channels given
+	 * from battery interface
+	 */
+	private void doChannelMapping() {
+		
+		/*
+		 * Writes the calculated values for charge/discharge max current to corresponding values
+		 * of the battery interface
+		 */
+//
+//
+//		this.channel(RenaultZoeChannelId.USER_SOC).onChange((oldValue, newValue) -> {
+//			@SuppressWarnings("unchecked")
+//			Optional<Integer> socOpt = (Optional<Integer>) newValue.asOptional();
+//			if (!socOpt.isPresent()) {
+//				return;
+//			}
+//			this.channel(Battery.ChannelId.SOC).setNextValue((int) (socOpt.get()));
+//		});
+		
+		
+		this.channel(RenaultZoeChannelId.HV_NETWORK_VOLTAGE).onChange((oldValue, newValue) -> {
+			@SuppressWarnings("unchecked")
+			Optional<Integer> vOpt = (Optional<Integer>) newValue.asOptional();
+			if (!vOpt.isPresent()) {
+				return;
+			}
+			this.channel(Battery.ChannelId.VOLTAGE).setNextValue((int) (vOpt.get()));
+		});
+		
+		this.channel(RenaultZoeChannelId.AVAILABLE_POWER).onChange((oldValue, newValue) -> {
+			@SuppressWarnings("unchecked")
+			Optional<Integer> disPowerOpt = (Optional<Integer>) newValue.asOptional();
+			if (!disPowerOpt.isPresent()) {
+				return;
+			}
+			int voltage = (int) this.channel(RenaultZoeChannelId.HV_NETWORK_VOLTAGE).value().get();
+			this.channel(Battery.ChannelId.DISCHARGE_MAX_CURRENT).setNextValue(((int) (disPowerOpt.get())/voltage));
+		});
+		
+		this.channel(RenaultZoeChannelId.CHARGING_POWER).onChange((oldValue, newValue) -> {
+			@SuppressWarnings("unchecked")
+			Optional<Integer> chaPowerOpt = (Optional<Integer>) newValue.asOptional();
+			if (!chaPowerOpt.isPresent()) {
+				return;
+			}
+			int voltage = (int) this.channel(RenaultZoeChannelId.HV_NETWORK_VOLTAGE).value().get();
+			this.channel(Battery.ChannelId.CHARGE_MAX_CURRENT).setNextValue(((int) (chaPowerOpt.get())/voltage));
+		});
+	}
+	
+	
 	@Override
 	protected ModbusProtocol defineModbusProtocol() {
 		return new ModbusProtocol(this, //
@@ -300,15 +374,24 @@ public class BatteryRenaultZoe extends AbstractOpenemsModbusComponent
 				 * Battery String1
 				 */
 				new FC3ReadRegistersTask(0x64, Priority.HIGH, //
-						m(Battery.ChannelId.SOC, new UnsignedWordElement(0x64)), //
+						m(RenaultZoeChannelId.USER_SOC, new UnsignedWordElement(0x64)), //
 						m(RenaultZoeChannelId.AVAILABLE_ENERGY, new UnsignedWordElement(0x65)), //
-						m(RenaultZoeChannelId.AVAILABLE_POWER, new UnsignedWordElement(0x66)), //
-						m(RenaultZoeChannelId.CHARGING_POWER, new UnsignedWordElement(0x67)), //
-						m(RenaultZoeChannelId.CELL_HIGHEST_VOLTAGE, new UnsignedWordElement(0x68)), //
-						m(RenaultZoeChannelId.CELL_LOWEST_VOLTAGE, new UnsignedWordElement(0x69)), //
+						m(RenaultZoeChannelId.AVAILABLE_POWER, new UnsignedWordElement(0x66),
+								ElementToChannelConverter.SCALE_FACTOR_3), //
+						m(RenaultZoeChannelId.CHARGING_POWER, new UnsignedWordElement(0x67), //
+								ElementToChannelConverter.SCALE_FACTOR_3), //
+						m(RenaultZoeChannelId.CELL_HIGHEST_VOLTAGE, new UnsignedWordElement(0x68),
+								ElementToChannelConverter.SCALE_FACTOR_3), ////
+						m(RenaultZoeChannelId.CELL_LOWEST_VOLTAGE, new UnsignedWordElement(0x69),
+								ElementToChannelConverter.SCALE_FACTOR_3), ////
+//						m(Battery.ChannelId.MAX_CELL_VOLTAGE, new UnsignedWordElement(0x68)), //
+//						m(Battery.ChannelId.MIN_CELL_VOLTAGE, new UnsignedWordElement(0x69)), //
 						m(Battery.ChannelId.CURRENT, new UnsignedWordElement(0x6A),
-								ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
-						m(Battery.ChannelId.VOLTAGE, new UnsignedWordElement(0x6B)), //
+								ElementToChannelConverter.SCALE_FACTOR_1), //
+						
+						
+						m(RenaultZoeChannelId.HV_NETWORK_VOLTAGE, new UnsignedWordElement(0x6B)), //
+						
 						m(RenaultZoeChannelId.HV_BATTERY_MAX_TEMP, new UnsignedWordElement(0x6C)), //						
 						m(RenaultZoeChannelId.HV_BAT_STATE, new UnsignedWordElement(0x6D)), //
 						m(RenaultZoeChannelId.HV_BAT_HEALTH, new UnsignedWordElement(0x6E)), //
@@ -459,9 +542,24 @@ public class BatteryRenaultZoe extends AbstractOpenemsModbusComponent
 //
 	}
 
+
 	
-	
-	
+	@Override
+	public String debugLog() {
+		return "SoC: " + this.channel(RenaultZoeChannelId.USER_SOC).value() //
+		+ " | Available Energy: " + this.channel(RenaultZoeChannelId.AVAILABLE_ENERGY).value() //
+		+ " | Available (Discharging) Power: " + this.channel(RenaultZoeChannelId.AVAILABLE_POWER).value() //
+		+ " | Max Discharging Current: " + this.getDischargeMaxCurrent().value()
+		+ " | Available (Charging) Power: " + this.channel(RenaultZoeChannelId.CHARGING_POWER).value() //
+		+ " | Max Charging Current: " + this.getChargeMaxCurrent().value()
+		+ " | Cell Highest Voltage: " + this.channel(RenaultZoeChannelId.CELL_HIGHEST_VOLTAGE).value() //
+		+ " | Cell Lowest Voltage: " + this.channel(RenaultZoeChannelId.CELL_LOWEST_VOLTAGE).value() //
+		+ " | Current: " + this.getCurrent().value()
+		+ " | Voltage: " + this.getVoltage().value()
+		+ " | HV Battery Max Temp: " + this.channel(RenaultZoeChannelId.HV_BATTERY_MAX_TEMP).value() //
+		+ "|State:" + this.getStateMachineState();
+		
+	}
 	
 	
 	

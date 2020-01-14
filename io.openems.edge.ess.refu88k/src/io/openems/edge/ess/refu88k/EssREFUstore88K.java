@@ -303,7 +303,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 
 		// Calculate absolute Value allowedCharge and allowed Discharge from battery
 		double absAllowedCharge = Math.abs((chaMaxA * optV) / (EFFICIENCY_FACTOR));
-		double absAllowedDischarge = Math.abs((disMaxA * optV) / (EFFICIENCY_FACTOR));
+		double absAllowedDischarge = Math.abs((disMaxA * optV) * (EFFICIENCY_FACTOR));
 
 		// Determine allowedCharge and allowedDischarge from Inverter
 		if (absAllowedCharge > MAX_APPARENT_POWER) {
