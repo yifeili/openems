@@ -204,7 +204,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 			/*
 			 * The inverter is grid connected. AC Relays are closed. The IGBT's are locked.
 			 */
-//			this.checkIfPowerIsAllowed();
+			this.checkIfPowerIsAllowed();
 			this.doGridConnectedHandling();
 			this.channel(SymmetricEss.ChannelId.GRID_MODE).setNextValue(GridMode.ON_GRID);
 			break;
@@ -213,7 +213,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 			 * The inverter feeds and derating is active. The IGBT's are working and AC
 			 * relays are closed.
 			 */
-//			this.checkIfPowerIsAllowed();
+			this.checkIfPowerIsAllowed();
 			this.timeNoPowerRequired();
 			this.channel(SymmetricEss.ChannelId.GRID_MODE).setNextValue(GridMode.ON_GRID);
 			break;
@@ -222,7 +222,7 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 			 * The inverter feeds with max possible power. The IGBT's are working and AC
 			 * relays are closed.
 			 */
-//			this.checkIfPowerIsAllowed();
+			this.checkIfPowerIsAllowed();
 			this.timeNoPowerRequired();
 			this.channel(SymmetricEss.ChannelId.GRID_MODE).setNextValue(GridMode.ON_GRID);
 			break;
