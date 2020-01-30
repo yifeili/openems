@@ -597,12 +597,22 @@ public class EssKacoBlueplanetGridsave50 extends AbstractOpenemsModbusComponent
 	}
 
 //	private final static int SUNSPEC_1 = 40003 - 1; // According to setup process pdf currently not used...
-	private final static int SUNSPEC_103 = 40071 - 1;
-	private final static int SUNSPEC_121 = 40213 - 1;
-	private final static int SUNSPEC_64201 = 40823 - 1;
-	private final static int SUNSPEC_64202 = 40877 - 1;
-	private final static int SUNSPEC_64203 = 40893 - 1;
-	private final static int SUNSPEC_64302 = 40931 - 1;
+	
+	private final static int SUNSPEC_103 = 40070;
+	private final static int SUNSPEC_113 = 40121;
+	private final static int SUNSPEC_121 = 40212;
+	private final static int SUNSPEC_64201 = 40888;
+	private final static int SUNSPEC_64202 = 40942;
+	private final static int SUNSPEC_64203 = 40958;
+	private final static int SUNSPEC_64302 = 40996;
+	
+	
+//	private final static int SUNSPEC_103 = 40071 - 1;
+//	private final static int SUNSPEC_121 = 40213 - 1;
+//	private final static int SUNSPEC_64201 = 40823 - 1;
+//	private final static int SUNSPEC_64202 = 40877 - 1;
+//	private final static int SUNSPEC_64203 = 40893 - 1;
+//	private final static int SUNSPEC_64302 = 40931 - 1;
 	/*
 	 * private final static int SUNSPEC_103 = 40071; // private final static int
 	 * SUNSPEC_121 = 40213; // private final static int SUNSPEC_64201 = 40823; //
