@@ -1,0 +1,2 @@
+= io.openems.edge.battery.bmw
+
