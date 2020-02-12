@@ -11,7 +11,11 @@
 @import '~@ionic/angular/css/flex-utils.css';
 @import '~@ionic/angular/css/display.css';
 
-//251px for the exact width of my-date-range-picker in PickDateComponent
+.active {
+    color: #2d8fab;
+}
+
+//252px for the exact width of my-date-range-picker in PickDateComponent
 .pickdate-popover .popover-content{
     width: 251px;
     position: center;
@@ -19,13 +23,18 @@
     overflow-x: hidden;
 }
 
-//is used for PickDateComponent - shows active PeriodString
-.active {
-    color: #2d8fab;
-}
-
 ion-label {
     font-family: Arial, Helvetica, sans-serif;
+}
+
+ion-item.noPadding {
+    --ion-safe-area-right: 0.1;
+}
+
+// used in history for better chart visibility
+.wide-modal .modal-wrapper {
+    width: 101%;
+    height: 101%;
 }
 
 mat-card.single {
@@ -68,6 +77,12 @@ button.activated {
   
 #toast-container {
     font-family: Roboto, "Helvetica Neue", sans-serif;
+}
+
+// 360px is aproximate min. width of mobile devices
+ion-toast.container {
+    text-align: center;
+    --max-width: 360px;
 }
 
 .no-scroll {
