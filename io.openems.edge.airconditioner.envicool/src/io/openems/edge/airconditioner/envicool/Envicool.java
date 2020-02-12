@@ -18,6 +18,7 @@ import org.osgi.service.metatype.annotations.Designate;
 import io.openems.common.channel.AccessMode;
 import io.openems.edge.bridge.modbus.api.AbstractOpenemsModbusComponent;
 import io.openems.edge.bridge.modbus.api.BridgeModbus;
+import io.openems.edge.bridge.modbus.api.ElementToChannelConverter;
 import io.openems.edge.bridge.modbus.api.ModbusProtocol;
 import io.openems.edge.bridge.modbus.api.element.SignedWordElement;
 import io.openems.edge.bridge.modbus.api.element.UnsignedWordElement;
@@ -45,10 +46,11 @@ public class Envicool extends AbstractOpenemsModbusComponent implements OpenemsC
 	public Envicool() {
 		super(//
 				OpenemsComponent.ChannelId.values(), //
-				ChannelId.values() //
+				EnvicoolChannelId.values() //
 		);
 	}
 
+	@Override
 	@Reference(policy = ReferencePolicy.STATIC, policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
 	protected void setModbus(BridgeModbus modbus) {
 		super.setModbus(modbus);
@@ -68,21 +70,30 @@ public class Envicool extends AbstractOpenemsModbusComponent implements OpenemsC
 	@Override
 	protected ModbusProtocol defineModbusProtocol() {
 		return new ModbusProtocol(this,
-				new FC3ReadRegistersTask(0x1000, Priority.HIGH,
+				new FC3ReadRegistersTask(0x1000, Priority.HIGH, //
 						m(EnvicoolChannelId.UNIT_RUNNING_STATUS, new UnsignedWordElement(0x1000)), //
 						m(EnvicoolChannelId.INTERNAL_FAN_STATUS, new UnsignedWordElement(0x1002)), //
 						m(EnvicoolChannelId.EXTERNAL_FAN_STATUS, new UnsignedWordElement(0x1004)), //
 						m(EnvicoolChannelId.COMPRESSOR_STATUS, new UnsignedWordElement(0x1006)), //
-						m(EnvicoolChannelId.INSIDE_RETURN_TEMP, new SignedWordElement(0x1008)), //
+						m(EnvicoolChannelId.INSIDE_RETURN_TEMP, new SignedWordElement(0x1008),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
 						m(EnvicoolChannelId.PUMP_STATUS, new UnsignedWordElement(0x100A)), //
-						m(EnvicoolChannelId.OUTSIDE_TEMP, new SignedWordElement(0x100C)), //
-						m(EnvicoolChannelId.CONDENSER_TEMP, new SignedWordElement(0x100E)), //
-						m(EnvicoolChannelId.EVAPORATOR_TEMP, new SignedWordElement(0x1010)), //
-						m(EnvicoolChannelId.INTERNAL_FAN_SPEED, new UnsignedWordElement(0x1012)), //
-						m(EnvicoolChannelId.EXTERNAL_FAN_SPEED, new UnsignedWordElement(0x1014)), //
-						m(EnvicoolChannelId.AC_INPUT_VOLTAGE, new UnsignedWordElement(0x1016)), //
-						m(EnvicoolChannelId.DC_INPUT_VOLTAGE, new UnsignedWordElement(0x1018)), //
-						m(EnvicoolChannelId.AC_RUNNING_CURRENT, new UnsignedWordElement(0x101A)), //
+						m(EnvicoolChannelId.OUTSIDE_TEMP, new SignedWordElement(0x100C),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
+						m(EnvicoolChannelId.CONDENSER_TEMP, new SignedWordElement(0x100E),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
+						m(EnvicoolChannelId.EVAPORATOR_TEMP, new SignedWordElement(0x1010),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
+						m(EnvicoolChannelId.INTERNAL_FAN_SPEED, new UnsignedWordElement(0x1012),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
+						m(EnvicoolChannelId.EXTERNAL_FAN_SPEED, new UnsignedWordElement(0x1014),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
+						m(EnvicoolChannelId.AC_INPUT_VOLTAGE, new UnsignedWordElement(0x1016),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
+						m(EnvicoolChannelId.DC_INPUT_VOLTAGE, new UnsignedWordElement(0x1018),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
+						m(EnvicoolChannelId.AC_RUNNING_CURRENT, new UnsignedWordElement(0x101A),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
 						m(EnvicoolChannelId.UNIT_RUNNING_TIME_HIGH, new UnsignedWordElement(0x101C)), //
 						m(EnvicoolChannelId.UNIT_RUNNING_TIME_LOW, new UnsignedWordElement(0x101D)), //
 						m(EnvicoolChannelId.COMPRESSOR_RUNNING_TIME_HIGH, new UnsignedWordElement(0x1020)), //
@@ -91,23 +102,32 @@ public class Envicool extends AbstractOpenemsModbusComponent implements OpenemsC
 						m(EnvicoolChannelId.INTERNAL_FAN_RUNNING_TIME_LOW, new UnsignedWordElement(0x1025)), //
 						m(EnvicoolChannelId.COMPRESSOR_ACTION_TIMES_HIGH, new UnsignedWordElement(0x1028)), //
 						m(EnvicoolChannelId.COMPRESSOR_ACTION_TIMES_LOW, new UnsignedWordElement(0x1029)), //
-						m(EnvicoolChannelId.SUPPLY_AIR_TEMPERATURE, new UnsignedWordElement(0xA004)), //
+						m(EnvicoolChannelId.SUPPLY_AIR_TEMPERATURE, new UnsignedWordElement(0xA004),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
 						m(EnvicoolChannelId.INSIDE_RETURN_HUM, new SignedWordElement(0xA013)) //
-				), new FC16WriteRegistersTask(0x07, m(EnvicoolChannelId.MODBUS_SLAVE_ID, new UnsignedWordElement(0x07)), //
+
+				), new FC16WriteRegistersTask(0x07, //
+						m(EnvicoolChannelId.MODBUS_SLAVE_ID, new UnsignedWordElement(0x07)), //
 						m(EnvicoolChannelId.BAUD, new UnsignedWordElement(0x08)), //
-						m(EnvicoolChannelId.HIGH_TEMP_ALARM_POINT, new UnsignedWordElement(0x0E)), //
-						m(EnvicoolChannelId.LOW_TEMP_ALARM_POINT, new UnsignedWordElement(0x10)), //
+						m(EnvicoolChannelId.HIGH_TEMP_ALARM_POINT, new UnsignedWordElement(0x0E),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
+						m(EnvicoolChannelId.LOW_TEMP_ALARM_POINT, new UnsignedWordElement(0x10),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
 						m(EnvicoolChannelId.DC_OVERVOLTAGE_ALARM, new UnsignedWordElement(0x12)), //
 						m(EnvicoolChannelId.DC_UNDERVOLTAGE_ALARM, new UnsignedWordElement(0x14)), //
 						m(EnvicoolChannelId.DC_OUTAGE_VOLTAGE, new UnsignedWordElement(0x16)), //
 						m(EnvicoolChannelId.AC_OVERVOLTAGE_ALARM, new UnsignedWordElement(0x18)), //
 						m(EnvicoolChannelId.AC_UNDERVOLTAGE_ALARM, new UnsignedWordElement(0x1A)), //
-						m(EnvicoolChannelId.HEAT_SET_POINT, new UnsignedWordElement(0x1C)), //
-						m(EnvicoolChannelId.HEAT_SENSITIVITY_SET_POINT, new UnsignedWordElement(0x1E)) //
+						m(EnvicoolChannelId.HEATING_SET_POINT, new UnsignedWordElement(0x1C),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
+						m(EnvicoolChannelId.HEATING_HYSTERESIS, new UnsignedWordElement(0x1E),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_1) //
 				),
 				new FC16WriteRegistersTask(0x8202,
-						m(EnvicoolChannelId.COOLING_SET_POINT, new SignedWordElement(0x8202)), //
-						m(EnvicoolChannelId.COOLING_SENSITIVITY_SET_POINT, new UnsignedWordElement(0x8204)) //
+						m(EnvicoolChannelId.COOLING_SET_POINT, new SignedWordElement(0x8202),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
+						m(EnvicoolChannelId.COOLING_HYSTERESIS, new UnsignedWordElement(0x8204),
+								ElementToChannelConverter.SCALE_FACTOR_MINUS_1) //
 				),
 				new FC16WriteRegistersTask(0x200,
 						m(EnvicoolChannelId.RESTORE_FACTORY_SETTINGS, new UnsignedWordElement(0x200)), //
@@ -133,8 +153,7 @@ public class Envicool extends AbstractOpenemsModbusComponent implements OpenemsC
 						m(EnvicoolChannelId.STATE_15, new UnsignedWordElement(0x30E)), //
 						m(EnvicoolChannelId.STATE_16, new UnsignedWordElement(0x30F)), //
 						m(EnvicoolChannelId.STATE_17, new UnsignedWordElement(0x310)) //
-				)
-		);
+				));
 	}
 
 	@Override
