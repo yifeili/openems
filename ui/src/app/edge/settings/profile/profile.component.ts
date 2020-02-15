@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { environment } from '../../../../environments';
 import { ChannelAddress, Edge, EdgeConfig, Service } from '../../../shared/shared';
+import { ModbusApiUtil } from './modbusapi/modbusapi';
 
 @Component({
   selector: ProfileComponent.SELECTOR,
@@ -54,9 +55,13 @@ export class ProfileComponent {
       ]);
       this.listComponents("Standard-Controller", categorizedComponentIds, [
         config.getComponentsByFactory("Controller.Api.Backend"),
-        config.getComponentsByFactory("Controller.Api.Rest"),
         config.getComponentsByFactory("Controller.Api.Websocket"),
         config.getComponentsByFactory("Controller.Debug.Log")
+      ]);
+      this.listComponents("Externe Schnittstellen", categorizedComponentIds, [
+        config.getComponentsByFactory("Controller.Api.Rest"),
+        config.getComponentsByFactory("Controller.Api.ModbusTcp.ReadOnly"),
+        config.getComponentsByFactory("Controller.Api.ModbusTcp.ReadWrite"),
       ]);
       this.listComponents("Spezial-Controller", categorizedComponentIds, [
         config.getComponentsImplementingNature("io.openems.edge.controller.api.Controller")
@@ -87,4 +92,9 @@ export class ProfileComponent {
       this.components.push({ title: category, components: components });
     }
   }
+
+  public getModbusProtocol(componentId: string) {
+    ModbusApiUtil.getModbusProtocol(this.service, componentId);
+  };
+
 }

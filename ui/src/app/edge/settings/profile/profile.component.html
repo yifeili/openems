@@ -53,7 +53,7 @@
                 {{ category.title }}
               </ion-item-group>
               <ion-item *ngFor="let item of category.components">
-                <ion-label (click)="item.showProperties = !item.showProperties" style="cursor: pointer"
+                <ion-label (click)="item['showProperties'] = !item['showProperties']" style="cursor: pointer"
                   class="ion-text-wrap">
                   <ion-text color="primary">
                     <h3>{{ item.alias }}
@@ -61,10 +61,12 @@
                       <small *ngIf="!item.isEnabled"> (Komponente ist inaktiv!)</small>
                     </h3>
                   </ion-text>
+
                   <ng-container *ngIf="config.factories[item.factoryId] as factory">
                     <p>{{ factory.name }} <small>({{ factory.description }})</small></p>
                   </ng-container>
-                  <ul *ngIf="item.showProperties" style="font-family: monospace">
+
+                  <ul *ngIf="item['showProperties']" style="font-family: monospace">
                     <ng-container *ngFor="let p of (item.properties | keys)">
                       <li
                         *ngIf="!['alias', '_lastChangeBy', '_lastChangeAt', 'enabled', ':org.apache.felix.configadmin.revision:'].includes(p.key)">
@@ -72,7 +74,15 @@
                       </li>
                     </ng-container>
                   </ul>
+
+                  <!-- Additional information for specific Factory-IDs -->
+                  <ng-container *ngFor="let factoryId of [item.factoryId]" [ngSwitch]="factoryId">
+                    <ion-text *ngSwitchCase="'Controller.Api.ModbusTcp.ReadOnly'">
+                      <ion-button (click)="getModbusProtocol(item.id)">Download Protocol</ion-button>
+                    </ion-text>
+                  </ng-container>
                 </ion-label>
+                <ion-icon name="arrow-dropdown"></ion-icon>
               </ion-item>
             </ng-container>
           </ion-list>

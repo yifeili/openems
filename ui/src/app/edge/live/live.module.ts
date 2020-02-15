@@ -18,7 +18,6 @@ import { GridComponent } from './grid/grid.component';
 import { GridModalComponent } from './grid/modal/modal.component';
 import { InfoComponent } from './info/info.component';
 import { LiveComponent } from './live.component';
-import { ModbusApiComponent } from './modbusapi/modbusapi.component';
 import { ProductionModalComponent } from './production/modal/modal.component';
 import { ProductionComponent } from './production/production.component';
 import { SelfconsumptionModalComponent } from './selfconsumption/modal/modal.component';
@@ -56,7 +55,6 @@ import { OfflineComponent } from './offline/offline.component';
     FixDigitalOutputModalComponent,
     ChannelthresholdComponent,
     EvcsComponent,
-    ModbusApiComponent,
     StorageComponent,
     GridComponent,
     ConsumptionComponent,
