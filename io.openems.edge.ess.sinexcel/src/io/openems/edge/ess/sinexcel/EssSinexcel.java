@@ -181,15 +181,29 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 		int chaMaxA = battery.getChargeMaxCurrent().value().orElse(0);
 		int disMinV = battery.getDischargeMinVoltage().value().orElse(0);
 		int chaMaxV = battery.getChargeMaxVoltage().value().orElse(0);
+		int optV = battery.getVoltage().value().orElse(0);
+		
+		
+		System.out.println("disMaxA : "+ disMaxA );
+		System.out.println("chaMaxA : " +  chaMaxA);
+		System.out.println("disMinV : " + chaMaxV);
+		System.out.println("chaMaxV : " + chaMaxV);
+		
+		
 
 		// Sinexcel range for Max charge/discharge current is 0A to 90A,
 		if (chaMaxA > 90) {
 			{
+				System.out.println(" charge max greater than 90");
 				IntegerWriteChannel setChaMaxA = this.channel(SinexcelChannelId.CHARGE_MAX_A);
 				setChaMaxA.setNextWriteValue(900);
+				
+				
+				
 			}
 		} else {
 			{
+				System.out.println(" charge max lesser than 90");
 				IntegerWriteChannel setChaMaxA = this.channel(SinexcelChannelId.CHARGE_MAX_A);
 				setChaMaxA.setNextWriteValue(chaMaxA * 10);
 			}
@@ -197,28 +211,56 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 
 		if (disMaxA > 90) {
 			{
+				System.out.println(" Discharge charge max greater than 90");
 				IntegerWriteChannel setDisMaxA = this.channel(SinexcelChannelId.DISCHARGE_MAX_A);
 				setDisMaxA.setNextWriteValue(900);
 			}
 		} else {
 			{
+				System.out.println(" discharge charge max lesser than 90");
 				IntegerWriteChannel setDisMaxA = this.channel(SinexcelChannelId.DISCHARGE_MAX_A);
 				setDisMaxA.setNextWriteValue(disMaxA * 10);
 			}
 		}
 		{
+			System.out.println("Setting dischrage min volt");
 			IntegerWriteChannel setDisMinV = this.channel(SinexcelChannelId.DISCHARGE_MIN_V);
 			setDisMinV.setNextWriteValue(disMinV * 10);
 		}
 		{
+			System.out.println("Setting charge max volt");
 			IntegerWriteChannel setChaMaxV = this.channel(SinexcelChannelId.CHARGE_MAX_V);
 			setChaMaxV.setNextWriteValue(chaMaxV * 10);
 		}
 		final double EFFICIENCY_FACTOR = 0.9;
-		this.getAllowedCharge().setNextValue(chaMaxA * chaMaxV * -1 * EFFICIENCY_FACTOR);
-		this.getAllowedDischarge().setNextValue(disMaxA * disMinV * EFFICIENCY_FACTOR);
-	}
+		
+		  // Calculate absolute Value allowedCharge and allowed Discharge from battery
+        double absAllowedCharge = Math.abs((chaMaxA * optV) / (EFFICIENCY_FACTOR));
+        double absAllowedDischarge = Math.abs((disMaxA * optV) * (EFFICIENCY_FACTOR));
+		
+//		System.out.println("Allowoed charge : " + (chaMaxA * optV * -1 / EFFICIENCY_FACTOR));
+//		this.getAllowedCharge().setNextValue(chaMaxA * optV * -1 / EFFICIENCY_FACTOR);
+//		
+//		System.out.println("Allowoed discharge : " + (disMaxA * optV * EFFICIENCY_FACTOR));
+//		this.getAllowedDischarge().setNextValue(disMaxA * optV * EFFICIENCY_FACTOR);
+		
+		// Determine allowedCharge and allowedDischarge from Inverter
+        
+        if (absAllowedCharge > MAX_APPARENT_POWER) {
+            this.getAllowedCharge().setNextValue(MAX_APPARENT_POWER * -1);
+        } else {
+            this.getAllowedCharge().setNextValue(absAllowedCharge * -1);
+        }
 
+        
+        if (absAllowedDischarge > MAX_APPARENT_POWER) {
+            this.getAllowedDischarge().setNextValue(MAX_APPARENT_POWER);
+        } else {
+            this.getAllowedDischarge().setNextValue(absAllowedDischarge);
+        }
+		
+	}
+ 
 	/**
 	 * Starts the inverter.
 	 * 
@@ -667,9 +709,10 @@ public class EssSinexcel extends AbstractOpenemsModbusComponent
 	public String debugLog() {
 		return "SoC:" + this.getSoc().value().asString() //
 				+ "|L:" + this.getActivePower().value().asString() //
-				+ "|Allowed:"
-				+ this.channel(ManagedSymmetricEss.ChannelId.ALLOWED_CHARGE_POWER).value().asStringWithoutUnit() + ";"
-				+ this.channel(ManagedSymmetricEss.ChannelId.ALLOWED_DISCHARGE_POWER).value().asString() //
+				+ "|Allowed:" + this.channel(ManagedSymmetricEss.ChannelId.ALLOWED_CHARGE_POWER).value().asStringWithoutUnit() //
+				+ ";" + this.channel(ManagedSymmetricEss.ChannelId.ALLOWED_DISCHARGE_POWER).value().asString() //
+				+ "|Discharge: " + this.channel(SinexcelChannelId.DISCHARGE_MIN_V).value().asString() + ";" + this.channel(SinexcelChannelId.DISCHARGE_MAX_A).value().asString() 
+				+ "|Charge: " + this.channel(SinexcelChannelId.CHARGE_MAX_V).value().asString() + ";" + this.channel(SinexcelChannelId.CHARGE_MAX_A).value().asString()
 				+ "|" + this.getGridMode().value().asOptionString();
 	}
 

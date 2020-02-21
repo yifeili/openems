@@ -21,6 +21,9 @@ import io.openems.edge.bridge.modbus.api.LogVerbosity;
 
 	@AttributeDefinition(name = "IP-Address", description = "The IP address of the Modbus/TCP device.")
 	String ip();
+	
+	@AttributeDefinition(name = "Port", description = "The port for the modbus communication, default is 502.")
+	int port() default 502;
 
 	@AttributeDefinition(name = "Log-Verbosity", description = "The log verbosity.")
 	LogVerbosity logVerbosity() default LogVerbosity.NONE;

@@ -420,14 +420,15 @@ public class BMWBattery extends AbstractOpenemsModbusComponent
 
 	@Override
 	public String debugLog() {
-		return "State:" + this.getStateMachineState() + " | SoC:" + this.getSoc().value() //
-				+ " | Voltage:" + this.getVoltage().value() + " | Max Operating Current:"
-				+ this.channel(BMWChannelId.MAXIMUM_OPERATING_CURRENT).value().asString() //
+		return "State:" + this.getStateMachineState() //
+				+ " | SoC:" + this.getSoc().value() //
+				+ " | Voltage:" + this.getVoltage().value() 
+				+ " | Max Operating Current:" + this.channel(BMWChannelId.MAXIMUM_OPERATING_CURRENT).value().asString() //
 				+ " | Min Operating Current:" + this.channel(BMWChannelId.MINIMUM_OPERATING_CURRENT).value().asString() //
 
-//				+ "|Discharge:" + this.getDischargeMinVoltage().value() + ";" + this.getDischargeMaxCurrent().value() //
-//				+ "|Charge:" + this.getChargeMaxVoltage().value() + ";" + this.getChargeMaxCurrent().value() + "|State:"
-//				+ this.channel(BMWChannelId.BMS_STATE)
+				+ "|Discharge:" + this.getDischargeMinVoltage().value() + ";" + this.getDischargeMaxCurrent().value() //
+				+ "|Charge:" + this.getChargeMaxVoltage().value() + ";" + this.getChargeMaxCurrent().value() //
+//				+ "|State:" + this.channel(BMWChannelId.BMS_STATE)
 		;
 	}
 
