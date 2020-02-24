@@ -28,7 +28,7 @@ public class StateMachine {
 		case FAULT:
 		case STANDBY:
 		case OFF:
-			// this.parent.softStart(false);
+			this.parent.softStart(true);
 			break;
 		default:
 			break;
