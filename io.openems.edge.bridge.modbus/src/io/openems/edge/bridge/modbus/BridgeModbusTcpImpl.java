@@ -75,6 +75,7 @@ public class BridgeModbusTcpImpl extends AbstractModbusBridge
 		super.activate(context, config.id(), config.alias(), config.enabled(), config.logVerbosity(),
 				config.invalidateElementsAfterReadErrors());
 		this.setIpAddress(InetAddress.getByName(config.ip()));
+		this.timeout_ms = config.timeout_ms();
 	}
 
 	@Deactivate
@@ -99,6 +100,7 @@ public class BridgeModbusTcpImpl extends AbstractModbusBridge
 	}
 
 	private TCPMasterConnection _connection = null;
+	private int timeout_ms;
 
 	private synchronized TCPMasterConnection getModbusConnection() throws OpenemsException {
 		if (this._connection == null) {
@@ -116,7 +118,7 @@ public class BridgeModbusTcpImpl extends AbstractModbusBridge
 				throw new OpenemsException(
 						"Connection to [" + this.getIpAddress().getHostAddress() + "] failed: " + e.getMessage());
 			}
-			this._connection.getModbusTransport().setTimeout(AbstractModbusBridge.DEFAULT_TIMEOUT);
+			this._connection.getModbusTransport().setTimeout(this.timeout_ms);
 		}
 		return this._connection;
 	}

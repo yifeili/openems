@@ -28,5 +28,9 @@ import io.openems.edge.bridge.modbus.api.LogVerbosity;
 	@AttributeDefinition(name = "Invalidate elements after how many read Errors?", description = "Increase this value if modbus read errors happen frequently.")
 	int invalidateElementsAfterReadErrors() default 1;
 	
+	@AttributeDefinition(name = "Timeout", description = "The timeout in milliseconds")
+	int timeout_ms() default 1000;
+
 	String webconsole_configurationFactory_nameHint() default "Bridge Modbus/TCP [{id}]";
+
 }
