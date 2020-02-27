@@ -22,6 +22,7 @@ import io.openems.edge.common.event.EdgeEventConstants;
 import io.openems.edge.common.sum.Sum;
 import io.openems.edge.predictor.api.ConsumptionHourlyPredictor;
 import io.openems.edge.predictor.api.HourlyPrediction;
+import io.openems.edge.predictor.persistencemodel.consumption.Config;
 import io.openems.edge.predictor.similardaymodel.AbstractSimilardayModelPredictor;
 import io.openems.edge.timedata.api.Timedata;
 
@@ -36,9 +37,6 @@ public class ConsumptionPredictor extends AbstractSimilardayModelPredictor
 
 	@Reference
 	protected ComponentManager componentManager;
-	
-	@Reference
-	protected Timedata timedata = null;
 
 	public ConsumptionPredictor() {
 		super(OpenemsConstants.SUM_ID, Sum.ChannelId.CONSUMPTION_ACTIVE_ENERGY);
@@ -64,52 +62,6 @@ public class ConsumptionPredictor extends AbstractSimilardayModelPredictor
 		return this.timedata;
 	}
 
-	@Override
-	public HourlyPrediction get24hPrediction() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public void handleEvent(Event event) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public String id() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public String alias() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public boolean isEnabled() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public ComponentContext getComponentContext() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Channel<?> _channel(String channelName) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Collection<Channel<?>> channels() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+	
 
 }
