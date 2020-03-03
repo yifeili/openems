@@ -1,7 +1,5 @@
 package io.openems.edge.evcs.api;
 
-import org.osgi.annotation.versioning.ProviderType;
-
 import io.openems.common.channel.AccessMode;
 import io.openems.common.channel.Unit;
 import io.openems.common.types.OpenemsType;
@@ -11,6 +9,7 @@ import io.openems.edge.common.channel.IntegerWriteChannel;
 import io.openems.edge.common.channel.StringWriteChannel;
 import io.openems.edge.common.modbusslave.ModbusSlaveNatureTable;
 import io.openems.edge.common.modbusslave.ModbusType;
+import org.osgi.annotation.versioning.ProviderType;
 
 @ProviderType
 public interface ManagedEvcs extends Evcs {
@@ -19,7 +18,7 @@ public interface ManagedEvcs extends Evcs {
 
 		/**
 		 * Sets the charge power limit of the EVCS in [W].
-		 * 
+		 * 		 * 
 		 * <p>
 		 * Actual charge power depends on
 		 * <ul>
@@ -28,6 +27,13 @@ public interface ManagedEvcs extends Evcs {
 		 * <li>limit of electric vehicle
 		 * <li>limit of power line
 		 * <li>...
+		 * </ul>
+		 * 
+		 * <p>
+		 * Function
+		 * <ul>
+		 * <li>Write Value should be sent to the EVCS and cleared afterwards
+		 * <li>Read value should contain the currently valid loading target that was sent
 		 * </ul>
 		 * 
 		 * <ul>
@@ -110,6 +116,12 @@ public interface ManagedEvcs extends Evcs {
 		}
 	}
 
+	/**
+	 * Returns the modbus table for this nature.
+	 * 
+	 * @param accessMode accessMode
+	 * @return nature table
+	 */
 	public static ModbusSlaveNatureTable getModbusSlaveNatureTable(AccessMode accessMode) {
 		// TODO add remaining channels
 		return ModbusSlaveNatureTable.of(ManagedEvcs.class, accessMode, 100) //
