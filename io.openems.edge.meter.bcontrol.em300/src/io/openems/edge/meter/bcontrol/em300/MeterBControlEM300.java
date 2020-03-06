@@ -47,10 +47,7 @@ public class MeterBControlEM300 extends AbstractOpenemsModbusComponent
 
 	private MeterType meterType = MeterType.PRODUCTION;
 
-	/*
-	 * Invert power values
-	 */
-	private boolean invert = false;
+	private Config config;
 
 	@Reference
 	protected ConfigurationAdmin cm;
@@ -72,6 +69,7 @@ public class MeterBControlEM300 extends AbstractOpenemsModbusComponent
 	@Activate
 	void activate(ComponentContext context, Config config) {
 		this.meterType = config.type();
+		this.config = config;
 
 		super.activate(context, config.id(), config.alias(), config.enabled(), config.modbusUnitId(), this.cm, "Modbus",
 				config.modbus_id());
@@ -291,33 +289,33 @@ public class MeterBControlEM300 extends AbstractOpenemsModbusComponent
 
 			// Active Power
 			this.getActivePower().setNextValue(invertIfTrue(this.getActivePowerPos().getNextValue().orElse(0)
-					- this.getActivePowerNeg().getNextValue().orElse(0), this.invert));
+					- this.getActivePowerNeg().getNextValue().orElse(0)));
 
 			// Active Power L1
 			this.getActivePowerL1().setNextValue(invertIfTrue(this.getActivePowerL1Pos().getNextValue().orElse(0)
-					- this.getActivePowerL1Neg().getNextValue().orElse(0), this.invert));
+					- this.getActivePowerL1Neg().getNextValue().orElse(0)));
 
 			// Active Power L2
 			this.getActivePowerL2().setNextValue(invertIfTrue(this.getActivePowerL2Pos().getNextValue().orElse(0)
-					- this.getActivePowerL2Neg().getNextValue().orElse(0), this.invert));
+					- this.getActivePowerL2Neg().getNextValue().orElse(0)));
 			// Active Power L3
 			this.getActivePowerL3().setNextValue(invertIfTrue(this.getActivePowerL3Pos().getNextValue().orElse(0)
-					- this.getActivePowerL3Neg().getNextValue().orElse(0), this.invert));
+					- this.getActivePowerL3Neg().getNextValue().orElse(0)));
 
 			// Reactive Power
 			this.getReactivePower().setNextValue(invertIfTrue(this.getReactivePowerPos().getNextValue().orElse(0)
-					- this.getReactivePowerNeg().getNextValue().orElse(0), this.invert));
+					- this.getReactivePowerNeg().getNextValue().orElse(0)));
 
 			// Reactive Power L1
 			this.getReactivePowerL1().setNextValue(invertIfTrue(this.getReactivePowerL1Pos().getNextValue().orElse(0)
-					- this.getReactivePowerL1Neg().getNextValue().orElse(0), this.invert));
+					- this.getReactivePowerL1Neg().getNextValue().orElse(0)));
 
 			// Reactive Power L2
 			this.getReactivePowerL2().setNextValue(invertIfTrue(this.getReactivePowerL2Pos().getNextValue().orElse(0)
-					- this.getReactivePowerL2Neg().getNextValue().orElse(0), this.invert));
+					- this.getReactivePowerL2Neg().getNextValue().orElse(0)));
 			// Reactive Power L3
 			this.getReactivePowerL3().setNextValue(invertIfTrue(this.getReactivePowerL3Pos().getNextValue().orElse(0)
-					- this.getReactivePowerL3Neg().getNextValue().orElse(0), this.invert));
+					- this.getReactivePowerL3Neg().getNextValue().orElse(0)));
 
 			// Current
 			Channel<Integer> currL1 = this.channel(AsymmetricMeter.ChannelId.CURRENT_L1);
@@ -341,11 +339,11 @@ public class MeterBControlEM300 extends AbstractOpenemsModbusComponent
 		);
 	}
 
-	public Integer invertIfTrue(int invertValue, boolean invert) {
-		if (!invert) {
-			return invertValue;
-		} else {
+	public Integer invertIfTrue(int invertValue) {
+		if (config.invert()) {
 			return -invertValue;
+		} else {
+			return invertValue;
 		}
 	}
 }
