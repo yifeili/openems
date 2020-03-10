@@ -150,8 +150,8 @@ public class ReadHandler implements Consumer<String> {
 
 					Optional<Integer> currUserMa = JsonUtils.getAsOptionalInt(jsonMessage, "Curr user"); // in [mA]
 					if (currUserMa.isPresent()) {
-						int chargingTarget = (currUserMa.get() / 1000) * 230
-								* this.parent.getPhases().value().orElse(3);
+						int chargingTarget = (int) ((currUserMa.get() / 1000.0) * 230
+								* this.parent.getPhases().value().orElse(3));
 						this.parent.setChargePowerLimit().setNextValue(chargingTarget);
 					}
 
