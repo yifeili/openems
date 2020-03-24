@@ -2,13 +2,13 @@ import { EdgeConfig } from '../edge/edgeconfig';
 import { Edge } from '../edge/edge';
 
 export enum WidgetClass {
+    'Energymonitor',
     'Autarchy',
     'Selfconsumption',
     'Storage',
     'Grid',
     'Production',
     'Consumption',
-    'Energymonitor'
 }
 
 export enum WidgetNature {
@@ -17,12 +17,18 @@ export enum WidgetNature {
 }
 
 export enum WidgetFactory {
-    'Evcs.Cluster.SelfConsumtion',
-    'Evcs.Cluster.PeakShaving',
-    'Controller.Api.ModbusTcp',
     'Controller.ChannelThreshold',
     'Controller.Io.FixDigitalOutput',
-    'Controller.CHP.SoC'
+    'Controller.IO.ChannelSingleThreshold',
+    'Controller.CHP.SoC',
+    'Controller.Asymmetric.PeakShaving',
+    'Controller.Symmetric.PeakShaving',
+    'Evcs.Cluster.PeakShaving',
+    'Evcs.Cluster.SelfConsumtion',
+    // TODO remove after all systems with Modbus/TCP-Slave Api are updated to at least 2020.5.1
+    'Controller.Api.ModbusTcp',
+    'Controller.Api.ModbusTcp.ReadOnly',
+    'Controller.Api.ModbusTcp.ReadWrite',
 }
 
 export class Widget {
@@ -64,12 +70,16 @@ export class Widgets {
 
         for (let nature of Object.values(WidgetNature).filter(v => typeof v === 'string')) {
             for (let componentId of config.getComponentIdsImplementingNature(nature)) {
-                list.push({ name: nature, componentId: componentId });
+                if (config.getComponent(componentId).isEnabled) {
+                    list.push({ name: nature, componentId: componentId });
+                }
             }
         }
         for (let factory of Object.values(WidgetFactory).filter(v => typeof v === 'string')) {
             for (let componentId of config.getComponentIdsByFactory(factory)) {
-                list.push({ name: factory, componentId: componentId });
+                if (config.getComponent(componentId).isEnabled) {
+                    list.push({ name: factory, componentId: componentId });
+                }
             }
         }
 
