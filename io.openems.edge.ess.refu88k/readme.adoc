@@ -1,4 +1,4 @@
-# io.openems.edge.meter.simulated Provider
+# io.openems.edge.ess.refu88k Provider
 
 ${Bundle-Description}
 

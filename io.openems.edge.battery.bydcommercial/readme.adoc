@@ -1,4 +1,4 @@
-# io.openems.edge.meter.simulated Provider
+# io.openems.edge.battery.bydcommercial Provider
 
 ${Bundle-Description}
 
