@@ -71,7 +71,7 @@ public class EssKacoBlueplanetGridsave50 extends AbstractOpenemsModbusComponent
 	private final Logger log = LoggerFactory.getLogger(EssKacoBlueplanetGridsave50.class);
 
 	public static final int DEFAULT_UNIT_ID = 1;
-	protected static final int MAX_APPARENT_POWER = 52000;
+	protected static final int MAX_APPARENT_POWER = 92000;
 
 	private int watchdogInterval = 0;
 	private int maxApparentPower = 0;
@@ -105,6 +105,7 @@ public class EssKacoBlueplanetGridsave50 extends AbstractOpenemsModbusComponent
 				ChannelId.values() //
 		);
 		this.channel(SymmetricEss.ChannelId.GRID_MODE).setNextValue(GridMode.ON_GRID);
+		this.getMaxApparentPower().setNextValue(MAX_APPARENT_POWER);
 	}
 
 	@Reference(policy = ReferencePolicy.STATIC, policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MANDATORY)
@@ -609,13 +610,24 @@ public class EssKacoBlueplanetGridsave50 extends AbstractOpenemsModbusComponent
 		}
 	}
 
+////	private final static int SUNSPEC_1 = 40003 - 1; // According to setup process pdf currently not used...
+//	private final static int SUNSPEC_103 = 40071 - 1;
+//	private final static int SUNSPEC_121 = 40213 - 1;
+//	private final static int SUNSPEC_64201 = 40823 - 1;
+//	private final static int SUNSPEC_64202 = 40877 - 1;
+//	private final static int SUNSPEC_64203 = 40893 - 1;
+//	private final static int SUNSPEC_64302 = 40931 - 1;
+	
+	
+	
+	
 //	private final static int SUNSPEC_1 = 40003 - 1; // According to setup process pdf currently not used...
-	private final static int SUNSPEC_103 = 40071 - 1;
-	private final static int SUNSPEC_121 = 40213 - 1;
-	private final static int SUNSPEC_64201 = 40823 - 1;
-	private final static int SUNSPEC_64202 = 40877 - 1;
-	private final static int SUNSPEC_64203 = 40893 - 1;
-	private final static int SUNSPEC_64302 = 40931 - 1;
+	private final static int SUNSPEC_103 = 40070;
+	private final static int SUNSPEC_121 = 40212;
+	private final static int SUNSPEC_64201 = 41050;
+	private final static int SUNSPEC_64202 = 41104;
+	private final static int SUNSPEC_64203 = 41120;
+	private final static int SUNSPEC_64302 = 41136;
 	/*
 	 * private final static int SUNSPEC_103 = 40071; // private final static int
 	 * SUNSPEC_121 = 40213; // private final static int SUNSPEC_64201 = 40823; //

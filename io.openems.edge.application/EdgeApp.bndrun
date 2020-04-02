@@ -26,7 +26,6 @@
 	bnd.identity;id='io.openems.edge.battery.soltaro',\
 	bnd.identity;id='io.openems.edge.bridge.mbus',\
 	bnd.identity;id='io.openems.edge.bridge.modbus',\
-	bnd.identity;id='io.openems.edge.bridge.onewire',\
 	bnd.identity;id='io.openems.edge.common',\
 	bnd.identity;id='io.openems.edge.controller.api.backend',\
 	bnd.identity;id='io.openems.edge.controller.api.common',\
@@ -99,7 +98,6 @@
 	bnd.identity;id='io.openems.edge.meter.sunspec',\
 	bnd.identity;id='io.openems.edge.meter.virtual',\
 	bnd.identity;id='io.openems.edge.meter.weidmueller',\
-	bnd.identity;id='io.openems.edge.onewire.thermometer',\
 	bnd.identity;id='io.openems.edge.predictor.persistencemodel',\
 	bnd.identity;id='io.openems.edge.pvinverter.cluster',\
 	bnd.identity;id='io.openems.edge.pvinverter.kaco.blueplanet',\
@@ -113,7 +111,7 @@
 	bnd.identity;id='io.openems.edge.tesla.powerwall2',\
 	bnd.identity;id='io.openems.edge.timedata.influxdb',\
 	bnd.identity;id='io.openems.edge.timedata.rrd4j',\
-
+	bnd.identity;version='latest';id='io.openems.edge.battery.bmw'
 -runbundles: \
 	Java-WebSocket;version='[1.4.1,1.4.2)',\
 	com.fazecast.jSerialComm;version='[2.5.1,2.5.2)',\
@@ -126,9 +124,9 @@
 	io.openems.edge.application;version=snapshot,\
 	io.openems.edge.battery.api;version=snapshot,\
 	io.openems.edge.battery.soltaro;version=snapshot,\
+	io.openems.edge.battery.bmw;version=snapshot,\
 	io.openems.edge.bridge.mbus;version=snapshot,\
 	io.openems.edge.bridge.modbus;version=snapshot,\
-	io.openems.edge.bridge.onewire;version=snapshot,\
 	io.openems.edge.common;version=snapshot,\
 	io.openems.edge.controller.api;version=snapshot,\
 	io.openems.edge.controller.api.backend;version=snapshot,\
@@ -205,7 +203,6 @@
 	io.openems.edge.meter.sunspec;version=snapshot,\
 	io.openems.edge.meter.virtual;version=snapshot,\
 	io.openems.edge.meter.weidmueller;version=snapshot,\
-	io.openems.edge.onewire.thermometer;version=snapshot,\
 	io.openems.edge.predictor.api;version=snapshot,\
 	io.openems.edge.predictor.persistencemodel;version=snapshot,\
 	io.openems.edge.pvinverter.api;version=snapshot,\

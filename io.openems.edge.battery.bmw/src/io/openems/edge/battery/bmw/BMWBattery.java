@@ -323,29 +323,29 @@ public class BMWBattery extends AbstractOpenemsModbusComponent
 		}
 		switch (event.getTopic()) {
 		case EdgeEventConstants.TOPIC_CYCLE_AFTER_PROCESS_IMAGE:
-
-			if (config.batteryOff()) {
-				SymmetricEss ess;
-				try {
-					ess = this.manager.getComponent(this.config.Inverter_id());
-					// Just temporarily for REFU: do not switch off if inverter is not in
-					// standby("8")
-					EnumReadChannel c = ess.channel("St");
-					int inverterState = c.value().orElse(0);
-					if (inverterState == 8) {
-						this.shutDownBattery();
-					} else {
-						return;
-					}
-				} catch (OpenemsNamedException e1) {
-					// TODO Auto-generated catch block
-
-					e1.printStackTrace();
-					return;
-				}
-			} else {
-				this.handleBatteryState();
-			}
+			this.handleBatteryState();
+//			if (config.batteryOff()) {
+//				SymmetricEss ess;
+//				try {
+//					ess = this.manager.getComponent(this.config.Inverter_id());
+//					// Just temporarily for REFU: do not switch off if inverter is not in
+//					// standby("8")
+//					EnumReadChannel c = ess.channel("St");
+//					int inverterState = c.value().orElse(0);
+//					if (inverterState == 8) {
+//						this.shutDownBattery();
+//					} else {
+//						return;
+//					}
+//				} catch (OpenemsNamedException e1) {
+//					// TODO Auto-generated catch block
+//
+//					e1.printStackTrace();
+//					return;
+//				}
+//			} else {
+//				this.handleBatteryState();
+//			}
 			break;
 		}
 	}
@@ -364,30 +364,30 @@ public class BMWBattery extends AbstractOpenemsModbusComponent
 		}
 	}
 
-	public void shutDownBattery() {
-		SymmetricEss ess;
-		try {
-			ess = this.manager.getComponent(this.config.Inverter_id());
-		} catch (OpenemsNamedException e1) {
-			// TODO Auto-generated catch block
-
-			e1.printStackTrace();
-			return;
-		}
-		int activePowerInverter = ess.getActivePower().value().orElse(0);
-		int reactivePowerInverter = ess.getReactivePower().value().orElse(0);
-
-		if (activePowerInverter == 0 && reactivePowerInverter == 0) {
-			IntegerWriteChannel commandChannel = this.channel(BMWChannelId.BMS_STATE_COMMAND);
-			try {
-				commandChannel.setNextWriteValue(OPEN_CONTACTORS);
-			} catch (OpenemsNamedException e) {
-				// TODO Auto-generated catch block
-				log.error("Problem occurred during send start command");
-			}
-		}
-
-	}
+//	public void shutDownBattery() {
+//		SymmetricEss ess;
+//		try {
+//			ess = this.manager.getComponent(this.config.Inverter_id());
+//		} catch (OpenemsNamedException e1) {
+//			// TODO Auto-generated catch block
+//
+//			e1.printStackTrace();
+//			return;
+//		}
+//		int activePowerInverter = ess.getActivePower().value().orElse(0);
+//		int reactivePowerInverter = ess.getReactivePower().value().orElse(0);
+//
+//		if (activePowerInverter == 0 && reactivePowerInverter == 0) {
+//			IntegerWriteChannel commandChannel = this.channel(BMWChannelId.BMS_STATE_COMMAND);
+//			try {
+//				commandChannel.setNextWriteValue(OPEN_CONTACTORS);
+//			} catch (OpenemsNamedException e) {
+//				// TODO Auto-generated catch block
+//				log.error("Problem occurred during send start command");
+//			}
+//		}
+//
+//	}
 
 	private boolean isSystemRunning() {
 		EnumReadChannel bmsStateChannel = this.channel(BMWChannelId.BMS_STATE);
@@ -499,7 +499,7 @@ public class BMWBattery extends AbstractOpenemsModbusComponent
 						m(Battery.ChannelId.DISCHARGE_MIN_VOLTAGE, new UnsignedWordElement(1009),
 								ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
 						m(Battery.ChannelId.DISCHARGE_MAX_CURRENT, new UnsignedWordElement(1010)), //
-						m(Battery.ChannelId.CHARGE_MAX_CURRENT, new SignedWordElement(1011)), //
+						m(Battery.ChannelId.CHARGE_MAX_CURRENT, new SignedWordElement(1011), ElementToChannelConverter.INVERT), //
 						m(BMWChannelId.MAXIMUM_LIMIT_DYNAMIC_VOLTAGE, new UnsignedWordElement(1012),
 								ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
 						m(BMWChannelId.MINIMUM_LIMIT_DYNAMIC_VOLTAGE, new UnsignedWordElement(1013),
