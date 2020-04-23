@@ -43,14 +43,14 @@ import io.openems.edge.battery.bmw.BatteryState;
 	@AttributeDefinition(name = "Start Not Successful Delay Time", description = "Sets the delay time in seconds how long the system should be stopped if it was not able to start")
 	int startUnsuccessfulDelay() default 3600;
 	
-	@AttributeDefinition(name = "Battery OFF", description = "Open DC-Relays of Battery")
-	boolean batteryOff() default false;
+//	@AttributeDefinition(name = "Battery OFF", description = "Open DC-Relays of Battery")
+//	boolean batteryOff() default false;
 	
 	@AttributeDefinition(name = "Pending Tolerance", description = "time in seconds, that is waited if system status cannot be determinated e.g. in case of reading errors")
 	int pendingTolerance() default 15;
 	
-	@AttributeDefinition(name = "Inverter-ID", description = "ID of Inverter.")
-	String Inverter_id(); 
+//	@AttributeDefinition(name = "Inverter-ID", description = "ID of Inverter.")
+//	String Inverter_id(); 
 
 	String webconsole_configurationFactory_nameHint() default "BMS BMW Battery[{id}]";
 	

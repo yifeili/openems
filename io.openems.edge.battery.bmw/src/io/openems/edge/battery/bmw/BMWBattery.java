@@ -42,7 +42,6 @@ import io.openems.edge.common.event.EdgeEventConstants;
 import io.openems.edge.common.modbusslave.ModbusSlave;
 import io.openems.edge.common.modbusslave.ModbusSlaveTable;
 import io.openems.edge.common.taskmanager.Priority;
-import io.openems.edge.ess.api.SymmetricEss;
 
 @Designate(ocd = Config.class, factory = true)
 @Component( //
@@ -262,10 +261,8 @@ public class BMWBattery extends AbstractOpenemsModbusComponent
 		// MAX_VOLTAGE ==> DcVolDynMax Register 1012
 
 		// TODO 23:09:2019 COMMITTED
-		
 
-		
-		this.channel(BMWChannelId.MAXIMUM_LIMIT_DYNAMIC_VOLTAGE).onChange( (oldValue, newValue) -> {
+		this.channel(BMWChannelId.MAXIMUM_LIMIT_DYNAMIC_VOLTAGE).onChange((oldValue, newValue) -> {
 			@SuppressWarnings("unchecked")
 			Optional<Integer> vOpt = (Optional<Integer>) newValue.asOptional();
 			if (!vOpt.isPresent()) {
@@ -324,28 +321,6 @@ public class BMWBattery extends AbstractOpenemsModbusComponent
 		switch (event.getTopic()) {
 		case EdgeEventConstants.TOPIC_CYCLE_AFTER_PROCESS_IMAGE:
 			this.handleBatteryState();
-//			if (config.batteryOff()) {
-//				SymmetricEss ess;
-//				try {
-//					ess = this.manager.getComponent(this.config.Inverter_id());
-//					// Just temporarily for REFU: do not switch off if inverter is not in
-//					// standby("8")
-//					EnumReadChannel c = ess.channel("St");
-//					int inverterState = c.value().orElse(0);
-//					if (inverterState == 8) {
-//						this.shutDownBattery();
-//					} else {
-//						return;
-//					}
-//				} catch (OpenemsNamedException e1) {
-//					// TODO Auto-generated catch block
-//
-//					e1.printStackTrace();
-//					return;
-//				}
-//			} else {
-//				this.handleBatteryState();
-//			}
 			break;
 		}
 	}
@@ -446,6 +421,13 @@ public class BMWBattery extends AbstractOpenemsModbusComponent
 	private void stopSystem() {
 		// TODO Currently not necessary, Battery starts itself?!
 		this.log.debug("Stop system");
+		IntegerWriteChannel commandChannel = this.channel(BMWChannelId.BMS_STATE_COMMAND);
+		try {
+			commandChannel.setNextWriteValue(OPEN_CONTACTORS);
+		} catch (OpenemsNamedException e) {
+			// TODO Auto-generated catch block
+			log.error("Problem occurred during send stopping command");
+		}
 	}
 
 	public State getStateMachineState() {
@@ -499,7 +481,8 @@ public class BMWBattery extends AbstractOpenemsModbusComponent
 						m(Battery.ChannelId.DISCHARGE_MIN_VOLTAGE, new UnsignedWordElement(1009),
 								ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
 						m(Battery.ChannelId.DISCHARGE_MAX_CURRENT, new UnsignedWordElement(1010)), //
-						m(Battery.ChannelId.CHARGE_MAX_CURRENT, new SignedWordElement(1011), ElementToChannelConverter.INVERT), //
+						m(Battery.ChannelId.CHARGE_MAX_CURRENT, new SignedWordElement(1011),
+								ElementToChannelConverter.INVERT), //
 						m(BMWChannelId.MAXIMUM_LIMIT_DYNAMIC_VOLTAGE, new UnsignedWordElement(1012),
 								ElementToChannelConverter.SCALE_FACTOR_MINUS_1), //
 						m(BMWChannelId.MINIMUM_LIMIT_DYNAMIC_VOLTAGE, new UnsignedWordElement(1013),
