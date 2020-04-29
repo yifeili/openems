@@ -21,9 +21,9 @@ import org.osgi.service.metatype.annotations.Designate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.openems.common.exceptions.OpenemsError.OpenemsNamedException;
 import io.openems.common.channel.AccessMode;
 import io.openems.common.channel.Unit;
+import io.openems.common.exceptions.OpenemsError.OpenemsNamedException;
 import io.openems.common.exceptions.OpenemsException;
 import io.openems.common.types.OpenemsType;
 import io.openems.edge.battery.api.Battery;
@@ -69,6 +69,7 @@ public class EssKacoBlueplanetGridsave50 extends AbstractOpenemsModbusComponent
 		implements ManagedSymmetricEss, SymmetricEss, OpenemsComponent, EventHandler, ModbusSlave {
 
 	private final Logger log = LoggerFactory.getLogger(EssKacoBlueplanetGridsave50.class);
+	private Config config;
 
 	public static final int DEFAULT_UNIT_ID = 1;
 	protected static final int MAX_APPARENT_POWER = 92000;
@@ -115,6 +116,7 @@ public class EssKacoBlueplanetGridsave50 extends AbstractOpenemsModbusComponent
 
 	@Activate
 	void activate(ComponentContext context, Config config) {
+		this.config = config;
 		super.activate(context, config.id(), config.alias(), config.enabled(), DEFAULT_UNIT_ID, this.cm, "Modbus",
 				config.modbus_id()); //
 		// update filter for 'battery'
@@ -354,7 +356,21 @@ public class EssKacoBlueplanetGridsave50 extends AbstractOpenemsModbusComponent
 		switch (event.getTopic()) {
 		case EdgeEventConstants.TOPIC_CYCLE_AFTER_PROCESS_IMAGE:
 			calculateEnergy();
-			handleStateMachine();
+			this.handleInverterState();
+			break;
+		}
+	}
+
+	private void handleInverterState() {
+		switch (config.inverterState()) {
+		case DEFAULT:
+			this.handleStateMachine();
+			break;
+		case OFF:
+			this.stopSystem();
+			break;
+		case ON:
+			this.startSystem();
 			break;
 		}
 	}
@@ -461,20 +477,19 @@ public class EssKacoBlueplanetGridsave50 extends AbstractOpenemsModbusComponent
 		this.battery.getMaxCellTemperature().onChange((oldValue, newValue) -> {
 			this.channel(ChannelId.BAT_TEMP).setNextValue(newValue.get());
 		});
-		
+
 		this.battery.getMinCellVoltage().onChange((oldValue, newValue) -> {
 			this.channel(SymmetricEss.ChannelId.MIN_CELL_VOLTAGE).setNextValue(newValue.get());
 		});
-		
+
 		this.battery.getMaxCellVoltage().onChange((oldValue, newValue) -> {
 			this.channel(SymmetricEss.ChannelId.MAX_CELL_VOLTAGE).setNextValue(newValue.get());
 		});
-		
+
 		this.battery.getMinCellTemperature().onChange((oldValue, newValue) -> {
 			this.channel(SymmetricEss.ChannelId.MIN_CELL_TEMPERATURE).setNextValue(newValue.get());
 		});
-		
-		
+
 		this.battery.getMaxCellTemperature().onChange((oldValue, newValue) -> {
 			this.channel(SymmetricEss.ChannelId.MAX_CELL_TEMPERATURE).setNextValue(newValue.get());
 		});

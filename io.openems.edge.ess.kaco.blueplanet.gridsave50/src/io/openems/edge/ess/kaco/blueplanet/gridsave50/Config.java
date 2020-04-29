@@ -16,6 +16,9 @@ import org.osgi.service.metatype.annotations.ObjectClassDefinition;
 
 	@AttributeDefinition(name = "Is enabled?", description = "Is this Component enabled?")
 	boolean enabled() default true;
+	
+	@AttributeDefinition(name = "Inverter state", description = "Switches the battery into the given state, if default is used, battery state is set automatically")
+	InverterState inverterState() default InverterState.DEFAULT;
 
 	@AttributeDefinition(name = "Modbus-ID", description = "ID of Modbus brige.")
 	String modbus_id() default "modbus0";
