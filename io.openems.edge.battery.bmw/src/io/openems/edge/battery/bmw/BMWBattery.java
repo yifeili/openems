@@ -273,7 +273,7 @@ public class BMWBattery extends AbstractOpenemsModbusComponent
 			this.channel(Battery.ChannelId.CHARGE_MAX_VOLTAGE).setNextValue(max_charge_voltage);
 		});
 
-		// DISCHARGE_MIN_VOLTAGE ==> DcVolDynMin Registerc 1013
+		// DISCHARGE_MIN_VOLTAGE ==> DcVolDynMin Register 1013
 		this.channel(BMWChannelId.MINIMUM_LIMIT_DYNAMIC_VOLTAGE).onChange((oldValue, newValue) -> {
 			@SuppressWarnings("unchecked")
 			Optional<Integer> vOpt = (Optional<Integer>) newValue.asOptional();
@@ -299,17 +299,17 @@ public class BMWBattery extends AbstractOpenemsModbusComponent
 		});
 
 		// !!!!! TODO What values are needed !!!!! Is this correct??
-		// DISCHARGE_MAX_CURRENT ==> DcAmpDynMin ==> 1011
-//		this.channel(BMWChannelId.MINIMUM_LIMIT_DYNAMIC_CURRENT).onChange(value -> {
-//			@SuppressWarnings("unchecked")
-//			Optional<Integer> cOpt = (Optional<Integer>) value.asOptional();
-//			if (!cOpt.isPresent()) {
-//				return;
-//			}
-//			int max_current = (int) (cOpt.get() * -1);
-//			log.debug("callback battery range, max discharge current, value: " + max_current);
-//			this.channel(Battery.ChannelId.CHARGE_MAX_CURRENT).setNextValue(max_current);
-//		});
+		// CHARGE_MAX_CURRENT ==> DcAmpDynMin ==> 1011
+		this.channel(BMWChannelId.MINIMUM_LIMIT_DYNAMIC_CURRENT).onChange((oldValue, newValue) -> {
+			@SuppressWarnings("unchecked")
+			Optional<Integer> cOpt = (Optional<Integer>) newValue.asOptional();
+			if (!cOpt.isPresent()) {
+				return;
+			}
+			int max_current = (int) (cOpt.get() * -1);
+			log.debug("callback battery range, max discharge current, value: " + max_current);
+			this.channel(Battery.ChannelId.CHARGE_MAX_CURRENT).setNextValue(max_current);
+		});
 
 	}
 
