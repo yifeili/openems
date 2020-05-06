@@ -148,7 +148,8 @@ public abstract class AbstractReadChannel<D extends AbstractDoc<T>, T> implement
 	public Value<T> value() {
 		switch (this.channelDoc.getAccessMode()) {
 		case WRITE_ONLY:
-			throw new IllegalArgumentException("Channel [" + this.channelId + "] is WRITE_ONLY.");
+			// TODO just removed for testing purposes
+			//throw new IllegalArgumentException("Channel [" + this.channelId + "] is WRITE_ONLY.");
 		case READ_ONLY:
 		case READ_WRITE:
 			break;
