@@ -396,6 +396,38 @@ public class SingleRack extends AbstractOpenemsModbusComponent
 			int voltageMillivolt = minCellVoltageOpt.get();
 			this.channel(Battery.ChannelId.MIN_CELL_VOLTAGE).setNextValue(voltageMillivolt);
 		}
+		
+		@SuppressWarnings("unchecked")
+		Optional<Integer> maxCellVoltageOpt = (Optional<Integer>) this
+				.channel(SingleRackChannelId.CLUSTER_1_MAX_CELL_VOLTAGE).value().asOptional();
+		if (minCellVoltageOpt.isPresent()) {
+			int voltageMillivolt = maxCellVoltageOpt.get();
+			this.channel(Battery.ChannelId.MAX_CELL_VOLTAGE).setNextValue(voltageMillivolt);
+		}
+		
+		@SuppressWarnings("unchecked")
+		Optional<Integer> minCellTemperatureOpt = (Optional<Integer>) this
+				.channel(SingleRackChannelId.CLUSTER_1_MIN_CELL_TEMPERATURE).value().asOptional();
+		if (minCellTemperatureOpt.isPresent()) {
+			int temperature = minCellTemperatureOpt.get() / 10;
+			this.channel(Battery.ChannelId.MIN_CELL_TEMPERATURE).setNextValue(temperature);
+		}
+		
+		@SuppressWarnings("unchecked")
+		Optional<Integer> maxCellTemperatureOpt = (Optional<Integer>) this
+				.channel(SingleRackChannelId.CLUSTER_1_MAX_CELL_TEMPERATURE).value().asOptional();
+		if (minCellTemperatureOpt.isPresent()) {
+			int temperature = maxCellTemperatureOpt.get() / 10;
+			this.channel(Battery.ChannelId.MAX_CELL_TEMPERATURE).setNextValue(temperature);
+		}
+		
+		@SuppressWarnings("unchecked")
+		Optional<Integer> currentOpt = (Optional<Integer>) this
+				.channel(SingleRackChannelId.CLUSTER_1_CURRENT).value().asOptional();
+		if (currentOpt.isPresent()) {
+			int current = currentOpt.get();
+			this.channel(Battery.ChannelId.CURRENT).setNextValue(current);
+		}
 
 		// write battery ranges to according channels in battery api
 		// MAX_VOLTAGE x2082
