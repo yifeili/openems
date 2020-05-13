@@ -57,9 +57,6 @@ public @interface Config {
 	@AttributeDefinition(name = "ForceCharge Reachable Min Cell Voltage [mV]", description = "Defines the min cell voltage that should be reached until force charge is stopped")
 	int forceChargeReachableMinCellVoltage() default 3100;
 
-	@AttributeDefinition(name = "Unused Time [s]", description = "Defines time period how long an ess is allowed to do nothing until full charge is triggered")
-	long unusedTime() default 60 * 60 * 24 * 14; // two weeks
-
 	String webconsole_configurationFactory_nameHint() default "Controller Battery Protection [{id}]";
 
 }

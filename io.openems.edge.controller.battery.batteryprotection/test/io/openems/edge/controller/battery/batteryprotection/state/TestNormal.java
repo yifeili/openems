@@ -39,7 +39,7 @@ public class TestNormal {
 		componentManager.initBms();
 		bms = componentManager.getComponent(Creator.BMS_ID);
 		sut = new Normal(ess, bms, config.warningLowCellVoltage(), config.criticalHighCellVoltage(),
-				config.warningSoC(), config.lowTemperature(), config.highTemperature(), config.unusedTime());
+				config.warningSoC(), config.lowTemperature(), config.highTemperature());
 	}
 
 	@Test
@@ -52,79 +52,6 @@ public class TestNormal {
 		State next = sut.getNextState();
 		assertEquals(State.NORMAL, next);
 	}
-
-//	@Test
-//	public final void testGetNextStateNormalNoChargingValuesPresent() {
-//		// writing two times causes past values in the channel
-//		bms.getChargeIndication().setNextValue(ChargeIndication.DISCHARGE);
-//		bms.getChargeIndication().nextProcessImage();
-//		bms.getChargeIndication().setNextValue(ChargeIndication.DISCHARGE);
-//		bms.getChargeIndication().nextProcessImage();
-//
-//		State next = sut.getNextState();
-//		assertEquals(State.NORMAL, next);
-//
-//		try {
-//			Thread.sleep(1000 * config.unusedTime() + 500);
-//		} catch (InterruptedException e) {
-//			fail();
-//		}
-//
-//		bms.getChargeIndication().setNextValue(ChargeIndication.DISCHARGE);
-//		bms.getChargeIndication().nextProcessImage();
-//
-//		// Waiting long enough means that the last charge or discharge action is too
-//		// long away, but there are no values, so state should be normal
-//		next = sut.getNextState();
-//		assertEquals(State.NORMAL, next);
-//	}
-//
-//	@Test
-//	public final void testGetNextStateNormalNoChargingValuePresent() {
-//		// writing two times causes past values in the channel
-//		bms.getChargeIndication().setNextValue(ChargeIndication.DISCHARGE);
-//		bms.getChargeIndication().nextProcessImage();
-//		bms.getChargeIndication().setNextValue(ChargeIndication.DISCHARGE);
-//		bms.getChargeIndication().nextProcessImage();
-//
-//		State next = sut.getNextState();
-//		assertEquals(State.NORMAL, next);
-//
-//		try {
-//			Thread.sleep(1000 * config.unusedTime() + 500);
-//		} catch (InterruptedException e) {
-//			fail();
-//		}
-//
-//		// Waiting long enough means that the last charge or discharge action is too
-//		// long away, but there are no values, so state should be normal
-//		next = sut.getNextState();
-//		assertEquals(State.NORMAL, next);
-//	}
-
-//	@Test
-//	public final void testGetNextStateFullCharge() {
-//		// writing two times causes past values in the channel
-//		bms.setChargeIndication(1);
-//		bms.setChargeIndication(1);
-//
-//		State next = sut.getNextState();
-//		assertEquals(State.NORMAL, next);
-//
-//		try {
-//			Thread.sleep(1000 * config.unusedTime() + 500);
-//		} catch (InterruptedException e) {
-//			fail();
-//		}
-//		
-//		bms.setChargeIndication(0);
-//		bms.setChargeIndication(0);
-//
-//		// Waiting long enough means that the last charge or discharge action is too
-//		// long away, but there are no values, so state should be normal
-//		next = sut.getNextState();
-//		assertEquals(State.FULL_CHARGE, next);
-//	}
 
 	@Test
 	public final void testGetNextStateUndefinedNoVoltage() {

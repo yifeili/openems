@@ -28,8 +28,6 @@ public class Creator {
 	public static final int LOW_TEMPERATURE = 0;
 	public static final int HIGH_TEMPERATURE = 60;
 
-	public static final long UNUSED_TIME = 2;
-
 	public static final String ID = "ctrl0";
 
 	public static BaseState createBaseState(DummyEss ess, DummyBattery bms) {
@@ -132,11 +130,6 @@ public class Creator {
 			@Override
 			public int highTemperature() {
 				return HIGH_TEMPERATURE;
-			}
-
-			@Override
-			public long unusedTime() {
-				return UNUSED_TIME;
 			}
 
 			@Override

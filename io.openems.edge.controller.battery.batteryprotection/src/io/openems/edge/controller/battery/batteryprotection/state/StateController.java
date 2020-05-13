@@ -25,13 +25,13 @@ public class StateController {
 		bms = componentManager.getComponent(c.bms_id());
 		stateObjects.put(State.UNDEFINED, new Undefined(ess, bms));
 		stateObjects.put(State.NORMAL, new Normal(ess, bms, c.warningLowCellVoltage(), c.criticalHighCellVoltage(),
-				c.warningSoC(), c.lowTemperature(), c.highTemperature(), c.unusedTime()));
+				c.warningSoC(), c.lowTemperature(), c.highTemperature()));
 		stateObjects.put(State.LIMIT, new Limit(ess, bms, c.warningLowCellVoltage(), c.criticalLowCellVoltage(),
-				c.criticalHighCellVoltage(), c.warningSoC(), c.criticalSoC(), c.lowTemperature(), c.highTemperature(), c.unusedTime()));
+				c.criticalHighCellVoltage(), c.warningSoC(), c.criticalSoC(), c.lowTemperature(), c.highTemperature()));
 		stateObjects.put(State.FORCE_CHARGE, new ForceCharge(ess, bms, c.chargePowerPercent(), c.chargingTime(),
 				c.forceChargeReachableMinCellVoltage(), c.warningSoC()));
 		stateObjects.put(State.FULL_CHARGE, new FullCharge(ess, bms, c.criticalHighCellVoltage()));
-		stateObjects.put(State.CHECK, new Check(ess, bms, c.deltaSoC(), c.unusedTime(), c.criticalLowCellVoltage()));
+		stateObjects.put(State.CHECK, new Check(ess, bms, c.deltaSoC(), c.criticalLowCellVoltage()));
 
 	}
 

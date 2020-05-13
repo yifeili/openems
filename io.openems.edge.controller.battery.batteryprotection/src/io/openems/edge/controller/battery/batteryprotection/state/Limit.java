@@ -19,8 +19,6 @@ public class Limit extends BaseState implements IState {
 	private int criticalSoC;
 	private int lowTemperature;
 	private int highTemperature;
-	private long unusedTime;
-
 
 	public Limit(//
 			ManagedSymmetricEss ess, //
@@ -31,8 +29,8 @@ public class Limit extends BaseState implements IState {
 			int warningSoC, //
 			int criticalSoC, //
 			int lowTemperature, //
-			int highTemperature, //
-			long unusedTime) {
+			int highTemperature //
+	) {
 		super(ess, bms);
 		this.warningLowCellVoltage = warningLowCellVoltage;
 		this.criticalLowCellVoltage = criticalLowCellVoltage;
@@ -41,7 +39,6 @@ public class Limit extends BaseState implements IState {
 		this.criticalSoC = criticalSoC;
 		this.lowTemperature = lowTemperature;
 		this.highTemperature = highTemperature;
-		this.unusedTime = unusedTime;
 	}
 
 	@Override
@@ -64,10 +61,6 @@ public class Limit extends BaseState implements IState {
 
 		if (getBmsMinCellVoltage() < criticalLowCellVoltage || getBmsSoC() < criticalSoC) {
 			return State.FORCE_CHARGE;
-		}
-
-		if (bmsNeedsFullCharge(unusedTime)) {
-			return State.FULL_CHARGE;
 		}
 
 		if (//

@@ -39,7 +39,7 @@ public class TestCheck {
 		componentManager.destroyBms();
 		componentManager.initBms();
 		bms = componentManager.getComponent(Creator.BMS_ID);
-		sut = new Check(ess, bms, config.deltaSoC(), config.unusedTime(), config.criticalLowCellVoltage());
+		sut = new Check(ess, bms, config.deltaSoC(), config.criticalLowCellVoltage());
 	}
 
 	@Test

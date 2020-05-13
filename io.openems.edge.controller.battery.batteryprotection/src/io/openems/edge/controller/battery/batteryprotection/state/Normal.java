@@ -12,7 +12,6 @@ public class Normal extends BaseState implements IState {
 	int warningSoC;
 	int lowTemperature;
 	int highTemperature;
-	long unusedTime;
 
 	public Normal(//
 			ManagedSymmetricEss ess, //
@@ -21,15 +20,14 @@ public class Normal extends BaseState implements IState {
 			int criticalHighCellVoltage, //
 			int warningSoC, //
 			int lowTemperature, //
-			int highTemperature, //
-			long unusedTime) {
+			int highTemperature //
+	) {
 		super(ess, bms);
 		this.warningLowCellVoltage = warningLowCellVoltage;
 		this.criticalHighCellVoltage = criticalHighCellVoltage;
 		this.warningSoC = warningSoC;
 		this.lowTemperature = lowTemperature;
 		this.highTemperature = highTemperature;
-		this.unusedTime = unusedTime;
 	}
 
 	@Override
@@ -67,10 +65,6 @@ public class Normal extends BaseState implements IState {
 
 		if (getBmsSoC() < warningSoC) {
 			return State.LIMIT;
-		}
-
-		if (bmsNeedsFullCharge(unusedTime)) {
-			return State.FULL_CHARGE;
 		}
 
 		return State.NORMAL;

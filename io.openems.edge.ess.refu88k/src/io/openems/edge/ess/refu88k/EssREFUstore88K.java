@@ -645,8 +645,12 @@ public class EssREFUstore88K extends AbstractOpenemsModbusComponent
 						m(REFUStore88KChannelId.PH_VPH_C, new UnsignedWordElement(SUNSPEC_103 + 12), // 40082
 								ElementToChannelConverter.SCALE_FACTOR_MINUS_1),
 						m(REFUStore88KChannelId.V_SF, new UnsignedWordElement(SUNSPEC_103 + 13)), // 40083
-						m(SymmetricEss.ChannelId.ACTIVE_POWER, new SignedWordElement(SUNSPEC_103 + 14), // 40084 //
-								ElementToChannelConverter.SCALE_FACTOR_1), // REFUStore88KChannelId.W//
+						
+						m(new SignedWordElement(SUNSPEC_103 + 14))
+							.m(SymmetricEss.ChannelId.ACTIVE_POWER, ElementToChannelConverter.SCALE_FACTOR_1)
+							.m(REFUStore88KChannelId.W, ElementToChannelConverter.SCALE_FACTOR_1)
+							.build(),	
+						
 						m(REFUStore88KChannelId.W_SF, new SignedWordElement(SUNSPEC_103 + 15)), // 40085
 						m(REFUStore88KChannelId.HZ, new SignedWordElement(SUNSPEC_103 + 16), // 40086
 								ElementToChannelConverter.SCALE_FACTOR_MINUS_2),

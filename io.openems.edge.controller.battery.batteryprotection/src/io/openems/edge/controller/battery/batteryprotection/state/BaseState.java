@@ -1,16 +1,12 @@
 package io.openems.edge.controller.battery.batteryprotection.state;
 
-import java.time.LocalDateTime;
-import java.util.Map;
 import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.openems.common.exceptions.OpenemsError.OpenemsNamedException;
-import io.openems.common.types.OptionsEnum;
 import io.openems.edge.battery.api.Battery;
-import io.openems.edge.common.channel.value.Value;
 import io.openems.edge.controller.battery.batteryprotection.BatteryProtectionController;
 import io.openems.edge.controller.battery.batteryprotection.IState;
 import io.openems.edge.ess.api.ManagedSymmetricEss;
@@ -58,61 +54,6 @@ public abstract class BaseState implements IState {
 		} catch (OpenemsNamedException e) {
 			log.error(e.getMessage());
 		}
-	}
-
-	protected boolean bmsNeedsFullCharge(long timeInSeconds) {
-		return false;
-		// Map<LocalDateTime, ?> values = getValuesInTimeSpan(timeInSeconds);
-
-		// if (values.size() == 0) {
-		// // No values present in time span
-		// return false;
-		// }
-		// return !hasBmsBeenChargedOrDischarged(values);
-	}
-
-//	@SuppressWarnings("unused")
-//	private Map<LocalDateTime, ?> getValuesInTimeSpan(long timeInSeconds) {
-//		Map<LocalDateTime, Object> values = new HashMap<>();
-//		Map<LocalDateTime, ?> pastValues = this.getChargeIndicationValues();
-//
-//		for (LocalDateTime key : pastValues.keySet()) {
-//			if (key.plusSeconds(timeInSeconds).isAfter(LocalDateTime.now())) {
-//				// entry is in the time span
-//				Object o = pastValues.get(key);
-//				if (o != null && o instanceof Value<?>) {
-//					Value<?> v = (Value<?>) o;
-//					if (v.get() != null) {
-//						values.put(key, o);
-//					}
-//				}
-//			}
-//		}
-//		return values;
-//	}
-
-	@SuppressWarnings("unused")
-	private boolean hasBmsBeenChargedOrDischarged(Map<LocalDateTime, ?> values) {
-		for (LocalDateTime dateTime : values.keySet()) {
-			try {
-				Object x = ((Value<?>) values.get(dateTime)).get();
-				System.out.println("Value: " + x + " is in time: " + dateTime);
-				if (x instanceof Integer) {
-					if ((Integer) x > 0) {
-						return true;
-					}
-				}
-				if (x instanceof OptionsEnum) {
-					if (((OptionsEnum) x).getValue() > 0) {
-						return true;
-					}
-				}
-
-			} catch (Exception e) {
-				log.error(e.getMessage());
-			}
-		}
-		return false;
 	}
 
 	protected boolean isNextStateUndefined() {
@@ -171,14 +112,4 @@ public abstract class BaseState implements IState {
 	public ManagedSymmetricEss getEss() {
 		return ess;
 	}
-
-//	public CircularTreeMap<LocalDateTime, ?> getChargeIndicationValues() {
-//		CircularTreeMap<LocalDateTime, ?> pastValues = null;
-//
-//		Channel<?> channel = bms.getChargeIndication();
-//		if (channel != null) {
-//			pastValues = channel.getPastValues();
-//		}
-//		return pastValues;
-//	}
 }

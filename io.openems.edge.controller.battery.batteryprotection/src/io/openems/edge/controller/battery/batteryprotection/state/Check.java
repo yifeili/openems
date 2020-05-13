@@ -15,15 +15,12 @@ public class Check extends BaseState implements IState {
 	private static int UNDEFINED_VALUE = -1;
 
 	private int deltaSoC;
-	private long unusedTime;
 	private int criticalLowCellVoltage;
 	private int startSoC = UNDEFINED_VALUE;
 
-	public Check(ManagedSymmetricEss ess, Battery bms, int deltaSoC, long unusedTime,
-			int criticalLowCellVoltage) {
+	public Check(ManagedSymmetricEss ess, Battery bms, int deltaSoC, int criticalLowCellVoltage) {
 		super(ess, bms);
 		this.deltaSoC = deltaSoC;
-		this.unusedTime = unusedTime;
 		this.criticalLowCellVoltage = criticalLowCellVoltage;
 	}
 
@@ -52,11 +49,6 @@ public class Check extends BaseState implements IState {
 		if (getBmsMinCellVoltage() < criticalLowCellVoltage) {
 			resetStartSoc();
 			return State.FORCE_CHARGE;
-		}
-
-		if (bmsNeedsFullCharge(unusedTime)) {
-			resetStartSoc();
-			return State.FULL_CHARGE;
 		}
 
 		if (hasSoCIncreasedEnough()) {
