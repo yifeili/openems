@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.openems.common.channel.AccessMode;
+import io.openems.common.exceptions.NotImplementedException;
 import io.openems.common.exceptions.OpenemsError.OpenemsNamedException;
 import io.openems.edge.battery.api.Battery;
 import io.openems.edge.battery.soltaro.BatteryState;
@@ -31,7 +32,6 @@ import io.openems.edge.battery.soltaro.SoltaroBattery;
 import io.openems.edge.battery.soltaro.State;
 import io.openems.edge.battery.soltaro.cluster.versionb.Enums.ContactorControl;
 import io.openems.edge.battery.soltaro.cluster.versionb.Enums.RackUsage;
-import io.openems.edge.battery.soltaro.cluster.versionb.Enums.StartStop;
 import io.openems.edge.bridge.modbus.api.AbstractOpenemsModbusComponent;
 import io.openems.edge.bridge.modbus.api.BridgeModbus;
 import io.openems.edge.bridge.modbus.api.ElementToChannelConverter;
@@ -52,6 +52,8 @@ import io.openems.edge.common.component.OpenemsComponent;
 import io.openems.edge.common.event.EdgeEventConstants;
 import io.openems.edge.common.modbusslave.ModbusSlave;
 import io.openems.edge.common.modbusslave.ModbusSlaveTable;
+import io.openems.edge.common.startstop.StartStop;
+import io.openems.edge.common.startstop.StartStoppable;
 import io.openems.edge.common.taskmanager.Priority;
 
 @Designate(ocd = Config.class, factory = true)
@@ -62,7 +64,7 @@ import io.openems.edge.common.taskmanager.Priority;
 		property = EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_AFTER_PROCESS_IMAGE //
 )
 public class Cluster extends AbstractOpenemsModbusComponent
-		implements Battery, OpenemsComponent, EventHandler, ModbusSlave {
+		implements Battery, OpenemsComponent, EventHandler, ModbusSlave, StartStoppable {
 
 	public static final int DISCHARGE_MAX_A = 0; // default value 0 to avoid damages
 	public static final int CHARGE_MAX_A = 0; // default value 0 to avoid damages
@@ -103,6 +105,7 @@ public class Cluster extends AbstractOpenemsModbusComponent
 		super(//
 				OpenemsComponent.ChannelId.values(), //
 				Battery.ChannelId.values(), //
+				StartStoppable.ChannelId.values(), //
 				ClusterChannelId.values() //
 		);
 	}
@@ -276,7 +279,9 @@ public class Cluster extends AbstractOpenemsModbusComponent
 			this.handleErrorsWithReset();
 			break;
 		}
-		this.getReadyForWorking().setNextValue(readyForWorking);
+
+		// TODO start stop is not implemented; mark as started if 'readyForWorking'
+		this._setStartStop(readyForWorking ? StartStop.START : StartStop.UNDEFINED);
 	}
 
 	private void handleErrorsWithReset() {
@@ -372,9 +377,9 @@ public class Cluster extends AbstractOpenemsModbusComponent
 
 	@Override
 	public String debugLog() {
-		return "SoC:" + this.getSoc().value() //
-				+ "|Discharge:" + this.getDischargeMinVoltage().value() + ";" + this.getDischargeMaxCurrent().value() //
-				+ "|Charge:" + this.getChargeMaxVoltage().value() + ";" + this.getChargeMaxCurrent().value();
+		return "SoC:" + this.getSoc() //
+				+ "|Discharge:" + this.getDischargeMinVoltage() + ";" + this.getDischargeMaxCurrent() //
+				+ "|Charge:" + this.getChargeMaxVoltage() + ";" + this.getChargeMaxCurrent();
 	}
 
 	private void sleepSystem() {
@@ -663,7 +668,7 @@ public class Cluster extends AbstractOpenemsModbusComponent
 
 		this.channel(Battery.ChannelId.SOC).setNextValue(soc);
 	}
-	
+
 	protected void recalculateMaxCellVoltage() {
 		int max = Integer.MIN_VALUE;
 
@@ -672,7 +677,7 @@ public class Cluster extends AbstractOpenemsModbusComponent
 		}
 		this.channel(Battery.ChannelId.MAX_CELL_VOLTAGE).setNextValue(max);
 	}
-	
+
 	protected void recalculateMinCellVoltage() {
 		int min = Integer.MAX_VALUE;
 
@@ -681,7 +686,7 @@ public class Cluster extends AbstractOpenemsModbusComponent
 		}
 		this.channel(Battery.ChannelId.MIN_CELL_VOLTAGE).setNextValue(min);
 	}
-	
+
 	protected void recalculateMaxCellTemperature() {
 		int max = Integer.MIN_VALUE;
 
@@ -690,7 +695,7 @@ public class Cluster extends AbstractOpenemsModbusComponent
 		}
 		this.channel(Battery.ChannelId.MAX_CELL_TEMPERATURE).setNextValue(max);
 	}
-	
+
 	protected void recalculateMinCellTemperature() {
 		int min = Integer.MAX_VALUE;
 
@@ -752,5 +757,11 @@ public class Cluster extends AbstractOpenemsModbusComponent
 			this.subMasterCommunicationAlarmChannelId = subMasterCommunicationAlarmChannelId;
 			this.positiveContactorChannelId = positiveContactorChannelId;
 		}
+	}
+
+	@Override
+	public void setStartStop(StartStop value) throws OpenemsNamedException {
+		// TODO start stop is not implemented
+		throw new NotImplementedException("Start Stop is not implemented for Soltaro SingleRack Version B");
 	}
 }
