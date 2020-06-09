@@ -109,7 +109,8 @@ public class Balancing extends AbstractOpenemsComponent implements Controller, O
 		/*
 		 * set result
 		 */
-		ess.getSetActivePowerEqualsWithPid().setNextWriteValue(calculatedPower);
+		// TODO reset to WithPid()
+		ess.getSetActivePowerEquals().setNextWriteValue(calculatedPower);
 		ess.getSetReactivePowerEquals().setNextWriteValue(0);
 	}
 }

@@ -1,8 +1,9 @@
 package io.openems.edge.simulator.meter.grid.reacting;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.function.Consumer;
 
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.component.ComponentContext;
@@ -14,15 +15,12 @@ import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
 import org.osgi.service.component.annotations.ReferencePolicyOption;
-import org.osgi.service.event.Event;
-import org.osgi.service.event.EventConstants;
-import org.osgi.service.event.EventHandler;
 import org.osgi.service.metatype.annotations.Designate;
 
 import io.openems.edge.common.channel.Doc;
+import io.openems.edge.common.channel.value.Value;
 import io.openems.edge.common.component.AbstractOpenemsComponent;
 import io.openems.edge.common.component.OpenemsComponent;
-import io.openems.edge.common.event.EdgeEventConstants;
 import io.openems.edge.ess.api.ManagedSymmetricEss;
 import io.openems.edge.meter.api.AsymmetricMeter;
 import io.openems.edge.meter.api.MeterType;
@@ -33,11 +31,9 @@ import io.openems.edge.meter.api.SymmetricMeter;
 		immediate = true, //
 		configurationPolicy = ConfigurationPolicy.REQUIRE, //
 		property = { //
-				EventConstants.EVENT_TOPIC + "=" + EdgeEventConstants.TOPIC_CYCLE_BEFORE_PROCESS_IMAGE, //
 				"type=GRID" //
 		})
-public class GridMeter extends AbstractOpenemsComponent
-		implements SymmetricMeter, AsymmetricMeter, OpenemsComponent, EventHandler {
+public class GridMeter extends AbstractOpenemsComponent implements SymmetricMeter, AsymmetricMeter, OpenemsComponent {
 
 	// private final Logger log = LoggerFactory.getLogger(GridMeter.class);
 
@@ -58,47 +54,42 @@ public class GridMeter extends AbstractOpenemsComponent
 	@Reference
 	protected ConfigurationAdmin cm;
 
-	@Reference(policy = ReferencePolicy.DYNAMIC, policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MULTIPLE)
-	private volatile List<ManagedSymmetricEss> symmetricEsss = new CopyOnWriteArrayList<>();
+	private final Set<ManagedSymmetricEss> symmetricEsss = new HashSet<>();
+
+	@Reference(//
+			policy = ReferencePolicy.DYNAMIC, //
+			policyOption = ReferencePolicyOption.GREEDY, //
+			cardinality = ReferenceCardinality.MULTIPLE, //
+			target = "(enabled=true)")
+	protected void addEss(ManagedSymmetricEss ess) {
+		this.symmetricEsss.add(ess);
+		ess.getActivePower().onSetNextValue(this.updateChannelsCallback);
+	}
+
+	protected void removeEss(ManagedSymmetricEss ess) {
+		ess.getActivePower().removeOnSetNextValueCallback(this.updateChannelsCallback);
+		this.symmetricEsss.remove(ess);
+	}
+
+	private final Set<SymmetricMeter> symmetricMeters = new HashSet<>();
 
 	// all meters are needed even grid meters
-	@Reference(policy = ReferencePolicy.DYNAMIC, policyOption = ReferencePolicyOption.GREEDY, cardinality = ReferenceCardinality.MULTIPLE)
-	private volatile List<SymmetricMeter> symmetricMeters = new CopyOnWriteArrayList<>();
-
-	@Activate
-	void activate(ComponentContext context, Config config) throws IOException {
-		super.activate(context, config.id(), config.alias(), config.enabled());
+	@Reference(//
+			policy = ReferencePolicy.DYNAMIC, //
+			policyOption = ReferencePolicyOption.GREEDY, //
+			cardinality = ReferenceCardinality.MULTIPLE, //
+			target = "(&(enabled=true)(!(service.factoryPid=Simulator.GridMeter.Reacting)))")
+	protected void addMeter(SymmetricMeter meter) {
+		this.symmetricMeters.add(meter);
+		meter.getActivePower().onSetNextValue(this.updateChannelsCallback);
 	}
 
-	@Deactivate
-	protected void deactivate() {
-		super.deactivate();
+	protected void removeMeter(SymmetricMeter meter) {
+		meter.getActivePower().removeOnSetNextValueCallback(this.updateChannelsCallback);
+		this.symmetricMeters.remove(meter);
 	}
 
-	public GridMeter() {
-		super(//
-				OpenemsComponent.ChannelId.values(), //
-				SymmetricMeter.ChannelId.values(), //
-				AsymmetricMeter.ChannelId.values(), //
-				ChannelId.values() //
-		);
-	}
-
-	@Override
-	public MeterType getMeterType() {
-		return MeterType.GRID;
-	}
-
-	@Override
-	public void handleEvent(Event event) {
-		switch (event.getTopic()) {
-		case EdgeEventConstants.TOPIC_CYCLE_BEFORE_PROCESS_IMAGE:
-			this.updateChannels();
-			break;
-		}
-	}
-
-	private void updateChannels() {
+	private final Consumer<Value<Integer>> updateChannelsCallback = (value) -> {
 		// calculate power sum from all meters and esss, but exclude grid meters.
 		// Count the latter to spread the load equally on the different grid-nodes.
 		int powerSum = 0;
@@ -144,6 +135,30 @@ public class GridMeter extends AbstractOpenemsComponent
 		this.getActivePowerL1().setNextValue(activePower / 3);
 		this.getActivePowerL2().setNextValue(activePower / 3);
 		this.getActivePowerL3().setNextValue(activePower / 3);
+	};
+
+	@Activate
+	void activate(ComponentContext context, Config config) throws IOException {
+		super.activate(context, config.id(), config.alias(), config.enabled());
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		super.deactivate();
+	}
+
+	public GridMeter() {
+		super(//
+				OpenemsComponent.ChannelId.values(), //
+				SymmetricMeter.ChannelId.values(), //
+				AsymmetricMeter.ChannelId.values(), //
+				ChannelId.values() //
+		);
+	}
+
+	@Override
+	public MeterType getMeterType() {
+		return MeterType.GRID;
 	}
 
 	@Override

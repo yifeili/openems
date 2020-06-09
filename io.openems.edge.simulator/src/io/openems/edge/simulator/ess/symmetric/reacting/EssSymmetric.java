@@ -108,14 +108,9 @@ public class EssSymmetric extends AbstractOpenemsComponent
 	public void handleEvent(Event event) {
 		switch (event.getTopic()) {
 		case EdgeEventConstants.TOPIC_CYCLE_BEFORE_CONTROLLERS:
-			this.updateChannels();
 			this.calculateEnergy();
 			break;
 		}
-	}
-
-	private void updateChannels() {
-		// nothing to do
 	}
 
 	@Override
