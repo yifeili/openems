@@ -2,8 +2,12 @@
     <ion-toolbar class="ion-justify-content-center" color="primary">
         <ion-title>{{ component.alias }}</ion-title>
         <ion-buttons slot="end">
+            <ion-button target="_blank"
+                href="https://openems.github.io/openems.io/openems/latest/edge/controller.html#_io_fix_digital_output">
+                <ion-icon name="help-circle-outline"></ion-icon>
+            </ion-button>
             <ion-button (click)="modalCtrl.dismiss()">
-                <ion-icon name="close"></ion-icon>
+                <ion-icon name="close-outline"></ion-icon>
             </ion-button>
         </ion-buttons>
     </ion-toolbar>
@@ -18,18 +22,20 @@
                 </td>
             </tr>
         </table>
-        <ion-segment (ionChange)="updateMode($event)" value="{{ component.properties['isOn'] }}" scrollable="false">
+        <!-- ngIf prevents ionChange to trigger on init -->
+        <ion-segment *ngIf="component" (ionChange)="updateMode($event)" value="{{ component.properties['isOn'] }}"
+            scrollable="false">
             <ion-segment-button value="true">
                 <ion-label translate>
                     General.on
                 </ion-label>
-                <ion-icon color="success" style="width:40px" name="power"></ion-icon>
+                <ion-icon color="success" style="width:40px" name="power-outline"></ion-icon>
             </ion-segment-button>
             <ion-segment-button value="false">
                 <ion-label translate>
                     General.off
                 </ion-label>
-                <ion-icon name="power" style="width: 40px"></ion-icon>
+                <ion-icon name="power-outline" style="width: 40px"></ion-icon>
             </ion-segment-button>
         </ion-segment>
     </ion-card-content>

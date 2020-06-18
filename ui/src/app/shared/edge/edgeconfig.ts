@@ -28,7 +28,13 @@ export class EdgeConfig {
 
         // initialize Components
         for (let componentId in this.components) {
-            this.components[componentId].id = componentId;
+            let component = this.components[componentId];
+            component.id = componentId;
+            if ('enabled' in component.properties) {
+                component.isEnabled = component.properties['enabled']
+            } else {
+                component.isEnabled = true;
+            }
         }
 
         // initialize Factorys
@@ -121,9 +127,11 @@ export class EdgeConfig {
     public getFactoriesByNature(natureId: string): EdgeConfig.Factory[] {
         let result = [];
         let nature = this.natures[natureId];
-        for (let factoryId of nature.factoryIds) {
-            if (factoryId in this.factories) {
-                result.push(this.factories[factoryId])
+        if (nature) {
+            for (let factoryId of nature.factoryIds) {
+                if (factoryId in this.factories) {
+                    result.push(this.factories[factoryId])
+                }
             }
         }
         return result;
@@ -291,11 +299,11 @@ export class EdgeConfig {
     public listAvailableFactories(): CategorizedFactories[] {
         let allFactories = [
             {
-                category: { title: 'Simulatoren', icon: 'flask' },
+                category: { title: 'Simulatoren', icon: 'flask-outline' },
                 factories: Object.values(this.factories).filter(factory => factory.id.startsWith('Simulator.'))
             },
             {
-                category: { title: 'Serielle Verbindungen', icon: 'swap' },
+                category: { title: 'Serielle Verbindungen', icon: 'swap-horizontal-outline' },
                 factories: [
                     this.getFactoriesByIds([
                         'Bridge.Mbus', 'Bridge.Onewire', 'Bridge.Modbus.Serial', 'Bridge.Modbus.Tcp'
@@ -303,72 +311,72 @@ export class EdgeConfig {
                 ]
             },
             {
-                category: { title: 'Zähler', icon: 'speedometer' },
+                category: { title: 'Zähler', icon: 'speedometer-outline' },
                 factories: [
                     this.getFactoriesByNature("io.openems.edge.meter.api.SymmetricMeter")
                 ]
             },
             {
-                category: { title: 'Speichersysteme', icon: 'battery-charging' },
+                category: { title: 'Speichersysteme', icon: 'battery-charging-outline' },
                 factories: [
                     this.getFactoriesByNature("io.openems.edge.ess.api.SymmetricEss"),
                     this.getFactoriesByNature("io.openems.edge.ess.dccharger.api.EssDcCharger")
                 ]
             },
             {
-                category: { title: 'Batterien', icon: 'battery-full' },
+                category: { title: 'Batterien', icon: 'battery-full-outline' },
                 factories: [
                     this.getFactoriesByNature("io.openems.edge.battery.api.Battery")
                 ]
             },
             {
-                category: { title: 'I/Os', icon: 'log-in' },
+                category: { title: 'I/Os', icon: 'log-in-outline' },
                 factories: [
                     this.getFactoriesByNature("io.openems.edge.io.api.DigitalOutput"),
                     this.getFactoriesByNature("io.openems.edge.io.api.DigitalInput")
                 ]
             },
             {
-                category: { title: 'E-Auto-Ladestation', icon: 'car' },
+                category: { title: 'E-Auto-Ladestation', icon: 'car-outline' },
                 factories: [
                     this.getFactoriesByNature("io.openems.edge.evcs.api.Evcs")
                 ]
             },
             {
-                category: { title: 'Standard-Controller', icon: 'resize' },
+                category: { title: 'Standard-Controller', icon: 'resize-outline' },
                 factories: [
                     this.getFactoriesByIds(['Controller.Debug.Log', 'Controller.Debug.DetailedLog'])
                 ]
             },
             {
-                category: { title: 'Externe Schnittstellen', icon: 'megaphone' },
+                category: { title: 'Externe Schnittstellen', icon: 'megaphone-outline' },
                 factories: [
                     this.getFactoriesByIds([
-                        'Controller.Api.Backend', 'Controller.Api.Websocket', 'Controller.Api.ModbusTcp.ReadOnly',
+                        'Controller.Api.Backend', 'Controller.Api.Websocket', 'Controller.Api.ModbusTcp', 'Controller.Api.ModbusTcp.ReadOnly',
                         'Controller.Api.ModbusTcp.ReadWrite', 'Controller.Api.Rest.ReadOnly', 'Controller.Api.Rest.ReadWrite'
                     ])
                 ]
             },
             {
-                category: { title: 'Spezial-Controller', icon: 'repeat' },
+                category: { title: 'Spezial-Controller', icon: 'repeat-outline' },
                 factories: [
                     this.getFactoriesByNature("io.openems.edge.controller.api.Controller"),
                 ]
             },
             {
-                category: { title: 'Timeseries-Datenbank', icon: 'repeat' },
+                category: { title: 'Timeseries-Datenbank', icon: 'repeat-outline' },
                 factories: [
                     this.getFactoriesByNature("io.openems.edge.timedata.api.Timedata"),
                 ]
             },
             {
-                category: { title: 'Scheduler', icon: 'stopwatch' },
+                category: { title: 'Scheduler', icon: 'stopwatch-outline' },
                 factories: [
                     this.getFactoriesByNature("io.openems.edge.scheduler.api.Scheduler")
                 ]
             },
             {
-                category: { title: 'Weitere', icon: 'radio-button-off' },
+                category: { title: 'Weitere', icon: 'radio-button-off-outline' },
                 factories: Object.values(this.factories)
             }
             // TODO weitere Factories?
@@ -390,6 +398,22 @@ export class EdgeConfig {
                 });
                 result.push({ category: item.category, factories: factories.sort((a, b) => a.id.localeCompare(b.id)) })
             }
+        })
+        return result;
+    }
+
+    /**
+     * Returns the corresponding icon for a given factory
+     */
+    public getFactoryIcon(factory: EdgeConfig.Factory): string {
+        // default icon, if no icons are found
+        let result = "stats-chart-outline";
+        this.listAvailableFactories().forEach(availableFactories => {
+            availableFactories.factories.forEach(availableFactory => {
+                if (factory == availableFactory) {
+                    result = availableFactories.category.icon;
+                }
+            })
         })
         return result;
     }

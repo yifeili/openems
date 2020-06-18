@@ -79,10 +79,12 @@ public class OsgiValidateWorker extends AbstractWorker {
 				for (Configuration config : configs) {
 					Dictionary<String, Object> properties = config.getProperties();
 					String componentId = (String) properties.get("id");
-					if (this.isComponentActivated(componentId)) {
-						this.componentDefectiveSince.remove(componentId);
-					} else {
-						this.componentDefectiveSince.putIfAbsent(componentId, new DefectiveComponent());
+					if (componentId != null) {
+						if (this.isComponentActivated(componentId)) {
+							this.componentDefectiveSince.remove(componentId);
+						} else {
+							this.componentDefectiveSince.putIfAbsent(componentId, new DefectiveComponent());
+						}
 					}
 				}
 			}
@@ -101,7 +103,7 @@ public class OsgiValidateWorker extends AbstractWorker {
 			this.parent.logWarn(this.log, "Component(s) configured but not active: "
 					+ String.join(",", this.componentDefectiveSince.keySet()));
 
-			this.parent.configNotActivatedChannel().setNextValue(true);
+			this.parent._setConfigNotActivated(true);
 
 			Iterator<Entry<String, DefectiveComponent>> iterator = this.componentDefectiveSince.entrySet().iterator();
 			while (iterator.hasNext()) {
@@ -135,7 +137,7 @@ public class OsgiValidateWorker extends AbstractWorker {
 			}
 		}
 
-		this.parent.configNotActivatedChannel().setNextValue(announceConfigNotActivated);
+		this.parent._setConfigNotActivated(announceConfigNotActivated);
 	}
 
 	private boolean isComponentActivated(String componentId) {

@@ -145,7 +145,14 @@ public abstract class AbstractReadChannel<D extends AbstractDoc<T>, T> implement
 	}
 
 	@Override
-	public Value<T> value() {
+	public Value<T> value() throws IllegalArgumentException {
+		switch (this.channelDoc.getAccessMode()) {
+		case WRITE_ONLY:
+			throw new IllegalArgumentException("Channel [" + this.channelId + "] is WRITE_ONLY.");
+		case READ_ONLY:
+		case READ_WRITE:
+			break;
+		}
 		return this.activeValue;
 	}
 
@@ -162,6 +169,11 @@ public abstract class AbstractReadChannel<D extends AbstractDoc<T>, T> implement
 	@Override
 	public void onSetNextValue(Consumer<Value<T>> callback) {
 		this.onSetNextValueCallbacks.add(callback);
+	}
+
+	@Override
+	public void removeOnSetNextValueCallback(Consumer<?> callback) {
+		this.onSetNextValueCallbacks.remove(callback);
 	}
 
 	@Override

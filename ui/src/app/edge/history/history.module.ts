@@ -19,6 +19,9 @@ import { EnergyModalComponent } from './energy/modal/modal.component';
 import { GridChartComponent } from './grid/chart.component';
 import { GridComponent } from './grid/widget.component';
 import { GridModalComponent } from './grid/modal/modal.component';
+import { HeatingelementChartComponent } from './heatingelement/chart.component';
+import { HeatingelementModalComponent } from './heatingelement/modal/modal.component';
+import { HeatingelementWidgetComponent } from './heatingelement/widget.component';
 import { HistoryComponent } from './history.component';
 import { NgModule } from '@angular/core';
 import { ProductionChargerChartComponent } from './production/chargerchart.component';
@@ -46,6 +49,14 @@ import { StorageTotalChartComponent } from './storage/totalchart.component';
 import { SymmetricPeakshavingChartComponent } from './peakshaving/symmetric/chart.component';
 import { SymmetricPeakshavingModalComponent } from './peakshaving/symmetric/modal/modal.component';
 import { SymmetricPeakshavingWidgetComponent } from './peakshaving/symmetric/widget.component';
+import { ChpSocWidgetComponent } from './chpsoc/widget.component';
+import { ChpSocModalComponent } from './chpsoc/modal/modal.component';
+import { ChpSocChartComponent } from './chpsoc/chart.component';
+import { ConsumptionMeterChartComponent } from './consumption/meterchart.component';
+import { FixDigitalOutputWidgetComponent } from './fixdigitaloutput/widget.component';
+import { FixDigitalOutputModalComponent } from './fixdigitaloutput/modal/modal.component';
+import { FixDigitalOutputSingleChartComponent } from './fixdigitaloutput/singlechart.component';
+import { FixDigitalOutputTotalChartComponent } from './fixdigitaloutput/totalchart.component';
 
 @NgModule({
   imports: [
@@ -55,9 +66,12 @@ import { SymmetricPeakshavingWidgetComponent } from './peakshaving/symmetric/wid
     AsymmetricPeakshavingModalComponent,
     AutarchyModalComponent,
     ChannelthresholdModalComponent,
+    ChpSocModalComponent,
     ConsumptionModalComponent,
     EnergyModalComponent,
+    FixDigitalOutputModalComponent,
     GridModalComponent,
+    HeatingelementModalComponent,
     ProductionModalComponent,
     SelfconsumptionModalComponent,
     SinglethresholdModalComponent,
@@ -75,17 +89,28 @@ import { SymmetricPeakshavingWidgetComponent } from './peakshaving/symmetric/wid
     ChannelthresholdSingleChartComponent,
     ChannelthresholdTotalChartComponent,
     ChanneltresholdWidgetComponent,
+    ChpSocChartComponent,
+    ChpSocModalComponent,
+    ChpSocWidgetComponent,
     ConsumptionComponent,
     ConsumptionEvcsChartComponent,
+    ConsumptionMeterChartComponent,
     ConsumptionModalComponent,
     ConsumptionOtherChartComponent,
     ConsumptionSingleChartComponent,
     ConsumptionTotalChartComponent,
     EnergyComponent,
     EnergyModalComponent,
+    FixDigitalOutputModalComponent,
+    FixDigitalOutputSingleChartComponent,
+    FixDigitalOutputTotalChartComponent,
+    FixDigitalOutputWidgetComponent,
     GridChartComponent,
     GridComponent,
     GridModalComponent,
+    HeatingelementChartComponent,
+    HeatingelementModalComponent,
+    HeatingelementWidgetComponent,
     HistoryComponent,
     ProductionChargerChartComponent,
     ProductionComponent,

@@ -8,8 +8,12 @@
                 {{evcsComponent.alias}}
             </ion-title>
             <ion-buttons slot="end">
+                <ion-button target="_blank"
+                    href="https://openems.github.io/openems.io/openems/latest/edge/controller.html#_evcs">
+                    <ion-icon name="help-circle-outline"></ion-icon>
+                </ion-button>
                 <ion-button (click)="modalCtrl.dismiss()">
-                    <ion-icon name="close"></ion-icon>
+                    <ion-icon name="close-outline"></ion-icon>
                 </ion-button>
             </ion-buttons>
         </ion-toolbar>
@@ -91,20 +95,20 @@
                             <ion-label translate>
                                 General.Manually
                             </ion-label>
-                            <ion-icon color="success" style="width:40px" name="power"></ion-icon>
+                            <ion-icon color="success" style="width:40px" name="power-outline"></ion-icon>
                         </ion-segment-button>
                         <ion-segment-button value="EXCESS_POWER">
                             <ion-label translate>
                                 General.Automatic
                             </ion-label>
-                            <ion-icon style="width:40px" name="sunny">
+                            <ion-icon style="width:40px" name="sunny-outline">
                             </ion-icon>
                         </ion-segment-button>
                         <ion-segment-button value="OFF">
                             <ion-label translate>
                                 General.Off
                             </ion-label>
-                            <ion-icon name="power" style="width: 40px"></ion-icon>
+                            <ion-icon name="power-outline" style="width: 40px"></ion-icon>
                         </ion-segment-button>
                     </ion-segment>
                 </ion-card-content>
